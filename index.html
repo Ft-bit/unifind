@@ -3,764 +3,621 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniFind - Premium Lost & Found Marketplace for University Students</title>
+    <title>UniFind - Premium Lost & Found Marketplace</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/framer-motion@10/dist/framer-motion.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDemoKey"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        @keyframes float1 {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(30px, -20px) scale(1.05); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        @keyframes float2 {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-20px, 30px) scale(1.03); }
+
+        body {
+            font-family: 'Space Grotesk', 'Syne', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+            color: #fff;
+            overflow-x: hidden;
         }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+
+        .glass-dark {
+            background: rgba(20, 20, 40, 0.4);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+        }
+
         @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .animate-float1 { animation: float1 8s ease-in-out infinite; }
-        .animate-float2 { animation: float2 10s ease-in-out infinite; }
-        .animate-slide-in { animation: slideIn 0.3s ease forwards; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 4px; }
-        select option { background: #0f0f1a; }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-glow { animation: glow 2s ease-in-out infinite; }
+        .animate-slide-in { animation: slideIn 0.6s ease-out; }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .neon-blue {
+            color: #3B82F6;
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.4);
+            border-radius: 4px;
+        }
+
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-glow {
+            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+            transition: all 0.3s;
+        }
+
+        .btn-glow:hover {
+            box-shadow: 0 0 60px rgba(59, 130, 246, 0.8);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .text-7xl { font-size: 2.5rem; }
+            .text-5xl { font-size: 2rem; }
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
+
     <script type="babel">
         const { useState, useEffect, useRef } = React;
 
-        // ─── MOCK DATA ────────────────────────────────────────────────────────────────
-        const MOCK_ITEMS = [
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MOCK DATA - PREMIUM ITEMS
+        // ═══════════════════════════════════════════════════════════════════════════
+        const PREMIUM_ITEMS = [
             {
                 id: 1,
-                title: "Apple AirPods Pro",
+                title: "iPhone 15 Pro Max",
                 category: "Electronics",
-                location: "Faculty of Engineering, Block C",
+                location: "Faculty of Science, Room 301",
+                lat: 6.5244,
+                lng: 3.3792,
                 date: "2 hours ago",
-                finder: "Chidi O.",
-                avatar: "CO",
-                avatarColor: "#6366f1",
-                image: null,
-                emoji: "🎧",
+                finder: "Sarah Johnson",
+                finderImg: "https://i.pravatar.cc/150?img=1",
+                emoji: "📱",
                 claimed: false,
-                description: "Found near the lab entrance. White case with small scratch.",
+                description: "Space Black, Mint condition, 256GB. Found with charging case.",
+                images: ["https://images.unsplash.com/photo-1511707267537-b85faf00021e?w=500"],
+                whatsapp: "234800000001"
             },
             {
                 id: 2,
-                title: "Student ID Card",
-                category: "Documents",
-                location: "Main Library, 2nd Floor",
-                date: "5 hours ago",
-                finder: "Amaka I.",
-                avatar: "AI",
-                avatarColor: "#ec4899",
-                image: null,
-                emoji: "🪪",
+                title: "Apple AirPods Pro 2",
+                category: "Electronics",
+                location: "Main Campus Cafeteria",
+                lat: 6.5250,
+                lng: 3.3800,
+                date: "4 hours ago",
+                finder: "Michael Chen",
+                finderImg: "https://i.pravatar.cc/150?img=2",
+                emoji: "🎧",
                 claimed: false,
-                description: "ID card found on a reading table. Name partially visible.",
+                description: "White case, noise cancellation enabled. Original box available.",
+                images: ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500"],
+                whatsapp: "234800000002"
             },
             {
                 id: 3,
-                title: "Samsung Galaxy S24",
-                category: "Electronics",
-                location: "University Cafeteria",
+                title: "Gold Rolex Watch",
+                category: "Luxury",
+                location: "Student Union Building",
+                lat: 6.5200,
+                lng: 3.3750,
                 date: "Yesterday",
-                finder: "Emeka B.",
-                avatar: "EB",
-                avatarColor: "#10b981",
-                image: null,
-                emoji: "📱",
-                claimed: true,
-                description: "Black phone with cracked screen protector. Found by the chairs.",
+                finder: "Emma Wilson",
+                finderImg: "https://i.pravatar.cc/150?img=3",
+                emoji: "⌚",
+                claimed: false,
+                description: "18K Gold Submariner. Engraved back. Excellent condition.",
+                images: ["https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=500"],
+                whatsapp: "234800000003"
             },
             {
                 id: 4,
-                title: "Navy Blue Backpack",
-                category: "Bags",
-                location: "Sports Complex, Changing Room",
-                date: "Yesterday",
-                finder: "Fatima A.",
-                avatar: "FA",
-                avatarColor: "#f59e0b",
-                image: null,
-                emoji: "🎒",
+                title: "MacBook Pro 16\"",
+                category: "Electronics",
+                location: "Engineering Block Library",
+                lat: 6.5260,
+                lng: 3.3810,
+                date: "3 days ago",
+                finder: "Alex Rodriguez",
+                finderImg: "https://i.pravatar.cc/150?img=4",
+                emoji: "💻",
                 claimed: false,
-                description: "Large navy backpack with a keychain. Books still inside.",
+                description: "M3 Max, Space Gray, 512GB SSD. Original charger included.",
+                images: ["https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500"],
+                whatsapp: "234800000004"
             },
             {
                 id: 5,
-                title: "Calculator (Casio FX)",
-                category: "Stationery",
-                location: "Exam Hall B",
-                date: "2 days ago",
-                finder: "Tobenna C.",
-                avatar: "TC",
-                avatarColor: "#8b5cf6",
-                image: null,
-                emoji: "🔢",
+                title: "Premium Leather Wallet",
+                category: "Accessories",
+                location: "Sports Complex Entrance",
+                lat: 6.5210,
+                lng: 3.3760,
+                date: "5 days ago",
+                finder: "Lisa Park",
+                finderImg: "https://i.pravatar.cc/150?img=5",
+                emoji: "💼",
                 claimed: false,
-                description: "Scientific calculator. Name written inside the battery cover.",
+                description: "Italian leather, Louis Vuitton. Contains ID & credit cards.",
+                images: ["https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500"],
+                whatsapp: "234800000005"
             },
             {
                 id: 6,
-                title: "Gold Wristwatch",
-                category: "Accessories",
-                location: "Admin Block Lobby",
-                date: "3 days ago",
-                finder: "Ngozi P.",
-                avatar: "NP",
-                avatarColor: "#ef4444",
-                image: null,
-                emoji: "⌚",
+                title: "Vintage Camera",
+                category: "Electronics",
+                location: "Art Building",
+                lat: 6.5270,
+                lng: 3.3820,
+                date: "1 week ago",
+                finder: "David Kim",
+                finderImg: "https://i.pravatar.cc/150?img=6",
+                emoji: "📷",
                 claimed: false,
-                description: "Gold-toned analogue watch. Inscription on the back.",
-            },
+                description: "Canon EOS R5. Includes 2 lenses and professional bag.",
+                images: ["https://images.unsplash.com/photo-1517638924702-92b37ca42b2d?w=500"],
+                whatsapp: "234800000006"
+            }
         ];
 
-        const MOCK_MESSAGES = [
-            { id: 1, sender: "them", text: "Hi! I think that's my backpack. Can we meet?", time: "10:23 AM" },
-            { id: 2, sender: "me", text: "Sure! I'm at the library right now. Come to the 2nd floor.", time: "10:25 AM" },
-            { id: 3, sender: "them", text: "On my way. Thanks so much 🙏", time: "10:26 AM" },
-            { id: 4, sender: "me", text: "No problem. I'll be at the blue chairs.", time: "10:27 AM" },
-        ];
-
-        const CATEGORIES = ["All", "Electronics", "Documents", "Bags", "Accessories", "Stationery", "Other"];
-
-        // ─── TOAST SYSTEM ─────────────────────────────────────────────────────────────
-        function Toast({ toasts, removeToast }) {
-            return (
-                <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-                    {toasts.map((t) => (
-                        <div
-                            key={t.id}
-                            className="flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl text-sm font-medium animate-slide-in"
-                            style={{
-                                background: t.type === "success" ? "#10b981" : t.type === "error" ? "#ef4444" : "#6366f1",
-                                color: "#fff",
-                                minWidth: 260,
-                            }}
-                        >
-                            <span className="text-lg">{t.type === "success" ? "✅" : t.type === "error" ? "❌" : "ℹ️"}</span>
-                            <span>{t.message}</span>
-                            <button onClick={() => removeToast(t.id)} className="ml-auto opacity-70 hover:opacity-100 text-lg leading-none">×</button>
-                        </div>
-                    ))}
-                </div>
-            );
-        }
-
-        // ─── NAVBAR ───────────────────────────────────────────────────────────────────
-        function Navbar({ dark, setDark, setModal, currentUser, setCurrentUser, setPage, addToast }) {
+        // ═══════════════════════════════════════════════════════════════════════════
+        // NAVBAR COMPONENT
+        // ═══════════════════════════════════════════════════════════════════════════
+        function Navbar({ onAuthClick, currentUser, onLogout }) {
             const [menuOpen, setMenuOpen] = useState(false);
+
             return (
-                <nav
-                    className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 md:px-8 h-16"
-                    style={{
-                        background: dark ? "rgba(10,10,20,0.85)" : "rgba(255,255,255,0.85)",
-                        backdropFilter: "blur(16px)",
-                        borderBottom: dark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.07)",
-                    }}
-                >
-                    {/* Logo */}
-                    <button onClick={() => setPage("home")} className="flex items-center gap-2 font-black text-xl tracking-tight" style={{background: 'none', border: 'none', cursor: 'pointer'}}>
-                        <span className="text-2xl">🔍</span>
-                        <span style={{ color: "#6366f1" }}>Uni</span>
-                        <span style={{ color: dark ? "#fff" : "#111" }}>Find</span>
-                    </button>
+                <nav className="fixed top-0 left-0 right-0 z-50 glass-dark border-b border-blue-500/20 animate-slide-in">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-20">
+                            {/* Logo */}
+                            <div className="flex items-center gap-2 group cursor-pointer">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center font-black text-lg">
+                                    U
+                                </div>
+                                <span className="font-black text-2xl gradient-text hidden sm:inline">UniFind</span>
+                            </div>
 
-                    {/* Desktop Nav */}
-                    <div className="hidden md:flex items-center gap-6 text-sm font-medium" style={{ color: dark ? "#ccc" : "#444" }}>
-                        <button onClick={() => setPage("home")} className="hover:text-indigo-500 transition-colors" style={{background: 'none', border: 'none', cursor: 'pointer', color: 'inherit'}}>Home</button>
-                        <button onClick={() => setPage("feed")} className="hover:text-indigo-500 transition-colors" style={{background: 'none', border: 'none', cursor: 'pointer', color: 'inherit'}}>Browse Items</button>
-                        {currentUser && (
-                            <button onClick={() => setPage("profile")} className="hover:text-indigo-500 transition-colors" style={{background: 'none', border: 'none', cursor: 'pointer', color: 'inherit'}}>My Profile</button>
-                        )}
-                    </div>
+                            {/* Desktop Menu */}
+                            <div className="hidden md:flex items-center gap-8">
+                                <button className="text-gray-300 hover:text-blue-400 transition text-sm font-semibold">Browse</button>
+                                <button className="text-gray-300 hover:text-blue-400 transition text-sm font-semibold">How it Works</button>
+                                <button className="text-gray-300 hover:text-blue-400 transition text-sm font-semibold">Contact</button>
+                            </div>
 
-                    {/* Right Controls */}
-                    <div className="flex items-center gap-2 md:gap-3">
-                        {/* Dark Mode Toggle */}
-                        <button
-                            onClick={() => setDark(!dark)}
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110"
-                            style={{ background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)", border: 'none', cursor: 'pointer' }}
-                        >
-                            {dark ? "☀️" : "🌙"}
-                        </button>
-
-                        {currentUser ? (
-                            <div className="flex items-center gap-2">
+                            {/* Auth Buttons */}
+                            <div className="flex items-center gap-4">
+                                {!currentUser ? (
+                                    <>
+                                        <button
+                                            onClick={() => onAuthClick('login')}
+                                            className="text-sm font-semibold text-gray-300 hover:text-blue-400 transition hidden sm:block"
+                                        >
+                                            Login
+                                        </button>
+                                        <button
+                                            onClick={() => onAuthClick('signup')}
+                                            className="btn-glow px-6 py-2 rounded-lg font-semibold text-sm text-white"
+                                        >
+                                            Sign Up
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="hidden sm:flex items-center gap-3">
+                                            <img src={currentUser.avatar} alt="User" className="w-8 h-8 rounded-full border border-blue-500" />
+                                            <span className="text-sm font-semibold">{currentUser.name}</span>
+                                        </div>
+                                        <button
+                                            onClick={onLogout}
+                                            className="text-sm font-semibold text-gray-300 hover:text-red-400 transition"
+                                        >
+                                            Logout
+                                        </button>
+                                    </>
+                                )}
+                                
+                                {/* Mobile Menu Button */}
                                 <button
-                                    onClick={() => setPage("profile")}
-                                    className="w-8 h-8 rounded-full text-white text-xs font-bold flex items-center justify-center"
-                                    style={{ background: "#6366f1", border: 'none', cursor: 'pointer' }}
+                                    onClick={() => setMenuOpen(!menuOpen)}
+                                    className="md:hidden text-white"
                                 >
-                                    {currentUser.name.slice(0, 2).toUpperCase()}
-                                </button>
-                                <button
-                                    onClick={() => { setCurrentUser(null); addToast("Signed out successfully", "success"); }}
-                                    className="hidden md:block text-xs px-3 py-1.5 rounded-lg font-medium"
-                                    style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", color: dark ? "#fff" : "#111", border: 'none', cursor: 'pointer' }}
-                                >
-                                    Sign Out
+                                    ☰
                                 </button>
                             </div>
-                        ) : (
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setModal("login")}
-                                    className="text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:opacity-80"
-                                    style={{ color: dark ? "#fff" : "#111", background: 'none', border: 'none', cursor: 'pointer' }}
-                                >
-                                    Login
-                                </button>
-                                <button
-                                    onClick={() => setModal("signup")}
-                                    className="text-sm font-semibold px-4 py-2 rounded-xl text-white transition-all hover:opacity-90"
-                                    style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", border: 'none', cursor: 'pointer' }}
-                                >
-                                    Sign Up
-                                </button>
-                            </div>
-                        )}
+                        </div>
 
                         {/* Mobile Menu */}
-                        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5" style={{background: 'none', border: 'none', cursor: 'pointer'}}>
-                            <span className="block w-5 h-0.5" style={{ background: dark ? "#fff" : "#111" }}></span>
-                            <span className="block w-5 h-0.5" style={{ background: dark ? "#fff" : "#111" }}></span>
-                            <span className="block w-5 h-0.5" style={{ background: dark ? "#fff" : "#111" }}></span>
-                        </button>
+                        {menuOpen && (
+                            <div className="md:hidden pb-4 border-t border-blue-500/20 glass-dark mt-2 p-4 rounded-lg">
+                                <button className="block w-full text-left py-2 text-gray-300 hover:text-blue-400 mb-2">Browse</button>
+                                <button className="block w-full text-left py-2 text-gray-300 hover:text-blue-400 mb-2">How it Works</button>
+                                <button className="block w-full text-left py-2 text-gray-300 hover:text-blue-400">Contact</button>
+                            </div>
+                        )}
                     </div>
-
-                    {/* Mobile Dropdown */}
-                    {menuOpen && (
-                        <div
-                            className="absolute top-16 left-0 right-0 flex flex-col py-3 text-sm font-medium"
-                            style={{ background: dark ? "#0f0f1a" : "#fff", borderBottom: "1px solid rgba(99,102,241,0.2)" }}
-                        >
-                            {["Home", "Browse Items"].map((item, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => { setPage(item === "Home" ? "home" : "feed"); setMenuOpen(false); }}
-                                    className="px-6 py-3 text-left hover:bg-indigo-500/10 transition-colors"
-                                    style={{ color: dark ? "#ccc" : "#444", background: 'none', border: 'none', cursor: 'pointer' }}
-                                >
-                                    {item}
-                                </button>
-                            ))}
-                        </div>
-                    )}
                 </nav>
             );
         }
 
-        // ─── HERO (LANDING PAGE) ──────────────────────────────────────────────────────
-        function HeroPage({ dark, setModal, setPage, currentUser, addToast }) {
+        // ═══════════════════════════════════════════════════════════════════════════
+        // HERO SECTION - THE EYE CATCHER
+        // ═══════════════════════════════════════════════════════════════════════════
+        function HeroSection({ onAuthClick }) {
+            const [searchTerm, setSearchTerm] = useState("");
             const [activeSlide, setActiveSlide] = useState(0);
-            const slides = MOCK_ITEMS.slice(0, 4);
 
             useEffect(() => {
-                const t = setInterval(() => setActiveSlide((s) => (s + 1) % slides.length), 3500);
-                return () => clearInterval(t);
+                const timer = setInterval(() => {
+                    setActiveSlide((prev) => (prev + 1) % PREMIUM_ITEMS.length);
+                }, 4000);
+                return () => clearInterval(timer);
             }, []);
 
-            const stats = [
-                { num: "1,240+", label: "Items Recovered" },
-                { num: "89%", label: "Return Rate" },
-                { num: "3,500+", label: "Active Students" },
-                { num: "12", label: "Campuses" },
-            ];
-
             return (
-                <div className="min-h-screen" style={{ background: dark ? "#070710" : "#f8f7ff" }}>
-                    {/* ── HERO SECTION ── */}
-                    <section
-                        className="relative flex flex-col items-center justify-center min-h-screen px-4 text-center overflow-hidden"
-                        style={{ paddingTop: 80 }}
-                    >
-                        {/* Animated background blobs */}
-                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                            <div
-                                className="absolute w-96 h-96 rounded-full opacity-20 blur-3xl animate-float1"
-                                style={{
-                                    background: "radial-gradient(circle, #6366f1, transparent)",
-                                    top: "10%", left: "5%",
-                                }}
-                            />
-                            <div
-                                className="absolute w-80 h-80 rounded-full opacity-15 blur-3xl animate-float2"
-                                style={{
-                                    background: "radial-gradient(circle, #8b5cf6, transparent)",
-                                    bottom: "10%", right: "5%",
-                                }}
-                            />
-                            <div
-                                className="absolute w-64 h-64 rounded-full opacity-10 blur-3xl animate-float1"
-                                style={{
-                                    background: "radial-gradient(circle, #ec4899, transparent)",
-                                    top: "40%", right: "20%",
-                                }}
-                            />
-                            {/* Grid pattern */}
-                            <div
-                                className="absolute inset-0 opacity-5"
-                                style={{
-                                    backgroundImage: dark
-                                        ? "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg,rgba(255,255,255,0.1) 1px, transparent 1px)"
-                                        : "linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px), linear-gradient(90deg,rgba(0,0,0,0.07) 1px, transparent 1px)",
-                                    backgroundSize: "40px 40px",
-                                }}
-                            />
+                <div className="min-h-screen pt-20 pb-20 relative overflow-hidden">
+                    {/* Animated Background Elements */}
+                    <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
+                    <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" style={{animationDelay: '1s'}}></div>
+
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                        {/* Main Headline */}
+                        <div className="text-center mb-12 animate-slide-in">
+                            <h1 className="text-6xl md:text-7xl font-black mb-6 leading-tight">
+                                <span className="block mb-2">Find Your Lost</span>
+                                <span className="gradient-text text-7xl md:text-8xl">Treasures</span>
+                            </h1>
+                            <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
+                                The Premium Lost & Found Marketplace for University Students. 
+                                <span className="text-blue-400"> Drop a pin. Get it back.</span>
+                            </p>
                         </div>
 
-                        {/* Badge */}
-                        <div
-                            className="relative inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-6"
-                            style={{
-                                background: dark ? "rgba(99,102,241,0.15)" : "rgba(99,102,241,0.1)",
-                                border: "1px solid rgba(99,102,241,0.3)",
-                                color: "#6366f1",
-                            }}
-                        >
-                            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                            Live on Campus · 12 Universities
-                        </div>
-
-                        {/* Headline */}
-                        <h1
-                            className="relative text-5xl md:text-7xl font-black leading-tight mb-6 max-w-4xl"
-                            style={{ color: dark ? "#fff" : "#0a0a14" }}
-                        >
-                            Lost Something?{" "}
-                            <span
-                                className="relative inline-block"
-                                style={{
-                                    background: "linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899)",
-                                    WebkitBackgroundClip: "text",
-                                    WebkitTextFillColor: "transparent",
-                                }}
-                            >
-                                Find It Here.
-                            </span>
-                        </h1>
-
-                        <p
-                            className="relative text-lg md:text-xl max-w-xl mb-10 leading-relaxed"
-                            style={{ color: dark ? "#9ca3af" : "#555" }}
-                        >
-                            UniFind connects students to report, search, and recover lost items
-                            across your university campus — fast, trusted, and free.
-                        </p>
-
-                        {/* CTA Buttons */}
-                        <div className="relative flex flex-col sm:flex-row gap-4 mb-16">
-                            <button
-                                onClick={() => currentUser ? setPage("report") : setModal("signup")}
-                                className="group flex items-center justify-center gap-2 px-8 py-4 rounded-2xl text-white font-bold text-base transition-all hover:scale-105 hover:shadow-2xl"
-                                style={{
-                                    background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                                    boxShadow: "0 8px 30px rgba(99,102,241,0.4)",
-                                    border: 'none',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                📍 Report a Found Item
-                                <span className="group-hover:translate-x-1 transition-transform">→</span>
-                            </button>
-                            <button
-                                onClick={() => setPage("feed")}
-                                className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl font-bold text-base transition-all hover:scale-105"
-                                style={{
-                                    background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
-                                    border: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.1)",
-                                    color: dark ? "#fff" : "#111",
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                🔍 Browse Lost Items
-                            </button>
-                        </div>
-
-                        {/* Stats Bar */}
-                        <div
-                            className="relative grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 px-8 py-6 rounded-3xl max-w-3xl w-full"
-                            style={{
-                                background: dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.8)",
-                                border: dark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(0,0,0,0.07)",
-                                backdropFilter: "blur(20px)",
-                            }}
-                        >
-                            {stats.map((s, i) => (
-                                <div key={i} className="text-center">
-                                    <div
-                                        className="text-2xl md:text-3xl font-black"
-                                        style={{
-                                            background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                                            WebkitBackgroundClip: "text",
-                                            WebkitTextFillColor: "transparent",
-                                        }}
-                                    >
-                                        {s.num}
-                                    </div>
-                                    <div className="text-xs mt-1" style={{ color: dark ? "#6b7280" : "#888" }}>{s.label}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* ── CAROUSEL: RECENTLY FOUND ── */}
-                    <section className="px-4 py-20 max-w-6xl mx-auto">
-                        <div className="flex items-center justify-between mb-8">
-                            <div>
-                                <h2 className="text-3xl font-black" style={{ color: dark ? "#fff" : "#0a0a14" }}>
-                                    Recently Found 🏷️
-                                </h2>
-                                <p className="text-sm mt-1" style={{ color: dark ? "#6b7280" : "#888" }}>
-                                    Items waiting to be claimed by their owners
-                                </p>
+                        {/* 3D-Style Search Bar */}
+                        <div className="max-w-2xl mx-auto mb-16 animate-slide-in" style={{animationDelay: '0.2s'}}>
+                            <div className="glass-dark p-2 rounded-2xl flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Search for iPhone, wallet, laptop... 🔍"
+                                    className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none px-6 py-4 text-lg"
+                                />
+                                <button className="btn-glow px-8 py-4 rounded-xl font-bold text-white">
+                                    Search
+                                </button>
                             </div>
-                            <button
-                                onClick={() => setPage("feed")}
-                                className="text-sm font-semibold px-4 py-2 rounded-xl"
-                                style={{ color: "#6366f1", background: "rgba(99,102,241,0.1)", border: 'none', cursor: 'pointer' }}
-                            >
-                                View All →
-                            </button>
-                        </div>
-
-                        {/* Swiper-style carousel (CSS-driven) */}
-                        <div className="relative overflow-hidden rounded-3xl" style={{ height: 280 }}>
-                            {slides.map((item, i) => (
-                                <div
-                                    key={item.id}
-                                    className="absolute inset-0 flex items-center gap-6 px-8 transition-all duration-700"
-                                    style={{
-                                        opacity: i === activeSlide ? 1 : 0,
-                                        transform: `translateX(${(i - activeSlide) * 100}%)`,
-                                        background: dark
-                                            ? "linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.08))"
-                                            : "linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.04))",
-                                        border: dark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(99,102,241,0.15)",
-                                    }}
-                                >
-                                    <div
-                                        className="text-8xl flex-shrink-0 w-32 h-32 rounded-2xl flex items-center justify-center"
-                                        style={{ background: dark ? "rgba(255,255,255,0.06)" : "rgba(99,102,241,0.08)" }}
-                                    >
-                                        {item.emoji}
-                                    </div>
-                                    <div className="flex-1">
-                                        <span
-                                            className="text-xs font-semibold px-2 py-1 rounded-full mb-3 inline-block"
-                                            style={{ background: "rgba(99,102,241,0.15)", color: "#6366f1" }}
-                                        >
-                                            {item.category}
-                                        </span>
-                                        <h3 className="text-2xl font-black mb-2" style={{ color: dark ? "#fff" : "#0a0a14" }}>
-                                            {item.title}
-                                        </h3>
-                                        <p className="text-sm mb-3" style={{ color: dark ? "#9ca3af" : "#666" }}>
-                                            📍 {item.location}
-                                        </p>
-                                        <p className="text-sm" style={{ color: dark ? "#6b7280" : "#999" }}>
-                                            Found by <strong style={{ color: dark ? "#c4b5fd" : "#6366f1" }}>{item.finder}</strong> · {item.date}
-                                        </p>
-                                        <button
-                                            onClick={() => setPage("feed")}
-                                            className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold text-white"
-                                            style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", border: 'none', cursor: 'pointer' }}
-                                        >
-                                            View & Claim →
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {/* Dots */}
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                                {slides.map((_, i) => (
+                            <div className="mt-4 flex justify-center gap-2">
+                                {["📱 Electronics", "💼 Accessories", "⌚ Luxury"].map((tag, i) => (
                                     <button
                                         key={i}
-                                        onClick={() => setActiveSlide(i)}
-                                        className="rounded-full transition-all"
-                                        style={{
-                                            width: i === activeSlide ? 24 : 8,
-                                            height: 8,
-                                            background: i === activeSlide ? "#6366f1" : "rgba(99,102,241,0.3)",
-                                            border: 'none',
-                                            cursor: 'pointer'
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* ── HOW IT WORKS ── */}
-                    <section className="px-4 py-16 max-w-6xl mx-auto">
-                        <h2 className="text-3xl font-black text-center mb-12" style={{ color: dark ? "#fff" : "#0a0a14" }}>
-                            How UniFind Works ⚡
-                        </h2>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {[
-                                { icon: "📍", step: "01", title: "Pin the Location", desc: "Finder drops a pin on the interactive campus map exactly where the item was discovered." },
-                                { icon: "📢", step: "02", title: "Post to Feed", desc: "Item appears instantly on the discovery feed. Students across campus get notified." },
-                                { icon: "💬", step: "03", title: "Chat & Recover", desc: "Owner messages the finder through secure in-app chat. Meet up and reunite!" },
-                            ].map((step, i) => (
-                                <div
-                                    key={i}
-                                    className="relative p-8 rounded-3xl group hover:-translate-y-1 transition-all duration-300"
-                                    style={{
-                                        background: dark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.9)",
-                                        border: dark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(0,0,0,0.07)",
-                                    }}
-                                >
-                                    <div
-                                        className="text-xs font-black mb-4 opacity-30"
-                                        style={{ color: "#6366f1", fontSize: 40, lineHeight: 1 }}
+                                        className="glass px-4 py-2 rounded-full text-sm text-gray-300 hover:text-blue-400 hover:border-blue-400 transition"
                                     >
-                                        {step.step}
-                                    </div>
-                                    <div className="text-4xl mb-4">{step.icon}</div>
-                                    <h3 className="text-lg font-bold mb-2" style={{ color: dark ? "#fff" : "#0a0a14" }}>
-                                        {step.title}
-                                    </h3>
-                                    <p className="text-sm leading-relaxed" style={{ color: dark ? "#9ca3af" : "#666" }}>
-                                        {step.desc}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* ── CTA BANNER ── */}
-                    <section className="px-4 py-8 pb-20 max-w-4xl mx-auto">
-                        <div
-                            className="relative p-12 rounded-3xl text-center overflow-hidden"
-                            style={{
-                                background: "linear-gradient(135deg,#4f46e5,#7c3aed,#db2777)",
-                            }}
-                        >
-                            <h2 className="relative text-3xl md:text-4xl font-black text-white mb-4">
-                                Found something on campus? 🙌
-                            </h2>
-                            <p className="relative text-white/80 mb-8 text-lg">
-                                Be a hero. Post it in 30 seconds and reunite someone with their belongings.
-                            </p>
-                            <button
-                                onClick={() => currentUser ? setPage("report") : setModal("signup")}
-                                className="px-10 py-4 rounded-2xl font-bold text-lg bg-white transition-all hover:scale-105"
-                                style={{ color: "#4f46e5", border: 'none', cursor: 'pointer' }}
-                            >
-                                Report a Found Item →
-                            </button>
-                        </div>
-                    </section>
-                </div>
-            );
-        }
-
-        // ─── ITEM CARD ────────────────────────────────────────────────────────────────
-        function ItemCard({ item, dark, onClaim, onChat }) {
-            const [hovered, setHovered] = useState(false);
-            return (
-                <div
-                    onMouseEnter={() => setHovered(true)}
-                    onMouseLeave={() => setHovered(false)}
-                    className="relative rounded-3xl overflow-hidden transition-all duration-300 flex flex-col"
-                    style={{
-                        background: dark ? "rgba(255,255,255,0.04)" : "#fff",
-                        border: dark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(0,0,0,0.08)",
-                        transform: hovered ? "translateY(-4px)" : "none",
-                        boxShadow: hovered
-                            ? "0 20px 60px rgba(99,102,241,0.2)"
-                            : "0 2px 16px rgba(0,0,0,0.06)",
-                    }}
-                >
-                    {/* Image / Emoji area */}
-                    <div
-                        className="relative flex items-center justify-center text-7xl"
-                        style={{
-                            height: 160,
-                            background: dark
-                                ? "linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.06))"
-                                : "linear-gradient(135deg,rgba(99,102,241,0.07),rgba(236,72,153,0.04))",
-                        }}
-                    >
-                        {item.emoji}
-                        {item.claimed && (
-                            <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.55)" }}>
-                                <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style={{ background: "#10b981" }}>
-                                    ✓ CLAIMED
-                                </span>
-                            </div>
-                        )}
-                        <span
-                            className="absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-full"
-                            style={{ background: "rgba(99,102,241,0.15)", color: "#6366f1" }}
-                        >
-                            {item.category}
-                        </span>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-5 flex-1 flex flex-col">
-                        <h3 className="font-bold text-base mb-1" style={{ color: dark ? "#fff" : "#0a0a14" }}>
-                            {item.title}
-                        </h3>
-                        <p className="text-xs mb-3 line-clamp-2" style={{ color: dark ? "#9ca3af" : "#777" }}>
-                            {item.description}
-                        </p>
-                        <div className="flex items-center gap-1.5 text-xs mb-1" style={{ color: dark ? "#6b7280" : "#999" }}>
-                            <span>📍</span> {item.location}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs mb-4" style={{ color: dark ? "#6b7280" : "#999" }}>
-                            <span>🕐</span> {item.date}
-                        </div>
-
-                        {/* Finder */}
-                        <div className="flex items-center gap-2 mb-4">
-                            <div
-                                className="w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center"
-                                style={{ background: item.avatarColor }}
-                            >
-                                {item.avatar}
-                            </div>
-                            <span className="text-xs" style={{ color: dark ? "#9ca3af" : "#777" }}>
-                                Found by <strong style={{ color: dark ? "#e5e7eb" : "#333" }}>{item.finder}</strong>
-                            </span>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-2 mt-auto">
-                            <button
-                                onClick={() => onClaim(item)}
-                                disabled={item.claimed}
-                                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                style={{ background: item.claimed ? "#6b7280" : "linear-gradient(135deg,#6366f1,#8b5cf6)", border: 'none', cursor: item.claimed ? 'not-allowed' : 'pointer' }}
-                            >
-                                {item.claimed ? "Claimed" : "🙋 Claim"}
-                            </button>
-                            <button
-                                onClick={() => onChat(item)}
-                                className="px-3 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-                                style={{
-                                    background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)",
-                                    color: dark ? "#fff" : "#333",
-                                    border: 'none',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                💬
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // ─── DISCOVERY FEED ───────────────────────────────────────────────────────────
-        function FeedPage({ dark, addToast, setPage, setChatItem, currentUser, setModal }) {
-            const [items, setItems] = useState(MOCK_ITEMS);
-            const [search, setSearch] = useState("");
-            const [category, setCategory] = useState("All");
-
-            const filtered = items.filter((item) => {
-                const matchSearch =
-                    item.title.toLowerCase().includes(search.toLowerCase()) ||
-                    item.location.toLowerCase().includes(search.toLowerCase());
-                const matchCat = category === "All" || item.category === category;
-                return matchSearch && matchCat;
-            });
-
-            const handleClaim = (item) => {
-                if (!currentUser) { setModal("login"); return; }
-                setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, claimed: true } : i)));
-                addToast(`Claim submitted for "${item.title}"! The finder has been notified.`, "success");
-            };
-
-            const handleChat = (item) => {
-                if (!currentUser) { setModal("login"); return; }
-                setChatItem(item);
-                setPage("chat");
-            };
-
-            return (
-                <div className="min-h-screen pt-20 pb-12" style={{ background: dark ? "#070710" : "#f8f7ff" }}>
-                    <div className="max-w-6xl mx-auto px-4">
-                        {/* Header */}
-                        <div className="mb-8">
-                            <h1 className="text-3xl font-black mb-2" style={{ color: dark ? "#fff" : "#0a0a14" }}>
-                                Discovery Feed 🔍
-                            </h1>
-                            <p className="text-sm" style={{ color: dark ? "#9ca3af" : "#888" }}>
-                                {filtered.length} item{filtered.length !== 1 ? "s" : ""} found across campus
-                            </p>
-                        </div>
-
-                        {/* Search + Filter */}
-                        <div className="flex flex-col md:flex-row gap-3 mb-8">
-                            <div className="relative flex-1">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg pointer-events-none">🔍</span>
-                                <input
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Search items, locations..."
-                                    className="w-full pl-12 pr-4 py-3 rounded-2xl text-sm outline-none transition-all"
-                                    style={{
-                                        background: dark ? "rgba(255,255,255,0.06)" : "#fff",
-                                        border: dark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)",
-                                        color: dark ? "#fff" : "#111",
-                                    }}
-                                />
-                            </div>
-                            <div className="flex gap-2 flex-wrap">
-                                {CATEGORIES.map((cat) => (
-                                    <button
-                                        key={cat}
-                                        onClick={() => setCategory(cat)}
-                                        className="px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-                                        style={{
-                                            background:
-                                                category === cat
-                                                    ? "linear-gradient(135deg,#6366f1,#8b5cf6)"
-                                                    : dark
-                                                    ? "rgba(255,255,255,0.06)"
-                                                    : "rgba(0,0,0,0.05)",
-                                            color: category === cat ? "#fff" : dark ? "#9ca3af" : "#666",
-                                            border: 'none',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {cat}
+                                        {tag}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Grid */}
-                        {filtered.length === 0 ? (
-                            <div className="text-center py-20" style={{ color: dark ? "#6b7280" : "#aaa" }}>
-                                <div className="text-6xl mb-4">😕</div>
-                                <p className="font-semibold">No items match your search</p>
+                        {/* Carousel - High Priority Items */}
+                        <div className="mb-12 animate-slide-in" style={{animationDelay: '0.4s'}}>
+                            <h2 className="text-2xl font-black mb-6">🔥 High Priority Items</h2>
+                            <div className="glass-dark rounded-2xl overflow-hidden p-8">
+                                <div className="flex flex-col md:flex-row gap-8 items-center">
+                                    {/* Carousel Item */}
+                                    <div className="flex-1">
+                                        <div className="relative">
+                                            <img
+                                                src={PREMIUM_ITEMS[activeSlide].images[0]}
+                                                alt={PREMIUM_ITEMS[activeSlide].title}
+                                                className="w-full h-80 object-cover rounded-xl"
+                                            />
+                                            <div className="absolute top-4 right-4 glass px-4 py-2 rounded-full">
+                                                <span className="neon-blue font-bold">{activeSlide + 1}/{PREMIUM_ITEMS.length}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Item Details */}
+                                    <div className="flex-1">
+                                        <div className="text-4xl mb-4">{PREMIUM_ITEMS[activeSlide].emoji}</div>
+                                        <h3 className="text-3xl font-black mb-2">{PREMIUM_ITEMS[activeSlide].title}</h3>
+                                        <p className="text-gray-400 mb-4 text-lg">{PREMIUM_ITEMS[activeSlide].description}</p>
+                                        
+                                        <div className="space-y-3 mb-6">
+                                            <div className="flex items-center gap-2 text-gray-300">
+                                                <span>📍</span> {PREMIUM_ITEMS[activeSlide].location}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-gray-300">
+                                                <span>⏰</span> {PREMIUM_ITEMS[activeSlide].date}
+                                            </div>
+                                            <div className="flex items-center gap-3 pt-4">
+                                                <img src={PREMIUM_ITEMS[activeSlide].finderImg} alt="Finder" className="w-10 h-10 rounded-full border border-blue-500" />
+                                                <div>
+                                                    <p className="text-sm text-gray-400">Found by</p>
+                                                    <p className="font-bold">{PREMIUM_ITEMS[activeSlide].finder}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-4">
+                                            <a
+                                                href={`https://wa.me/${PREMIUM_ITEMS[activeSlide].whatsapp}?text=Hi, I saw the ${PREMIUM_ITEMS[activeSlide].title} you posted on UniFind. Is it still available?`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="btn-glow px-6 py-3 rounded-xl font-bold text-white flex items-center gap-2 flex-1 justify-center"
+                                            >
+                                                💬 WhatsApp Finder
+                                            </a>
+                                            <button className="glass px-6 py-3 rounded-xl font-bold text-blue-400 hover:text-blue-300 transition">
+                                                ❤️
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Carousel Dots */}
+                                <div className="flex justify-center gap-3 mt-8">
+                                    {PREMIUM_ITEMS.map((_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setActiveSlide(i)}
+                                            className={`transition-all ${i === activeSlide ? 'bg-blue-500 w-8' : 'bg-gray-600 w-4'} h-2 rounded-full`}
+                                        ></button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* CTA Button */}
+                        <div className="text-center animate-slide-in" style={{animationDelay: '0.6s'}}>
+                            <button
+                                onClick={() => onAuthClick('signup')}
+                                className="btn-glow px-10 py-4 rounded-xl font-black text-white text-lg hover:scale-110 transition-transform"
+                            >
+                                🚀 Post Your Found Item Now
+                            </button>
+                            <p className="text-gray-400 mt-4">Or scroll to browse all lost items →</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ITEM CARD COMPONENT - INTERACTIVE & PROFESSIONAL
+        // ═══════════════════════════════════════════════════════════════════════════
+        function ItemCard({ item, onViewMap }) {
+            const [liked, setLiked] = useState(false);
+
+            return (
+                <div className="glass-dark rounded-2xl overflow-hidden card-hover group animate-slide-in">
+                    {/* Image Container */}
+                    <div className="relative h-64 overflow-hidden bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+                        <img
+                            src={item.images[0]}
+                            alt={item.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        <div className="absolute top-4 right-4 glass px-3 py-1 rounded-full">
+                            <span className="text-sm font-bold text-blue-400">{item.category}</span>
+                        </div>
+                        <div className="absolute bottom-4 left-4 text-5xl">{item.emoji}</div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                        <h3 className="text-2xl font-black mb-2 group-hover:text-blue-400 transition">{item.title}</h3>
+                        <p className="text-gray-400 text-sm mb-4 line-clamp-2">{item.description}</p>
+
+                        {/* Location & Time */}
+                        <div className="space-y-2 mb-4 text-sm text-gray-400">
+                            <div className="flex items-center gap-2">
+                                <span className="text-lg">📍</span>
+                                {item.location}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-lg">⏰</span>
+                                {item.date}
+                            </div>
+                        </div>
+
+                        {/* Finder Info */}
+                        <div className="flex items-center gap-3 mb-6 pb-6 border-b border-blue-500/20">
+                            <img src={item.finderImg} alt="Finder" className="w-10 h-10 rounded-full border border-blue-500" />
+                            <div>
+                                <p className="text-xs text-gray-500">Found by</p>
+                                <p className="font-bold text-sm">{item.finder}</p>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3">
+                            <a
+                                href={`https://wa.me/${item.whatsapp}?text=Hi, I saw the ${item.title} you posted on UniFind. Is it still available?`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 btn-glow py-3 rounded-lg font-bold text-white text-center transition-all"
+                            >
+                                💬 Contact Finder
+                            </a>
+                            <button
+                                onClick={() => setLiked(!liked)}
+                                className={`px-4 py-3 rounded-lg transition-all ${liked ? 'bg-red-500/30 text-red-400' : 'glass text-gray-400'}`}
+                            >
+                                {liked ? '❤️' : '🤍'}
+                            </button>
+                            <button
+                                onClick={() => onViewMap(item)}
+                                className="px-4 py-3 rounded-lg glass text-gray-400 hover:text-blue-400 transition"
+                                title="View on map"
+                            >
+                                🗺️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MAIN DASHBOARD/GALLERY
+        // ═══════════════════════════════════════════════════════════════════════════
+        function DashboardPage({ onViewMap, onAuthClick, currentUser }) {
+            const [filteredItems, setFilteredItems] = useState(PREMIUM_ITEMS);
+            const [selectedCategory, setSelectedCategory] = useState("All");
+            const [searchTerm, setSearchTerm] = useState("");
+
+            const categories = ["All", "Electronics", "Luxury", "Accessories"];
+
+            useEffect(() => {
+                let items = PREMIUM_ITEMS;
+
+                if (selectedCategory !== "All") {
+                    items = items.filter(item => item.category === selectedCategory);
+                }
+
+                if (searchTerm) {
+                    items = items.filter(item =>
+                        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        item.description.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                }
+
+                setFilteredItems(items);
+            }, [selectedCategory, searchTerm]);
+
+            return (
+                <div className="min-h-screen pb-20">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
+                        {/* Header */}
+                        <div className="mb-12 animate-slide-in">
+                            <h2 className="text-5xl font-black mb-4 gradient-text">All Lost Items</h2>
+                            <p className="text-xl text-gray-400">Browse and find your lost belongings</p>
+                        </div>
+
+                        {/* Search & Filter */}
+                        <div className="mb-12 space-y-6 animate-slide-in" style={{animationDelay: '0.1s'}}>
+                            {/* Search Bar */}
+                            <div className="glass-dark rounded-2xl p-2 flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Search items... 🔍"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none px-6 py-3"
+                                />
+                            </div>
+
+                            {/* Category Filter */}
+                            <div className="flex gap-3 flex-wrap">
+                                {categories.map(category => (
+                                    <button
+                                        key={category}
+                                        onClick={() => setSelectedCategory(category)}
+                                        className={`px-6 py-3 rounded-full font-bold transition-all ${
+                                            selectedCategory === category
+                                                ? 'btn-glow text-white'
+                                                : 'glass text-gray-300 hover:text-blue-400'
+                                        }`}
+                                    >
+                                        {category}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Items Grid */}
+                        {filteredItems.length === 0 ? (
+                            <div className="text-center py-20">
+                                <div className="text-6xl mb-4">😔</div>
+                                <p className="text-xl text-gray-400">No items found. Try different filters.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                                {filtered.map((item) => (
-                                    <ItemCard
-                                        key={item.id}
-                                        item={item}
-                                        dark={dark}
-                                        onClaim={handleClaim}
-                                        onChat={handleChat}
-                                    />
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                                {filteredItems.map((item, idx) => (
+                                    <div key={item.id} style={{animationDelay: `${idx * 0.1}s`}}>
+                                        <ItemCard item={item} onViewMap={onViewMap} />
+                                    </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* CTA Section */}
+                        {!currentUser && (
+                            <div className="glass-dark rounded-2xl p-12 text-center mb-8">
+                                <h3 className="text-3xl font-black mb-4">Found Something? Become a Hero!</h3>
+                                <p className="text-gray-300 mb-8 text-lg">Post your found items and help students recover their belongings.</p>
+                                <button
+                                    onClick={() => onAuthClick('signup')}
+                                    className="btn-glow px-10 py-4 rounded-xl font-bold text-white text-lg"
+                                >
+                                    📸 Post Item Now
+                                </button>
                             </div>
                         )}
                     </div>
@@ -768,374 +625,266 @@
             );
         }
 
-        // ─── MAP REPORT PAGE ──────────────────────────────────────────────────────────
-        function ReportPage({ dark, addToast, setPage }) {
-            const [pin, setPin] = useState(null);
-            const [form, setForm] = useState({ title: "", category: "Electronics", description: "" });
-            const [submitted, setSubmitted] = useState(false);
+        // ═══════════════════════════════════════════════════════════════════════════
+        // AUTH MODAL - WhatsApp Centric
+        // ═══════════════════════════════════════════════════════════════════════════
+        function AuthModal({ mode, onClose, onLogin, onSignup }) {
+            const [whatsapp, setWhatsapp] = useState("");
+            const [name, setName] = useState("");
+            const [email, setEmail] = useState("");
 
-            // Mock map grid (replace with Google Maps API in production)
-            const mapLocations = [
-                { x: 30, y: 25, label: "Faculty of Engineering" },
-                { x: 65, y: 20, label: "Main Library" },
-                { x: 50, y: 50, label: "Admin Block" },
-                { x: 20, y: 65, label: "Cafeteria" },
-                { x: 75, y: 60, label: "Sports Complex" },
-                { x: 45, y: 75, label: "Faculty of Science" },
-            ];
-
-            const handleMapClick = (e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                setPin({ x, y });
-            };
+            const isSignup = mode === 'signup';
 
             const handleSubmit = () => {
-                if (!form.title || !pin) {
-                    addToast("Please fill in the title and pin a location on the map", "error");
-                    return;
+                if (isSignup) {
+                    if (!whatsapp || !name || !email) {
+                        alert("Please fill all fields");
+                        return;
+                    }
+                    onSignup({ name, email, whatsapp, avatar: `https://i.pravatar.cc/150?u=${email}` });
+                } else {
+                    if (!whatsapp) {
+                        alert("Please enter WhatsApp number");
+                        return;
+                    }
+                    onLogin({ whatsapp });
                 }
-                setSubmitted(true);
-                addToast(`"${form.title}" has been posted to the feed! 🎉`, "success");
-                setTimeout(() => setPage("feed"), 2000);
-            };
-
-            if (submitted) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center pt-16" style={{ background: dark ? "#070710" : "#f8f7ff" }}>
-                        <div className="text-center">
-                            <div className="text-8xl mb-6">🎉</div>
-                            <h2 className="text-3xl font-black mb-3" style={{ color: dark ? "#fff" : "#0a0a14" }}>Posted Successfully!</h2>
-                            <p style={{ color: dark ? "#9ca3af" : "#666" }}>Redirecting to the feed...</p>
-                        </div>
-                    </div>
-                );
-            }
-
-            return (
-                <div className="min-h-screen pt-20 pb-12" style={{ background: dark ? "#070710" : "#f8f7ff" }}>
-                    <div className="max-w-5xl mx-auto px-4">
-                        <div className="mb-8">
-                            <h1 className="text-3xl font-black mb-2" style={{ color: dark ? "#fff" : "#0a0a14" }}>
-                                Report a Found Item 📍
-                            </h1>
-                            <p className="text-sm" style={{ color: dark ? "#9ca3af" : "#888" }}>
-                                Pin the exact location on the map and fill in the details
-                            </p>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {/* MAP */}
-                            <div
-                                className="relative rounded-3xl overflow-hidden cursor-crosshair"
-                                style={{
-                                    height: 400,
-                                    background: dark
-                                        ? "linear-gradient(135deg,#0d1117,#161b27)"
-                                        : "linear-gradient(135deg,#e8f4fd,#d1e8f7)",
-                                    border: dark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(99,102,241,0.15)",
-                                }}
-                                onClick={handleMapClick}
-                            >
-                                {/* Grid lines */}
-                                <div
-                                    className="absolute inset-0 pointer-events-none opacity-10"
-                                    style={{
-                                        backgroundImage: "linear-gradient(rgba(99,102,241,0.5) 1px, transparent 1px), linear-gradient(90deg,rgba(99,102,241,0.5) 1px, transparent 1px)",
-                                        backgroundSize: "40px 40px",
-                                    }}
-                                />
-
-                                {/* Map label */}
-                                <div
-                                    className="absolute top-3 left-3 text-xs font-semibold px-3 py-1.5 rounded-full"
-                                    style={{ background: dark ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.8)", color: dark ? "#9ca3af" : "#555" }}
-                                >
-                                    🗺️ Campus Map · Click to Drop Pin
-                                </div>
-
-                                {/* Location markers */}
-                                {mapLocations.map((loc, i) => (
-                                    <div
-                                        key={i}
-                                        className="absolute flex flex-col items-center pointer-events-none"
-                                        style={{ left: `${loc.x}%`, top: `${loc.y}%`, transform: "translate(-50%,-100%)" }}
-                                    >
-                                        <div
-                                            className="text-xs font-semibold px-2 py-1 rounded-lg mb-1 whitespace-nowrap"
-                                            style={{ background: dark ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.9)", color: dark ? "#9ca3af" : "#555", fontSize: 10 }}
-                                        >
-                                            {loc.label}
-                                        </div>
-                                        <div className="w-2 h-2 rounded-full bg-indigo-400 opacity-60" />
-                                    </div>
-                                ))}
-
-                                {/* User pin */}
-                                {pin && (
-                                    <div
-                                        className="absolute pointer-events-none"
-                                        style={{ left: `${pin.x}%`, top: `${pin.y}%`, transform: "translate(-50%,-100%)" }}
-                                    >
-                                        <div className="flex flex-col items-center">
-                                            <div
-                                                className="px-2 py-1 rounded-lg text-xs font-bold text-white mb-1"
-                                                style={{ background: "#ef4444" }}
-                                            >
-                                                📍 Found Here
-                                            </div>
-                                            <div
-                                                className="w-4 h-4 rounded-full border-2 border-white"
-                                                style={{ background: "#ef4444", boxShadow: "0 0 0 4px rgba(239,68,68,0.3)" }}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-
-                                {!pin && (
-                                    <div
-                                        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-medium px-4 py-2 rounded-full"
-                                        style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}
-                                    >
-                                        👆 Click anywhere on the map to drop a pin
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* FORM */}
-                            <div className="flex flex-col gap-4">
-                                {[
-                                    { label: "Item Title *", key: "title", placeholder: "e.g. Apple AirPods Pro", type: "input" },
-                                    { label: "Description", key: "description", placeholder: "Brief description, color, condition...", type: "textarea" },
-                                ].map((field) => (
-                                    <div key={field.key}>
-                                        <label className="block text-xs font-semibold mb-2" style={{ color: dark ? "#9ca3af" : "#555" }}>
-                                            {field.label}
-                                        </label>
-                                        {field.type === "input" ? (
-                                            <input
-                                                value={form[field.key]}
-                                                onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                                                placeholder={field.placeholder}
-                                                className="w-full px-4 py-3 rounded-2xl text-sm outline-none"
-                                                style={{
-                                                    background: dark ? "rgba(255,255,255,0.06)" : "#fff",
-                                                    border: dark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)",
-                                                    color: dark ? "#fff" : "#111",
-                                                }}
-                                            />
-                                        ) : (
-                                            <textarea
-                                                rows={3}
-                                                value={form[field.key]}
-                                                onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                                                placeholder={field.placeholder}
-                                                className="w-full px-4 py-3 rounded-2xl text-sm outline-none resize-none"
-                                                style={{
-                                                    background: dark ? "rgba(255,255,255,0.06)" : "#fff",
-                                                    border: dark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)",
-                                                    color: dark ? "#fff" : "#111",
-                                                }}
-                                            />
-                                        )}
-                                    </div>
-                                ))}
-
-                                <div>
-                                    <label className="block text-xs font-semibold mb-2" style={{ color: dark ? "#9ca3af" : "#555" }}>
-                                        Category
-                                    </label>
-                                    <select
-                                        value={form.category}
-                                        onChange={(e) => setForm({ ...form, category: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-2xl text-sm outline-none"
-                                        style={{
-                                            background: dark ? "rgba(255,255,255,0.06)" : "#fff",
-                                            border: dark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)",
-                                            color: dark ? "#fff" : "#111",
-                                        }}
-                                    >
-                                        {CATEGORIES.filter((c) => c !== "All").map((c) => (
-                                            <option key={c} value={c}>{c}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {/* Pin status */}
-                                <div
-                                    className="flex items-center gap-3 p-4 rounded-2xl"
-                                    style={{
-                                        background: pin ? "rgba(16,185,129,0.1)" : dark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                                        border: pin ? "1px solid rgba(16,185,129,0.3)" : dark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(0,0,0,0.07)",
-                                    }}
-                                >
-                                    <span className="text-2xl">{pin ? "✅" : "📍"}</span>
-                                    <div>
-                                        <p className="text-xs font-semibold" style={{ color: dark ? "#e5e7eb" : "#333" }}>
-                                            {pin ? "Location Pinned!" : "No Location Set"}
-                                        </p>
-                                        <p className="text-xs" style={{ color: dark ? "#6b7280" : "#aaa" }}>
-                                            {pin ? `Coordinates: ${pin.x.toFixed(1)}%, ${pin.y.toFixed(1)}%` : "Click on the map to set a discovery pin"}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={handleSubmit}
-                                    className="w-full py-4 rounded-2xl font-bold text-white text-base transition-all hover:scale-105"
-                                    style={{
-                                        background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                                        boxShadow: "0 8px 30px rgba(99,102,241,0.35)",
-                                        border: 'none',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    🚀 Post to Discovery Feed
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // ─── CHAT PAGE ────────────────────────────────────────────────────────────────
-        function ChatPage({ dark, chatItem, setPage }) {
-            const [messages, setMessages] = useState(MOCK_MESSAGES);
-            const [input, setInput] = useState("");
-            const bottomRef = useRef(null);
-
-            useEffect(() => {
-                bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-            }, [messages]);
-
-            const send = () => {
-                if (!input.trim()) return;
-                setMessages((prev) => [
-                    ...prev,
-                    { id: Date.now(), sender: "me", text: input.trim(), time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
-                ]);
-                setInput("");
-                // Simulate reply
-                setTimeout(() => {
-                    setMessages((prev) => [
-                        ...prev,
-                        { id: Date.now() + 1, sender: "them", text: "Got it! I'll be there shortly 🙏", time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
-                    ]);
-                }, 1800);
             };
 
             return (
-                <div className="min-h-screen flex flex-col pt-16" style={{ background: dark ? "#070710" : "#f8f7ff" }}>
-                    {/* Chat Header */}
-                    <div
-                        className="flex items-center gap-4 px-4 py-4 border-b"
-                        style={{
-                            background: dark ? "rgba(255,255,255,0.03)" : "#fff",
-                            borderColor: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.08)",
-                        }}
-                    >
-                        <button onClick={() => setPage("feed")} className="text-indigo-500 font-semibold text-sm" style={{background: 'none', border: 'none', cursor: 'pointer'}}>← Back</button>
-                        <div className="w-10 h-10 rounded-full text-xl flex items-center justify-center" style={{ background: "rgba(99,102,241,0.12)" }}>
-                            {chatItem?.emoji || "📦"}
-                        </div>
-                        <div>
-                            <p className="font-bold text-sm" style={{ color: dark ? "#fff" : "#111" }}>
-                                {chatItem?.title || "Item Chat"}
-                            </p>
-                            <p className="text-xs" style={{ color: "#10b981" }}>● Online</p>
-                        </div>
-                        <a
-                            href="https://wa.me/2348000000000"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="ml-auto px-3 py-1.5 rounded-xl text-xs font-semibold text-white flex items-center gap-1"
-                            style={{ background: "#25d366" }}
-                        >
-                            💬 WhatsApp
-                        </a>
-                    </div>
-
-                    {/* Messages */}
-                    <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3">
-                        {messages.map((msg) => (
-                            <div key={msg.id} className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}>
-                                <div
-                                    className="max-w-xs px-4 py-3 rounded-2xl text-sm"
-                                    style={{
-                                        background:
-                                            msg.sender === "me"
-                                                ? "linear-gradient(135deg,#6366f1,#8b5cf6)"
-                                                : dark
-                                                ? "rgba(255,255,255,0.07)"
-                                                : "#fff",
-                                        color: msg.sender === "me" ? "#fff" : dark ? "#e5e7eb" : "#333",
-                                        borderBottomRightRadius: msg.sender === "me" ? 4 : 16,
-                                        borderBottomLeftRadius: msg.sender === "me" ? 16 : 4,
-                                    }}
-                                >
-                                    {msg.text}
-                                    <div
-                                        className="text-xs mt-1 opacity-60"
-                                        style={{ textAlign: msg.sender === "me" ? "right" : "left" }}
-                                    >
-                                        {msg.time}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        <div ref={bottomRef} />
-                    </div>
-
-                    {/* Input */}
-                    <div
-                        className="flex items-center gap-3 px-4 py-4 border-t"
-                        style={{
-                            background: dark ? "rgba(255,255,255,0.03)" : "#fff",
-                            borderColor: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.08)",
-                        }}
-                    >
-                        <input
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && send()}
-                            placeholder="Type a message..."
-                            className="flex-1 px-4 py-3 rounded-2xl text-sm outline-none"
-                            style={{
-                                background: dark ? "rgba(255,255,255,0.06)" : "#f3f4f6",
-                                color: dark ? "#fff" : "#111",
-                            }}
-                        />
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="glass-dark rounded-3xl p-8 max-w-md w-full space-y-6 animate-slide-in">
                         <button
-                            onClick={send}
-                            className="w-11 h-11 rounded-2xl text-white flex items-center justify-center text-lg"
-                            style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", border: 'none', cursor: 'pointer' }}
+                            onClick={onClose}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl"
                         >
-                            ➤
+                            ×
                         </button>
+
+                        <div>
+                            <h2 className="text-3xl font-black mb-2 gradient-text">{isSignup ? 'Join UniFind' : 'Welcome Back'}</h2>
+                            <p className="text-gray-400">
+                                {isSignup
+                                    ? 'WhatsApp-powered authentication for easy login'
+                                    : 'Sign in with your WhatsApp number'}
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {isSignup && (
+                                <>
+                                    <input
+                                        type="text"
+                                        placeholder="Your Full Name"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full glass px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:border-blue-500 focus:border"
+                                    />
+                                    <input
+                                        type="email"
+                                        placeholder="University Email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full glass px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:border-blue-500 focus:border"
+                                    />
+                                </>
+                            )}
+                            <div>
+                                <label className="text-sm text-gray-400 mb-2 block">WhatsApp Number</label>
+                                <input
+                                    type="tel"
+                                    placeholder="Enter WhatsApp number with country code (e.g., 234XXXXXXXXXX)"
+                                    value={whatsapp}
+                                    onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, ''))}
+                                    className="w-full glass px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:border-blue-500 focus:border"
+                                />
+                                <p className="text-xs text-gray-500 mt-2">We'll use this for one-click WhatsApp messaging</p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleSubmit}
+                            className="w-full btn-glow py-3 rounded-xl font-black text-white text-lg hover:scale-105 transition-transform"
+                        >
+                            💬 {isSignup ? 'Sign Up' : 'Login'} with WhatsApp
+                        </button>
+
+                        <div className="text-center">
+                            <p className="text-gray-400 text-sm">
+                                {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
+                                <button
+                                    onClick={() => {
+                                        setWhatsapp("");
+                                        setName("");
+                                        setEmail("");
+                                    }}
+                                    className="text-blue-400 hover:text-blue-300 font-bold"
+                                >
+                                    {isSignup ? 'Login' : 'Sign Up'}
+                                </button>
+                            </p>
+                        </div>
+
+                        <div className="border-t border-blue-500/20 pt-6">
+                            <p className="text-xs text-gray-500 text-center">
+                                By continuing, you agree to our Terms of Service and Privacy Policy.
+                                We'll never share your WhatsApp number.
+                            </p>
+                        </div>
                     </div>
                 </div>
             );
         }
 
-        // ─── PROFILE PAGE ─────────────────────────────────────────────────────────────
-        function ProfilePage({ dark, currentUser }) {
-            const badges = ["🏅 First Recovery", "⭐ Trusted Finder", "💎 Campus Hero"];
-            const activity = [
-                { emoji: "🎧", title: "AirPods Pro", action: "Posted", date: "2 days ago" },
-                { emoji: "🪪", title: "Student ID Card", action: "Claimed", date: "5 days ago" },
-                { emoji: "📱", title: "Samsung Galaxy", action: "Posted", date: "1 week ago" },
-            ];
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MAP VIEW
+        // ═══════════════════════════════════════════════════════════════════════════
+        function MapView({ item, onClose }) {
+            return (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="glass-dark rounded-3xl p-6 max-w-2xl w-full max-h-[80vh] overflow-auto animate-slide-in">
+                        <button
+                            onClick={onClose}
+                            className="float-right text-gray-400 hover:text-white text-2xl mb-4"
+                        >
+                            ×
+                        </button>
 
-            const score = currentUser?.score || 87;
-            const scoreColor = score >= 80 ? "#10b981" : score >= 50 ? "#f59e0b" : "#ef4444";
+                        <h2 className="text-2xl font-black mb-4">{item.title} Location</h2>
+
+                        <div className="glass rounded-xl p-4 mb-4">
+                            <div className="w-full h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                                <div className="text-center">
+                                    <div className="text-6xl mb-4">📍</div>
+                                    <p className="text-gray-300">
+                                        <strong>Latitude:</strong> {item.lat.toFixed(4)}<br />
+                                        <strong>Longitude:</strong> {item.lng.toFixed(4)}
+                                    </p>
+                                    <p className="text-sm text-gray-400 mt-4">
+                                        📍 {item.location}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <a
+                                href={`https://wa.me/${item.whatsapp}?text=Hi, I saw the ${item.title} at ${item.location}. I think I found it!`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 btn-glow py-3 rounded-xl font-bold text-white text-center"
+                            >
+                                💬 Contact About Item
+                            </a>
+                            <a
+                                href={`https://maps.google.com/?q=${item.lat},${item.lng}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 glass py-3 rounded-xl font-bold text-blue-400 hover:text-blue-300 text-center"
+                            >
+                                🗺️ Open in Google Maps
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MAIN APP
+        // ═══════════════════════════════════════════════════════════════════════════
+        function App() {
+            const [currentPage, setCurrentPage] = useState('home');
+            const [authMode, setAuthMode] = useState(null);
+            const [currentUser, setCurrentUser] = useState(null);
+            const [selectedItem, setSelectedItem] = useState(null);
+
+            const handleAuthClick = (mode) => {
+                setAuthMode(mode);
+            };
+
+            const handleLogin = (data) => {
+                setCurrentUser({ whatsapp: data.whatsapp, name: "UniFind User", avatar: "https://i.pravatar.cc/150?u=unifind" });
+                setAuthMode(null);
+            };
+
+            const handleSignup = (data) => {
+                setCurrentUser(data);
+                setAuthMode(null);
+            };
+
+            const handleLogout = () => {
+                setCurrentUser(null);
+                setCurrentPage('home');
+            };
 
             return (
-                <div className="min-h-screen pt-20 pb-12" style={{ background: dark ? "#070710" : "#f8f7ff" }}>
-                    <div className="max-w-2xl mx-auto px-4">
-                        {/* Profile Card */}
-                        <div
-                            className="relative p-8 rounded-3xl mb-6 overflow-hidden"
-                            style={{
-                                background: dark ? "rgba(255,255,255,0.04
+                <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+                    <Navbar onAuthClick={handleAuthClick} currentUser={currentUser} onLogout={handleLogout} />
+
+                    {currentPage === 'home' && (
+                        <>
+                            <HeroSection onAuthClick={handleAuthClick} />
+                            <DashboardPage
+                                onViewMap={setSelectedItem}
+                                onAuthClick={handleAuthClick}
+                                currentUser={currentUser}
+                            />
+                        </>
+                    )}
+
+                    {/* Footer */}
+                    <footer className="border-t border-blue-500/10 glass-dark py-12">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                                <div>
+                                    <h3 className="font-black text-lg mb-4 gradient-text">UniFind</h3>
+                                    <p className="text-gray-400 text-sm">Premium Lost & Found Marketplace for University Students</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-sm mb-4 text-blue-400">Product</h4>
+                                    <ul className="space-y-2 text-sm text-gray-400">
+                                        <li><button className="hover:text-blue-400 transition">Browse Items</button></li>
+                                        <li><button className="hover:text-blue-400 transition">Post Item</button></li>
+                                        <li><button className="hover:text-blue-400 transition">How it Works</button></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-sm mb-4 text-blue-400">Company</h4>
+                                    <ul className="space-y-2 text-sm text-gray-400">
+                                        <li><button className="hover:text-blue-400 transition">About Us</button></li>
+                                        <li><button className="hover:text-blue-400 transition">Privacy</button></li>
+                                        <li><button className="hover:text-blue-400 transition">Terms</button></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-sm mb-4 text-blue-400">Support</h4>
+                                    <a
+                                        href="https://wa.me/2349123456789?text=Hi, I'm interested in UniFind. Tell me more!"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn-glow px-6 py-2 rounded-lg font-bold text-white text-sm block text-center"
+                                    >
+                                        💬 Talk to Developer
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-blue-500/10 pt-8 text-center text-gray-500 text-sm">
+                                <p>© 2024 UniFind. All rights reserved. Built with ❤️ for students.</p>
+                            </div>
+                        </div>
+                    </footer>
+
+                    {/* Modals */}
+                    {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} onLogin={handleLogin} onSignup={handleSignup} />}
+                    {selectedItem && <MapView item={selectedItem} onClose={() => setSelectedItem(null)} />}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
