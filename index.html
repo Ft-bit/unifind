@@ -1,920 +1,1484 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniFind - Production-Grade University Lost & Found Platform</title>
-    
-    <!-- React & Dependencies -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js"></script>
-    
-    <!-- Framer Motion CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/framer-motion@10/dist/framer-motion.js"></script>
-    
-    <!-- Google Maps -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDemoKey"></script>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UniFind — Campus Lost & Found</title>
 
-        :root {
-            --primary: #3B82F6;
-            --secondary: #8B5CF6;
-            --accent: #EC4899;
-            --dark: #0F0F0F;
-            --surface: #1A1A2E;
-            --text: #FFFFFF;
-        }
+<!-- FONTS -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
 
-        body {
-            font-family: 'Space Grotesk', 'Syne', system-ui, sans-serif;
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
-            color: var(--text);
-            overflow-x: hidden;
-        }
+<!-- REACT + BABEL (CDN) -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-        /* Glassmorphism Design */
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+<!-- FRAMER MOTION (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/framer-motion@10.18.0/dist/framer-motion.js"></script>
 
-        .glass-dark {
-            background: rgba(20, 20, 40, 0.4);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
+<!-- FIREBASE (CDN — modular compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
-        /* Animations */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { height: 100%; }
+  body {
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    background: #030508;
+    color: #F1F5F9;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  ::selection { background: rgba(59,130,246,0.3); }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+  input, textarea, select, button { font-family: inherit; }
+  input::placeholder, textarea::placeholder { color: rgba(241,245,249,0.25); }
+  select option { background: #0a0f1e; color: #F1F5F9; }
+  a { color: inherit; text-decoration: none; }
+  button { cursor: pointer; }
+  .no-scroll { overflow: hidden; }
+  .scroll-y { overflow-y: auto; }
+  .scroll-y::-webkit-scrollbar { width: 3px; }
+  .scroll-y::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
 
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
-        }
+  /* AUTH page grid lines */
+  .auth-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+    background-size: 54px 54px;
+  }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+  /* Shimmer animation */
+  @keyframes shimmer {
+    0%   { transform: translateX(-130%); }
+    100% { transform: translateX(230%); }
+  }
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.13) 50%, transparent 70%);
+    animation: shimmer 3s infinite ease-in-out;
+    pointer-events: none;
+  }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+  /* Spin */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 0.75s linear infinite; }
 
-        .animate-float { animation: float 3s ease-in-out infinite; }
-        .animate-glow { animation: glow 2s ease-in-out infinite; }
-        .animate-slide-in { animation: slideIn 0.6s ease-out; }
-        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+  /* Pulse glow */
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50%       { opacity: 1;   transform: scale(1.12); }
+  }
 
-        .gradient-text {
-            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+  /* Ticker */
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .ticker-inner { display: flex; gap: 44px; animation: ticker 22s linear infinite; white-space: nowrap; }
 
-        .card-hover {
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+  /* Floating cards */
+  @keyframes floatCard {
+    0%,100% { transform: translateY(0px); opacity: 0.65; }
+    50%      { transform: translateY(-10px); opacity: 0.9; }
+  }
 
-        .card-hover:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4);
-        }
+  /* Sidebar active highlight */
+  .nav-active {
+    background: rgba(59,130,246,0.11) !important;
+    border-left: 2px solid #3B82F6 !important;
+  }
+  .nav-item {
+    transition: background 0.15s, padding-left 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.05) !important; }
 
-        .btn-glow {
-            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
-            transition: all 0.3s;
-        }
+  /* Card hover */
+  .card-hover { transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; }
+  .card-hover:hover { transform: translateY(-2px); }
 
-        .btn-glow:hover {
-            box-shadow: 0 0 60px rgba(59, 130, 246, 0.8);
-            transform: scale(1.05);
-        }
+  /* Item row hover */
+  .row-hover { transition: background 0.15s, transform 0.15s; }
+  .row-hover:hover { background: rgba(255,255,255,0.065) !important; transform: translateX(2px); }
 
-        /* Loading Spinner */
-        .spinner {
-            border: 3px solid rgba(59, 130, 246, 0.1);
-            border-top: 3px solid #3B82F6;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
+  /* Button hover effects */
+  .btn-primary { transition: transform 0.15s, box-shadow 0.2s; }
+  .btn-primary:hover { transform: scale(1.012); box-shadow: 0 0 0 1px rgba(59,130,246,0.55), 0 10px 36px rgba(29,78,216,0.42) !important; }
+  .btn-primary:active { transform: scale(0.988); }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+  .btn-google { transition: background 0.15s, border-color 0.15s; }
+  .btn-google:hover { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.18) !important; }
 
-        @media (max-width: 768px) {
-            .text-7xl { font-size: 2.5rem; }
-            .text-5xl { font-size: 2rem; }
-            .text-4xl { font-size: 1.875rem; }
-        }
+  /* Modal overlay */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+    background: rgba(0,0,0,0.62);
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: scale(0.93) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .modal-box { animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1); }
 
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
+  /* Field focus */
+  .field-wrap { transition: box-shadow 0.15s, background 0.15s; }
+  .field-wrap:focus-within {
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.45) !important;
+    background: rgba(59,130,246,0.07) !important;
+  }
 
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
+  /* Map pin pulse */
+  @keyframes pinPulse {
+    0%   { transform: translate(-50%,-50%) scale(1); opacity: 0.7; }
+    70%  { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+    100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+  }
 
-        ::-webkit-scrollbar-thumb {
-            background: rgba(59, 130, 246, 0.4);
-            border-radius: 4px;
-        }
-    </style>
+  /* Toast slide */
+  @keyframes toastIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(80px); } }
+  .toast { animation: toastIn 0.35s cubic-bezier(0.22,1,0.36,1); }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .auth-left { display: none !important; }
+    .auth-right { width: 100% !important; max-width: 100% !important; padding: 40px 24px !important; }
+    .sidebar { width: 56px !important; }
+    .sidebar .sidebar-label { display: none !important; }
+    .sidebar .sidebar-logo-text { display: none !important; }
+    .sidebar .user-info { display: none !important; }
+    .dash-grid { grid-template-columns: 1fr !important; }
+    .stat-grid { grid-template-columns: 1fr 1fr !important; }
+    .detail-grid { grid-template-columns: 1fr 1fr !important; }
+  }
+</style>
 </head>
 <body>
-    <div id="root"></div>
+<div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef, createContext, useContext } = React;
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+const { motion, AnimatePresence } = window.Motion || {};
 
-        // ════════════════════════════════════════════════════════════════════════════
-        // FIREBASE INITIALIZATION
-        // ════════════════════════════════════════════════════════════════════════════
-        const firebaseConfig = {
-            apiKey: "AIzaSyDemoKey_Replace_With_Your_Key",
-            authDomain: "uni-find-9041e.firebaseapp.com",
-            projectId: "uni-find-9041e",
-            storageBucket: "uni-find-9041e.appspot.com",
-            messagingSenderId: "2904053304401",
-            appId: "1:290405330440:web:b1e709176b1c784737ebbd",
-            measurementId: "G-7Y1K5P31XC"
-        };
+// ─── FIREBASE INIT ─────────────────────────────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyCqFxLS_AvYW8onnkUDZQ_j-orrLiTHqZc",
+  authDomain: "uni-find-9041e.firebaseapp.com",
+  projectId: "uni-find-9041e",
+  storageBucket: "uni-find-9041e.firebasestorage.app",
+  messagingSenderId: "290405330440",
+  appId: "1:290405330440:web:b1e70917b14c784737ebbd",
+  measurementId: "G-7Y1K5P31XC"
+});
+const auth = firebase.auth();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const storage = firebase.storage();
-        const googleProvider = new firebase.auth.GoogleAuthProvider();
+// ─── DESIGN TOKENS ─────────────────────────────────────────────────────────
+const C = {
+  bg: '#030508',
+  surface: 'rgba(255,255,255,0.042)',
+  surfaceHover: 'rgba(255,255,255,0.072)',
+  border: 'rgba(255,255,255,0.072)',
+  borderHover: 'rgba(255,255,255,0.14)',
+  blue: '#3B82F6',
+  blueDeep: '#1D4ED8',
+  green: '#10B981',
+  red: '#EF4444',
+  amber: '#F59E0B',
+  indigo: '#6366F1',
+  text: '#F1F5F9',
+  textSub: 'rgba(241,245,249,0.52)',
+  textMuted: 'rgba(241,245,249,0.28)',
+};
 
-        // ════════════════════════════════════════════════════════════════════════════
-        // APP CONTEXT
-        // ════════════════════════════════════════════════════════════════════════════
-        const AppContext = createContext();
+// ─── MOCK DATA ──────────────────────────────────────────────────────────────
+const SEED = [
+  { id:1, title:'MacBook Pro 16"',   cat:'Electronics', status:'lost',  loc:'Library Block B',  reporter:'Chidi A.',   time:'2h ago',  desc:'Silver MacBook, sticker on lid. Near study pod 3.',                karma:50, phone:'2348012345678', verified:true,  mx:22, my:28 },
+  { id:2, title:'Student ID Card',    cat:'Documents',   status:'found', loc:'Science Faculty',  reporter:'Amaka O.',   time:'4h ago',  desc:"Found near Chemistry Lab. Owner's photo visible.",               karma:20, phone:'2348023456789', verified:true,  mx:55, my:38 },
+  { id:3, title:'AirPods Pro',        cat:'Electronics', status:'lost',  loc:'Cafeteria',        reporter:'Emeka N.',   time:'1d ago',  desc:"White AirPods Pro, engraving 'EN' on case.",                     karma:30, phone:'2348034567890', verified:false, mx:38, my:62 },
+  { id:4, title:'Navy Backpack',      cat:'Bags',        status:'found', loc:'Admin Block',      reporter:'Ngozi K.',   time:'3h ago',  desc:'Jansport — notebooks and water bottle inside.',                  karma:25, phone:'2348045678901', verified:true,  mx:70, my:55 },
+  { id:5, title:'Honda Car Keys',     cat:'Keys',        status:'lost',  loc:'Parking Lot C',    reporter:'Tunde B.',   time:'5h ago',  desc:'Honda key fob + 3 keys on red lanyard.',                        karma:40, phone:'2348056789012', verified:false, mx:15, my:72 },
+  { id:6, title:'Casio Calculator',   cat:'Electronics', status:'found', loc:'Engineering Dept', reporter:'Blessing I.',time:'6h ago',  desc:'Casio fx-991ES Plus. Name written inside cover.',               karma:15, phone:'2348067890123', verified:true,  mx:82, my:30 },
+  { id:7, title:'Gold Wristwatch',    cat:'Jewelry',     status:'lost',  loc:'Sports Complex',   reporter:'Kemi F.',    time:'12h ago', desc:'Gold Casio G-Shock, large face. Very sentimental.',             karma:60, phone:'2348078901234', verified:true,  mx:48, my:20 },
+  { id:8, title:"Gray's Anatomy",     cat:'Books',       status:'found', loc:'Medical School',   reporter:'Tochi M.',   time:'2d ago',  desc:'41st edition. Name written inside front cover.',                karma:18, phone:'2348089012345', verified:false, mx:65, my:75 },
+];
 
-        function AppProvider({ children }) {
-            const [currentUser, setCurrentUser] = useState(null);
-            const [items, setItems] = useState([]);
-            const [loading, setLoading] = useState(true);
+const CATS  = ['All','Electronics','Documents','Bags','Keys','Jewelry','Books','Clothing'];
+const LOCS  = ['Library Block B','Science Faculty','Cafeteria','Admin Block','Parking Lot C','Engineering Dept','Sports Complex','Medical School','Student Union','Main Gate'];
 
-            useEffect(() => {
-                const unsubscribe = auth.onAuthStateChanged((user) => {
-                    setCurrentUser(user);
-                    setLoading(false);
-                });
-                return unsubscribe;
-            }, []);
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+function useInterval(fn, ms) {
+  const cb = useRef(fn);
+  useEffect(() => { cb.current = fn; }, [fn]);
+  useEffect(() => { const t = setInterval(() => cb.current(), ms); return () => clearInterval(t); }, [ms]);
+}
 
-            useEffect(() => {
-                const unsubscribe = db.collection("items").onSnapshot((snapshot) => {
-                    const itemsData = snapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    }));
-                    setItems(itemsData);
-                });
-                return unsubscribe;
-            }, []);
+function useAnimCount(to) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    let s; const run = ts => {
+      if (!s) s = ts;
+      const p = Math.min((ts - s) / 1500, 1);
+      const e = 1 - (1-p)**3;
+      setV(Math.round(e * to));
+      if (p < 1) requestAnimationFrame(run);
+    };
+    requestAnimationFrame(run);
+  }, [to]);
+  return v;
+}
 
-            return (
-                <AppContext.Provider value={{ currentUser, setCurrentUser, items, setItems, loading, auth, db, storage }}>
-                    {children}
-                </AppContext.Provider>
-            );
-        }
+const friendlyErr = code => ({
+  'auth/invalid-credential':'Incorrect email or password.',
+  'auth/email-already-in-use':'An account with this email already exists.',
+  'auth/weak-password':'Password must be at least 6 characters.',
+  'auth/user-not-found':'No account found with this email.',
+  'auth/too-many-requests':'Too many attempts — try again later.',
+  'auth/popup-closed-by-user':'',
+  'auth/network-request-failed':'Network error — check your connection.',
+}[code] || 'Something went wrong. Please try again.');
 
-        function useApp() {
-            return useContext(AppContext);
-        }
+// ─── ICONS (inline SVG — no dependency) ────────────────────────────────────
+const Ico = {
+  compass:  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
+  home:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  map:      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>,
+  package:  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m16.5 9.4-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>,
+  user:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  plus:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  bell:     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+  search:   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  check:    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  alert:    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+  zap:      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  award:    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>,
+  arrow:    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+  chevron:  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+  x:        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  upload:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+  pin:      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+  clock:    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  logout:   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  mail:     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+  lock:     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+  eye:      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+  msg:      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  grid:     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+  list:     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+  sparkle:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a1 1 0 0 1 1 1 7 7 0 0 0 7 7 1 1 0 0 1 0 2 7 7 0 0 0-7 7 1 1 0 0 1-2 0 7 7 0 0 0-7-7 1 1 0 0 1 0-2 7 7 0 0 0 7-7 1 1 0 0 1 1-1Z"/></svg>,
+  trend:    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+};
 
-        // ════════════════════════════════════════════════════════════════════════════
-        // NAVBAR
-        // ════════════════════════════════════════════════════════════════════════════
-        function Navbar({ onAuthClick, onProfileClick }) {
-            const { currentUser } = useApp();
-            const [menuOpen, setMenuOpen] = useState(false);
+const GoogleSVG = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+  </svg>
+);
 
-            const handleLogout = async () => {
-                try {
-                    await auth.signOut();
-                    setMenuOpen(false);
-                } catch (error) {
-                    console.error("Logout error:", error);
-                }
-            };
+// ─── TOAST ──────────────────────────────────────────────────────────────────
+function Toast({ msg, onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, 3600); return () => clearTimeout(t); }, []);
+  return (
+    <div className="toast" style={{
+      position:'fixed', bottom:24, right:24, zIndex:200,
+      display:'flex', alignItems:'center', gap:10,
+      padding:'12px 18px', borderRadius:12,
+      background:'rgba(16,185,129,0.11)', border:'1px solid rgba(16,185,129,0.3)',
+      backdropFilter:'blur(20px)', boxShadow:'0 12px 40px rgba(0,0,0,0.5)',
+      fontSize:13, fontWeight:600, color:C.text,
+    }}>
+      <span style={{color:C.green}}>{Ico.check}</span> {msg}
+    </div>
+  );
+}
 
-            return (
-                <nav className="fixed top-0 left-0 right-0 z-50 glass-dark border-b border-blue-500/20">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between items-center h-20">
-                            {/* Logo */}
-                            <div className="flex items-center gap-2 group cursor-pointer">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center font-black text-lg">
-                                    U
-                                </div>
-                                <span className="font-black text-2xl gradient-text hidden sm:inline">UniFind</span>
-                            </div>
+// ─── MODAL WRAPPER ──────────────────────────────────────────────────────────
+function Modal({ children, onClose }) {
+  useEffect(() => {
+    const esc = e => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', esc);
+    return () => document.removeEventListener('keydown', esc);
+  }, [onClose]);
+  return (
+    <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-box" style={{ width:'100%', maxWidth:480, position:'relative', zIndex:1 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
-                            {/* Desktop Menu */}
-                            <div className="hidden md:flex items-center gap-8">
-                                <button className="text-gray-300 hover:text-blue-400 transition text-sm font-semibold">Browse Items</button>
-                                <button className="text-gray-300 hover:text-blue-400 transition text-sm font-semibold">How it Works</button>
-                                <button className="text-gray-300 hover:text-blue-400 transition text-sm font-semibold">FAQ</button>
-                            </div>
+// ─────────────────────────────────────────────────────────────────────────────
+//  AUTH PAGE
+// ─────────────────────────────────────────────────────────────────────────────
+function AuthPage() {
+  const [mode, setMode]         = useState('signin');
+  const [form, setForm]         = useState({ name:'', email:'', password:'' });
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [gLoading, setGLoading] = useState(false);
+  const [error, setError]       = useState('');
+  const [tIdx, setTIdx]         = useState(0);
 
-                            {/* Auth Section */}
-                            <div className="flex items-center gap-4">
-                                {!currentUser ? (
-                                    <>
-                                        <button
-                                            onClick={() => onAuthClick('login')}
-                                            className="text-sm font-semibold text-gray-300 hover:text-blue-400 transition hidden sm:block"
-                                        >
-                                            Login
-                                        </button>
-                                        <button
-                                            onClick={() => onAuthClick('signup')}
-                                            className="btn-glow px-6 py-2 rounded-lg font-semibold text-sm text-white"
-                                        >
-                                            Sign Up
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <button
-                                            onClick={onProfileClick}
-                                            className="flex items-center gap-2 hover:text-blue-400 transition"
-                                        >
-                                            <img
-                                                src={currentUser.photoURL || `https://i.pravatar.cc/150?u=${currentUser.email}`}
-                                                alt="User"
-                                                className="w-8 h-8 rounded-full border border-blue-500"
-                                            />
-                                            <span className="text-sm font-semibold hidden sm:inline">{currentUser.displayName || currentUser.email.split('@')[0]}</span>
-                                        </button>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="text-sm font-semibold text-gray-300 hover:text-red-400 transition"
-                                        >
-                                            Logout
-                                        </button>
-                                    </>
-                                )}
-                                
-                                {/* Mobile Menu */}
-                                <button
-                                    onClick={() => setMenuOpen(!menuOpen)}
-                                    className="md:hidden text-white text-2xl"
-                                >
-                                    ☰
-                                </button>
-                            </div>
-                        </div>
+  const c1 = useAnimCount(1247);
+  const c2 = useAnimCount(98);
+  const c3 = useAnimCount(4800);
 
-                        {/* Mobile Menu Dropdown */}
-                        {menuOpen && (
-                            <div className="md:hidden pb-4 border-t border-blue-500/20 space-y-2">
-                                <button className="block w-full text-left py-2 text-gray-300 hover:text-blue-400">Browse Items</button>
-                                <button className="block w-full text-left py-2 text-gray-300 hover:text-blue-400">How it Works</button>
-                                <button className="block w-full text-left py-2 text-gray-300 hover:text-blue-400">FAQ</button>
-                            </div>
-                        )}
-                    </div>
-                </nav>
-            );
-        }
+  const testimonials = [
+    { q:'Got my MacBook back in 3 hours. Completely unreal.',             name:'Chidi Amara',  role:'Computer Science '25' },
+    { q:'Found my student ID the same day. WhatsApp link is genius.',     name:'Amaka Obi',    role:'Medicine '26' },
+    { q:'Returned 4 items this semester. Karma system is addictive.',     name:'Tunde Bello',  role:'Engineering '25' },
+  ];
 
-        // ════════════════════════════════════════════════════════════════════════════
-        // HERO SECTION
-        // ════════════════════════════════════════════════════════════════════════════
-        function HeroSection({ onAuthClick, items }) {
-            const [searchTerm, setSearchTerm] = useState("");
-            const [activeSlide, setActiveSlide] = useState(0);
+  useInterval(() => setTIdx(i => (i+1) % testimonials.length), 4800);
 
-            useEffect(() => {
-                if (items.length === 0) return;
-                const timer = setInterval(() => {
-                    setActiveSlide((prev) => (prev + 1) % items.length);
-                }, 4000);
-                return () => clearInterval(timer);
-            }, [items.length]);
+  const upd = (k,v) => setForm(f => ({...f, [k]:v}));
 
-            const premiumItems = items.filter(item => item.status === 'lost' && item.category === 'Electronics').slice(0, 6);
+  const handleGoogle = async () => {
+    setGLoading(true); setError('');
+    try { await auth.signInWithPopup(googleProvider); }
+    catch(e) { const m = friendlyErr(e.code); if(m) setError(m); }
+    setGLoading(false);
+  };
 
-            return (
-                <div className="min-h-screen pt-20 pb-20 relative overflow-hidden">
-                    {/* Animated Background */}
-                    <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
-                    <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" style={{animationDelay: '1s'}}></div>
+  const handleSubmit = async () => {
+    if (!form.email || !form.password) { setError('Please fill in all fields'); return; }
+    if (mode === 'signup' && !form.name) { setError('Please enter your name'); return; }
+    setLoading(true); setError('');
+    try {
+      if (mode === 'signup') {
+        const r = await auth.createUserWithEmailAndPassword(form.email, form.password);
+        await r.user.updateProfile({ displayName: form.name });
+      } else {
+        await auth.signInWithEmailAndPassword(form.email, form.password);
+      }
+    } catch(e) { setError(friendlyErr(e.code)); }
+    setLoading(false);
+  };
 
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                        {/* Main Headline */}
-                        <div className="text-center mb-12 animate-slide-in">
-                            <h1 className="text-6xl md:text-7xl font-black mb-6 leading-tight">
-                                <span className="block mb-2">Find Your Lost</span>
-                                <span className="gradient-text text-7xl md:text-8xl">Treasures</span>
-                            </h1>
-                            <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
-                                Production-Grade Lost & Found Platform for University Students
-                                <br />
-                                <span className="text-blue-400 font-bold">Firebase Backend • Google Auth • Real-Time Updates</span>
-                            </p>
-                        </div>
+  const onKey = e => { if (e.key === 'Enter') handleSubmit(); };
 
-                        {/* Advanced Search Bar */}
-                        <div className="max-w-2xl mx-auto mb-16 animate-slide-in" style={{animationDelay: '0.2s'}}>
-                            <div className="glass-dark p-2 rounded-2xl flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Search for MacBook, iPhone, wallet... 🔍"
-                                    className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none px-6 py-4 text-lg"
-                                />
-                                <button className="btn-glow px-8 py-4 rounded-xl font-bold text-white">
-                                    Search
-                                </button>
-                            </div>
-                            <div className="mt-4 flex justify-center gap-2 flex-wrap">
-                                {["📱 Electronics", "💼 Accessories", "⌚ Luxury", "🎒 Bags"].map((tag, i) => (
-                                    <button
-                                        key={i}
-                                        className="glass px-4 py-2 rounded-full text-sm text-gray-300 hover:text-blue-400 hover:border-blue-400 transition"
-                                    >
-                                        {tag}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+  // Floating preview cards
+  const previewCards = [
+    { label:'🔴 Lost',  title:'MacBook Pro',  sub:'Library · 2h ago',  delay:'0s' },
+    { label:'🟢 Found', title:'Student ID',   sub:'Science · 4h ago',  delay:'2s' },
+    { label:'🔴 Lost',  title:'AirPods Pro',  sub:'Cafeteria · 1d ago', delay:'1.2s' },
+  ];
 
-                        {/* Premium Items Carousel */}
-                        {premiumItems.length > 0 && (
-                            <div className="animate-slide-in" style={{animationDelay: '0.4s'}}>
-                                <h2 className="text-2xl font-black mb-6">🔥 Recently Lost Items</h2>
-                                <div className="glass-dark rounded-2xl overflow-hidden p-8">
-                                    <div className="flex flex-col md:flex-row gap-8 items-center">
-                                        {/* Carousel Image */}
-                                        <div className="flex-1">
-                                            <div className="relative">
-                                                {premiumItems[activeSlide]?.image ? (
-                                                    <img
-                                                        src={premiumItems[activeSlide].image}
-                                                        alt={premiumItems[activeSlide].title}
-                                                        className="w-full h-80 object-cover rounded-xl"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center text-6xl">
-                                                        {premiumItems[activeSlide]?.emoji || '📦'}
-                                                    </div>
-                                                )}
-                                                <div className="absolute top-4 right-4 glass px-4 py-2 rounded-full">
-                                                    <span className="font-bold text-blue-400">{activeSlide + 1}/{premiumItems.length}</span>
-                                                </div>
-                                            </div>
-                                        </div>
+  return (
+    <div style={{ minHeight:'100vh', display:'flex', background:C.bg }}>
 
-                                        {/* Item Details */}
-                                        <div className="flex-1">
-                                            <h3 className="text-3xl font-black mb-2">{premiumItems[activeSlide]?.title}</h3>
-                                            <p className="text-gray-400 mb-4 text-lg">{premiumItems[activeSlide]?.description}</p>
-                                            
-                                            <div className="space-y-3 mb-6">
-                                                <div className="flex items-center gap-2 text-gray-300">
-                                                    <span>📍</span> {premiumItems[activeSlide]?.location}
-                                                </div>
-                                                <div className="flex items-center gap-2 text-gray-300">
-                                                    <span>⏰</span> {premiumItems[activeSlide]?.date || 'Recently'}
-                                                </div>
-                                                <div className="flex items-center gap-2 text-gray-300">
-                                                    <span>📁</span> {premiumItems[activeSlide]?.category}
-                                                </div>
-                                            </div>
+      {/* ── LEFT PANEL ── */}
+      <div className="auth-left auth-grid" style={{
+        width:'52%', minHeight:'100vh', position:'relative',
+        display:'flex', flexDirection:'column', justifyContent:'space-between',
+        padding:'48px 56px', borderRight:`1px solid ${C.border}`, overflow:'hidden',
+      }}>
+        {/* Radial glows */}
+        <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
+          <div style={{ position:'absolute', width:560, height:560, top:'5%', left:'35%', borderRadius:'50%', background:'radial-gradient(circle,rgba(37,99,235,0.1) 0%,transparent 65%)', filter:'blur(2px)', animation:'pulseGlow 10s ease-in-out infinite' }} />
+          <div style={{ position:'absolute', width:380, height:380, bottom:'12%', left:'-5%', borderRadius:'50%', background:'radial-gradient(circle,rgba(99,102,241,0.08) 0%,transparent 65%)', animation:'pulseGlow 13s ease-in-out infinite reverse' }} />
+          <div style={{ position:'absolute', width:260, height:260, top:'45%', right:'5%', borderRadius:'50%', background:'radial-gradient(circle,rgba(16,185,129,0.06) 0%,transparent 60%)', animation:'pulseGlow 8s ease-in-out infinite' }} />
+        </div>
+        {/* Diagonal SVG line */}
+        <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:0.07, pointerEvents:'none' }}>
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3B82F6" stopOpacity="0"/><stop offset="50%" stopColor="#3B82F6" stopOpacity="1"/><stop offset="100%" stopColor="#3B82F6" stopOpacity="0"/></linearGradient></defs>
+          <line x1="5%" y1="0" x2="50%" y2="100%" stroke="url(#dg)" strokeWidth="1" />
+          <line x1="95%" y1="0" x2="50%" y2="100%" stroke="url(#dg)" strokeWidth="1" />
+        </svg>
 
-                                            <div className="flex gap-3">
-                                                <a
-                                                    href={`https://wa.me/${premiumItems[activeSlide]?.phone || '2349123456789'}?text=Hi, I found the ${premiumItems[activeSlide]?.title} you posted on UniFind`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="btn-glow px-6 py-3 rounded-xl font-bold text-white flex-1 text-center"
-                                                >
-                                                    💬 WhatsApp Finder
-                                                </a>
-                                                <button className="glass px-6 py-3 rounded-xl font-bold text-blue-400 hover:text-blue-300 transition">
-                                                    ❤️ Save
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+        {/* Floating preview cards */}
+        {previewCards.map((card, i) => (
+          <div key={i} style={{
+            position:'absolute', left:'3%', top:`${18 + i*27}%`,
+            background:'rgba(255,255,255,0.042)', border:`1px solid ${C.border}`,
+            borderRadius:12, padding:'10px 14px', backdropFilter:'blur(12px)',
+            minWidth:190, zIndex:2,
+            animation:`floatCard ${6+i}s ease-in-out infinite`,
+            animationDelay: card.delay,
+          }}>
+            <div style={{ fontSize:10, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4 }}>{card.label}</div>
+            <div style={{ fontSize:13, fontWeight:600, color:C.text, marginBottom:2 }}>{card.title}</div>
+            <div style={{ fontSize:11, color:C.textMuted }}>{card.sub}</div>
+          </div>
+        ))}
 
-                                    {/* Carousel Controls */}
-                                    <div className="flex justify-center gap-3 mt-8">
-                                        {premiumItems.map((_, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => setActiveSlide(i)}
-                                                className={`transition-all ${i === activeSlide ? 'bg-blue-500 w-8' : 'bg-gray-600 w-4'} h-2 rounded-full`}
-                                            ></button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+        {/* Logo */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, position:'relative', zIndex:3 }}>
+          <div style={{ width:34, height:34, borderRadius:9, background:'linear-gradient(135deg,#1D4ED8,#4338CA)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 20px rgba(59,130,246,0.32)', flexShrink:0 }}>
+            <span style={{ color:'#fff' }}>{Ico.compass}</span>
+          </div>
+          <span style={{ fontSize:18, fontWeight:800, color:C.text, letterSpacing:'-0.045em' }}>UniFind</span>
+        </div>
 
-                        {/* CTA */}
-                        <div className="text-center mt-12 animate-slide-in" style={{animationDelay: '0.6s'}}>
-                            <button
-                                onClick={() => onAuthClick('signup')}
-                                className="btn-glow px-10 py-4 rounded-xl font-black text-white text-lg hover:scale-110 transition-transform"
-                            >
-                                🚀 Post Your Found Item Now
-                            </button>
-                            <p className="text-gray-400 mt-4">Or scroll to browse all items →</p>
-                        </div>
-                    </div>
+        {/* Hero */}
+        <div style={{ position:'relative', zIndex:3 }}>
+          {/* Badge */}
+          <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.22)', borderRadius:99, padding:'5px 13px', marginBottom:26 }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background:C.green, display:'block' }} />
+            <span style={{ fontSize:12, color:'rgba(147,197,253,0.95)', fontWeight:500 }}>University of Port Harcourt</span>
+          </div>
+
+          <h1 style={{ fontSize:'clamp(2.2rem,3.5vw,3.8rem)', fontWeight:800, lineHeight:1.04, letterSpacing:'-0.045em', color:C.text, marginBottom:18 }}>
+            Lost things{' '}
+            <span style={{ fontFamily:"'Instrument Serif', Georgia, serif", fontStyle:'italic', background:'linear-gradient(90deg,#60A5FA 0%,#818CF8 55%,#34D399 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
+              find their way
+            </span>{' '}
+            back.
+          </h1>
+          <p style={{ fontSize:15, color:C.textSub, lineHeight:1.7, maxWidth:400, fontWeight:400 }}>
+            Real-time campus lost &amp; found. Report items, browse live map pins, and connect via WhatsApp — built for students.
+          </p>
+
+          {/* Stats */}
+          <div style={{ display:'flex', gap:36, marginTop:38 }}>
+            {[{n:c1,s:'+',l:'Items recovered'},{n:c2,s:'%',l:'Return rate'},{n:c3,s:'+',l:'Active students'}].map(s => (
+              <div key={s.l}>
+                <div style={{ fontSize:27, fontWeight:800, color:C.text, letterSpacing:'-0.04em', lineHeight:1 }}>{s.n.toLocaleString()}{s.s}</div>
+                <div style={{ fontSize:12, color:C.textMuted, marginTop:4 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Testimonial */}
+        <div style={{ position:'relative', zIndex:3 }}>
+          {/* Ticker */}
+          <div style={{ overflow:'hidden', marginBottom:18, paddingBottom:18, borderBottom:`1px solid ${C.border}`, maskImage:'linear-gradient(90deg,transparent,black 8%,black 92%,transparent)' }}>
+            <div className="ticker-inner">
+              {['1,200+ items recovered','98% return rate','4,800 students','Instant WhatsApp alerts','Live campus map','Karma rewards system',
+                '1,200+ items recovered','98% return rate','4,800 students','Instant WhatsApp alerts','Live campus map','Karma rewards system'].map((item,i) => (
+                <span key={i} style={{ display:'flex', alignItems:'center', gap:7, fontSize:12, color:C.textMuted, fontWeight:500, whiteSpace:'nowrap' }}>
+                  <span style={{ width:5, height:5, borderRadius:'50%', background:C.blue, display:'inline-block', flexShrink:0 }} />
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background:'rgba(255,255,255,0.042)', border:`1px solid ${C.border}`, borderRadius:14, padding:'20px 22px', position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,rgba(59,130,246,0.07),transparent 55%)', pointerEvents:'none' }} />
+            <div style={{ position:'relative', zIndex:1 }}>
+              {/* Swappable quote */}
+              <p style={{ fontSize:14, fontStyle:'italic', fontFamily:"'Instrument Serif', serif", color:C.text, lineHeight:1.65, marginBottom:14 }}>
+                "{testimonials[tIdx].q}"
+              </p>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#1D4ED8,#4338CA)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:'#fff', flexShrink:0 }}>
+                  {testimonials[tIdx].name[0]}
                 </div>
-            );
-        }
-
-        // ════════════════════════════════════════════════════════════════════════════
-        // ITEM CARD COMPONENT
-        // ════════════════════════════════════════════════════════════════════════════
-        function ItemCard({ item }) {
-            const [liked, setLiked] = useState(false);
-
-            return (
-                <div className="glass-dark rounded-2xl overflow-hidden card-hover group animate-slide-in">
-                    {/* Image */}
-                    <div className="relative h-64 overflow-hidden bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-                        {item.image ? (
-                            <img
-                                src={item.image}
-                                alt={item.title}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-blue-500/20 to-purple-500/20">
-                                {item.emoji || '📦'}
-                            </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                        <div className="absolute top-4 right-4 glass px-3 py-1 rounded-full">
-                            <span className="text-sm font-bold text-blue-400">{item.category}</span>
-                        </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-6">
-                        <h3 className="text-2xl font-black mb-2 group-hover:text-blue-400 transition">{item.title}</h3>
-                        <p className="text-gray-400 text-sm mb-4 line-clamp-2">{item.description}</p>
-
-                        {/* Meta Info */}
-                        <div className="space-y-2 mb-4 text-sm text-gray-400">
-                            <div className="flex items-center gap-2">
-                                <span>📍</span> {item.location}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span>⏰</span> {item.date || 'Recently'}
-                            </div>
-                            {item.karma && (
-                                <div className="flex items-center gap-2 text-blue-400">
-                                    <span>⭐</span> Karma: {item.karma}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Reporter Info */}
-                        <div className="flex items-center gap-3 mb-6 pb-6 border-b border-blue-500/20">
-                            <img src={item.reporterImg || `https://i.pravatar.cc/150?u=${item.reporter}`} alt={item.reporter} className="w-10 h-10 rounded-full border border-blue-500" />
-                            <div>
-                                <p className="text-xs text-gray-500">Reported by</p>
-                                <p className="font-bold text-sm">{item.reporter}</p>
-                            </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-3">
-                            <a
-                                href={`https://wa.me/${item.phone || '2349123456789'}?text=Hi, I found the ${item.title} you lost. I have it on UniFind.`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 btn-glow py-3 rounded-lg font-bold text-white text-center transition-all"
-                            >
-                                💬 Contact
-                            </a>
-                            <button
-                                onClick={() => setLiked(!liked)}
-                                className={`px-4 py-3 rounded-lg transition-all ${liked ? 'bg-red-500/30 text-red-400' : 'glass text-gray-400'}`}
-                            >
-                                {liked ? '❤️' : '🤍'}
-                            </button>
-                            <button className="px-4 py-3 rounded-lg glass text-gray-400 hover:text-blue-400 transition">
-                                🗺️
-                            </button>
-                        </div>
-                    </div>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:600, color:C.text }}>{testimonials[tIdx].name}</div>
+                  <div style={{ fontSize:11, color:C.textMuted }}>{testimonials[tIdx].role}</div>
                 </div>
-            );
-        }
+              </div>
+              <div style={{ display:'flex', gap:6, marginTop:12 }}>
+                {testimonials.map((_,i) => (
+                  <button key={i} onClick={() => setTIdx(i)} style={{ height:4, borderRadius:99, border:'none', background: i===tIdx ? C.blue : 'rgba(255,255,255,0.15)', width: i===tIdx ? 20 : 6, cursor:'pointer', transition:'all 0.25s' }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        // ════════════════════════════════════════════════════════════════════════════
-        // DASHBOARD PAGE
-        // ════════════════════════════════════════════════════════════════════════════
-        function DashboardPage({ onAuthClick }) {
-            const { items, currentUser } = useApp();
-            const [filteredItems, setFilteredItems] = useState([]);
-            const [selectedCategory, setSelectedCategory] = useState("All");
-            const [searchTerm, setSearchTerm] = useState("");
+      {/* ── RIGHT PANEL — FORM ── */}
+      <div className="auth-right" style={{
+        flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+        padding:'60px 48px', position:'relative', minHeight:'100vh',
+      }}>
+        {/* Subtle glow behind form */}
+        <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse 60% 50% at 70% 50%,rgba(29,78,216,0.05),transparent)', pointerEvents:'none' }} />
 
-            const categories = ["All", "Electronics", "Accessories", "Documents", "Luxury", "Books"];
+        <div style={{ width:'100%', maxWidth:400, position:'relative', zIndex:1 }}>
 
-            useEffect(() => {
-                let itemsList = items;
+          {/* Mobile logo */}
+          <div style={{ display:'none' }} className="mobile-logo-show">
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:36 }}>
+              <div style={{ width:30, height:30, borderRadius:8, background:'linear-gradient(135deg,#1D4ED8,#4338CA)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <span style={{ color:'#fff', fontSize:14 }}>{Ico.compass}</span>
+              </div>
+              <span style={{ fontSize:16, fontWeight:800, color:C.text, letterSpacing:'-0.04em' }}>UniFind</span>
+            </div>
+          </div>
 
-                if (selectedCategory !== "All") {
-                    itemsList = itemsList.filter(item => item.category === selectedCategory);
-                }
+          {/* Heading */}
+          <div style={{ marginBottom:28 }}>
+            <h2 style={{ fontSize:26, fontWeight:800, color:C.text, letterSpacing:'-0.04em', lineHeight:1.1, marginBottom:8 }}>
+              {mode === 'signin' ? 'Welcome back' : 'Create account'}
+            </h2>
+            <p style={{ fontSize:14, color:C.textSub }}>
+              {mode === 'signin' ? 'Sign in to continue to UniFind' : 'Join UniFind and help your campus community'}
+            </p>
+          </div>
 
-                if (searchTerm) {
-                    itemsList = itemsList.filter(item =>
-                        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        item.location.toLowerCase().includes(searchTerm.toLowerCase())
-                    );
-                }
-
-                setFilteredItems(itemsList);
-            }, [items, selectedCategory, searchTerm]);
-
-            return (
-                <div className="min-h-screen pb-20">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-                        {/* Header */}
-                        <div className="mb-12 animate-slide-in">
-                            <h2 className="text-5xl font-black mb-4 gradient-text">All Lost Items</h2>
-                            <p className="text-xl text-gray-400">Browse {filteredItems.length} items and help reunite them</p>
-                        </div>
-
-                        {/* Search & Filter */}
-                        <div className="mb-12 space-y-6 animate-slide-in" style={{animationDelay: '0.1s'}}>
-                            {/* Search Bar */}
-                            <div className="glass-dark rounded-2xl p-2 flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Search items, locations... 🔍"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none px-6 py-3"
-                                />
-                            </div>
-
-                            {/* Categories */}
-                            <div className="flex gap-3 flex-wrap">
-                                {categories.map(category => (
-                                    <button
-                                        key={category}
-                                        onClick={() => setSelectedCategory(category)}
-                                        className={`px-6 py-3 rounded-full font-bold transition-all ${
-                                            selectedCategory === category
-                                                ? 'btn-glow text-white'
-                                                : 'glass text-gray-300 hover:text-blue-400'
-                                        }`}
-                                    >
-                                        {category}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Items Grid */}
-                        {filteredItems.length === 0 ? (
-                            <div className="text-center py-20">
-                                <div className="text-6xl mb-4">😔</div>
-                                <p className="text-xl text-gray-400">No items found. Try different filters.</p>
-                                {!currentUser && (
-                                    <button
-                                        onClick={() => onAuthClick('signup')}
-                                        className="mt-8 btn-glow px-8 py-4 rounded-xl font-bold text-white"
-                                    >
-                                        📸 Post Your First Item
-                                    </button>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {filteredItems.map((item, idx) => (
-                                    <div key={item.id} style={{animationDelay: `${idx * 0.1}s`}}>
-                                        <ItemCard item={item} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* CTA for Non-Auth Users */}
-                        {!currentUser && filteredItems.length > 0 && (
-                            <div className="glass-dark rounded-2xl p-12 text-center mt-20 animate-slide-in">
-                                <h3 className="text-3xl font-black mb-4">Found Something? Be a Hero!</h3>
-                                <p className="text-gray-300 mb-8 text-lg">Post your found items and help students recover their belongings.</p>
-                                <button
-                                    onClick={() => onAuthClick('signup')}
-                                    className="btn-glow px-10 py-4 rounded-xl font-bold text-white text-lg"
-                                >
-                                    📸 Post Item & Earn Karma
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        }
-
-        // ════════════════════════════════════════════════════════════════════════════
-        // AUTH MODAL
-        // ════════════════════════════════════════════════════════════════════════════
-        function AuthModal({ mode, onClose }) {
-            const [email, setEmail] = useState("");
-            const [password, setPassword] = useState("");
-            const [name, setName] = useState("");
-            const [phone, setPhone] = useState("");
-            const [loading, setLoading] = useState(false);
-            const [error, setError] = useState("");
-
-            const isSignup = mode === 'signup';
-
-            const handleEmailAuth = async (e) => {
-                e.preventDefault();
-                setError("");
-                setLoading(true);
-
-                try {
-                    if (isSignup) {
-                        const result = await auth.createUserWithEmailAndPassword(email, password);
-                        await result.user.updateProfile({
-                            displayName: name
-                        });
-                        await db.collection("users").doc(result.user.uid).set({
-                            name,
-                            email,
-                            phone,
-                            createdAt: new Date(),
-                            verified: false,
-                            karma: 0
-                        });
-                    } else {
-                        await auth.signInWithEmailAndPassword(email, password);
-                    }
-                    onClose();
-                } catch (err) {
-                    setError(err.message);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            const handleGoogleAuth = async () => {
-                try {
-                    setLoading(true);
-                    const result = await auth.signInWithPopup(googleProvider);
-                    const userRef = db.collection("users").doc(result.user.uid);
-                    const doc = await userRef.get();
-                    if (!doc.exists) {
-                        await userRef.set({
-                            name: result.user.displayName,
-                            email: result.user.email,
-                            photoURL: result.user.photoURL,
-                            createdAt: new Date(),
-                            verified: true,
-                            karma: 10
-                        });
-                    }
-                    onClose();
-                } catch (err) {
-                    setError(err.message);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            return (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                    <div className="glass-dark rounded-3xl p-8 max-w-md w-full space-y-6 animate-slide-in">
-                        <button
-                            onClick={onClose}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl"
-                        >
-                            ×
-                        </button>
-
-                        <div>
-                            <h2 className="text-3xl font-black mb-2 gradient-text">{isSignup ? 'Join UniFind' : 'Welcome Back'}</h2>
-                            <p className="text-gray-400">
-                                {isSignup
-                                    ? 'Sign up to post and track found items'
-                                    : 'Sign in to your UniFind account'}
-                            </p>
-                        </div>
-
-                        {error && (
-                            <div className="bg-red-500/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg text-sm">
-                                {error}
-                            </div>
-                        )}
-
-                        <form onSubmit={handleEmailAuth} className="space-y-4">
-                            {isSignup && (
-                                <>
-                                    <input
-                                        type="text"
-                                        placeholder="Full Name"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        required
-                                        className="w-full glass px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:border focus:border-blue-500"
-                                    />
-                                    <input
-                                        type="tel"
-                                        placeholder="WhatsApp Number (with country code)"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        className="w-full glass px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:border focus:border-blue-500"
-                                    />
-                                </>
-                            )}
-                            <input
-                                type="email"
-                                placeholder="Email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                className="w-full glass px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:border focus:border-blue-500"
-                            />
-                            <input
-                                type="password"
-                                placeholder="Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="w-full glass px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:border focus:border-blue-500"
-                            />
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full btn-glow py-3 rounded-xl font-bold text-white hover:scale-105 transition-transform disabled:opacity-50"
-                            >
-                                {loading ? <span className="spinner mx-auto"></span> : (isSignup ? '🚀 Create Account' : '🔓 Sign In')}
-                            </button>
-                        </form>
-
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-600"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-gray-400">Or</span>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={handleGoogleAuth}
-                            disabled={loading}
-                            className="w-full glass py-3 rounded-xl font-bold text-white hover:bg-white/10 transition-all disabled:opacity-50"
-                        >
-                            🔐 Sign in with Google
-                        </button>
-
-                        <div className="text-center">
-                            <p className="text-gray-400 text-sm">
-                                {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
-                                <button className="text-blue-400 hover:text-blue-300 font-bold">
-                                    {isSignup ? 'Login' : 'Sign Up'}
-                                </button>
-                            </p>
-                        </div>
-
-                        <p className="text-xs text-gray-500 text-center border-t border-gray-700 pt-6">
-                            By continuing, you agree to our Terms. We never share your data.
-                        </p>
-                    </div>
-                </div>
-            );
-        }
-
-        // ════════════════════════════════════════════════════════════════════════════
-        // MAIN APP COMPONENT
-        // ════════════════════════════════════════════════════════════════════════════
-        function AppContent() {
-            const { loading } = useApp();
-            const [authMode, setAuthMode] = useState(null);
-            const { items } = useApp();
-
-            if (loading) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center">
-                        <div className="text-center">
-                            <div className="spinner mx-auto mb-4"></div>
-                            <p className="text-gray-400">Loading UniFind...</p>
-                        </div>
-                    </div>
-                );
+          {/* Google */}
+          <button className="btn-google" onClick={handleGoogle} disabled={loading || gLoading} style={{
+            width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+            padding:'11px 0', borderRadius:10, background:C.surface, border:`1px solid ${C.border}`,
+            fontSize:14, fontWeight:500, color:C.textSub, marginBottom:20,
+          }}>
+            {gLoading
+              ? <div className="spin" style={{ width:16, height:16, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.2)', borderTopColor:'#fff' }} />
+              : <GoogleSVG />
             }
+            Continue with Google
+          </button>
 
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-                    <Navbar onAuthClick={setAuthMode} onProfileClick={() => {}} />
-                    
-                    <HeroSection onAuthClick={setAuthMode} items={items} />
-                    <DashboardPage onAuthClick={setAuthMode} />
+          {/* Divider */}
+          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
+            <div style={{ flex:1, height:1, background:C.border }} />
+            <span style={{ fontSize:12, color:C.textMuted }}>or</span>
+            <div style={{ flex:1, height:1, background:C.border }} />
+          </div>
 
-                    {/* Footer */}
-                    <footer className="border-t border-blue-500/10 glass-dark py-12 mt-20">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                                <div>
-                                    <h3 className="font-black text-lg mb-4 gradient-text">UniFind</h3>
-                                    <p className="text-gray-400 text-sm">Production-Grade University Lost & Found Platform</p>
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-sm mb-4 text-blue-400">Product</h4>
-                                    <ul className="space-y-2 text-sm text-gray-400">
-                                        <li><button className="hover:text-blue-400 transition">Browse Items</button></li>
-                                        <li><button className="hover:text-blue-400 transition" onClick={() => setAuthMode('signup')}>Post Item</button></li>
-                                        <li><button className="hover:text-blue-400 transition">How it Works</button></li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-sm mb-4 text-blue-400">Company</h4>
-                                    <ul className="space-y-2 text-sm text-gray-400">
-                                        <li><button className="hover:text-blue-400 transition">About Us</button></li>
-                                        <li><button className="hover:text-blue-400 transition">Privacy</button></li>
-                                        <li><button className="hover:text-blue-400 transition">Terms</button></li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-sm mb-4 text-blue-400">Support</h4>
-                                    <a
-                                        href="https://wa.me/2349123456789?text=Hi, I'm interested in UniFind!"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="btn-glow px-6 py-2 rounded-lg font-bold text-white text-sm block text-center"
-                                    >
-                                        💬 Talk to Developer
-                                    </a>
-                                </div>
-                            </div>
-                            <div className="border-t border-blue-500/10 pt-8 text-center text-gray-500 text-sm">
-                                <p>© 2024 UniFind. Built with ❤️ by Ft-bit</p>
-                            </div>
-                        </div>
-                    </footer>
-
-                    {/* Modals */}
-                    {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} />}
+          {/* Fields */}
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {mode === 'signup' && (
+              <div>
+                <label style={{ display:'block', fontSize:12, fontWeight:500, color:C.textMuted, marginBottom:6, letterSpacing:'0.04em' }}>Full Name</label>
+                <div className="field-wrap" style={{ display:'flex', alignItems:'center', borderRadius:10, background:C.surface, boxShadow:`0 0 0 1px ${C.border}`, overflow:'hidden' }}>
+                  <span style={{ paddingLeft:13, color:C.textMuted, display:'flex', flexShrink:0 }}>{Ico.user}</span>
+                  <input value={form.name} onChange={e=>upd('name',e.target.value)} onKeyDown={onKey} placeholder="Your full name" autoComplete="name"
+                    style={{ flex:1, padding:'11px 13px', fontSize:14, color:C.text, outline:'none', background:'transparent' }} />
                 </div>
-            );
-        }
+              </div>
+            )}
+            <div>
+              <label style={{ display:'block', fontSize:12, fontWeight:500, color:C.textMuted, marginBottom:6, letterSpacing:'0.04em' }}>Email address</label>
+              <div className="field-wrap" style={{ display:'flex', alignItems:'center', borderRadius:10, background:C.surface, boxShadow:`0 0 0 1px ${C.border}`, overflow:'hidden' }}>
+                <span style={{ paddingLeft:13, color:C.textMuted, display:'flex', flexShrink:0 }}>{Ico.mail}</span>
+                <input value={form.email} onChange={e=>upd('email',e.target.value)} onKeyDown={onKey} type="email" placeholder="you@university.edu" autoComplete="email"
+                  style={{ flex:1, padding:'11px 13px', fontSize:14, color:C.text, outline:'none', background:'transparent' }} />
+              </div>
+            </div>
+            <div>
+              <label style={{ display:'block', fontSize:12, fontWeight:500, color:C.textMuted, marginBottom:6, letterSpacing:'0.04em' }}>Password</label>
+              <div className="field-wrap" style={{ display:'flex', alignItems:'center', borderRadius:10, background:C.surface, boxShadow:`0 0 0 1px ${C.border}`, overflow:'hidden' }}>
+                <span style={{ paddingLeft:13, color:C.textMuted, display:'flex', flexShrink:0 }}>{Ico.lock}</span>
+                <input value={form.password} onChange={e=>upd('password',e.target.value)} onKeyDown={onKey} type={showPass?'text':'password'} placeholder="Your password" autoComplete={mode==='signup'?'new-password':'current-password'}
+                  style={{ flex:1, padding:'11px 13px', fontSize:14, color:C.text, outline:'none', background:'transparent' }} />
+                <button onClick={()=>setShowPass(s=>!s)} style={{ paddingRight:12, background:'none', border:'none', color:C.textMuted, display:'flex' }}>{Ico.eye}</button>
+              </div>
+            </div>
+          </div>
 
-        // ════════════════════════════════════════════════════════════════════════════
-        // ROOT RENDER
-        // ════════════════════════════════════════════════════════════════════════════
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(
-            <AppProvider>
-                <AppContent />
-            </AppProvider>
-        );
-    </script>
+          {/* Error */}
+          {error && (
+            <div style={{ marginTop:12, padding:'10px 14px', borderRadius:9, background:'rgba(239,68,68,0.09)', border:'1px solid rgba(239,68,68,0.22)', display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ color:C.red, flexShrink:0 }}>{Ico.alert}</span>
+              <span style={{ fontSize:13, color:'#FCA5A5' }}>{error}</span>
+            </div>
+          )}
+
+          {/* Submit */}
+          <button className="btn-primary shimmer" onClick={handleSubmit} disabled={loading || gLoading} style={{
+            width:'100%', marginTop:16, padding:'12px 0',
+            borderRadius:10, background:'linear-gradient(135deg,#1D4ED8 0%,#4338CA 100%)',
+            border:'none', fontSize:14, fontWeight:600, color:'#fff',
+            position:'relative', overflow:'hidden',
+            boxShadow:'0 0 0 1px rgba(59,130,246,0.25), 0 4px 24px rgba(29,78,216,0.28)',
+          }}>
+            {loading
+              ? <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                  <div className="spin" style={{ width:14, height:14, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.2)', borderTopColor:'#fff' }} />
+                  <span style={{ color:'rgba(255,255,255,0.7)' }}>{mode==='signin'?'Signing in…':'Creating account…'}</span>
+                </div>
+              : <span style={{ position:'relative', zIndex:1 }}>{mode==='signin'?'Sign in':'Create account'}</span>
+            }
+          </button>
+
+          {/* Toggle */}
+          <p style={{ textAlign:'center', marginTop:20, fontSize:13, color:C.textMuted }}>
+            {mode==='signin'?'No account yet? ':'Already have one? '}
+            <button onClick={()=>{setMode(m=>m==='signin'?'signup':'signin');setError('');}} style={{ background:'none', border:'none', color:'#60A5FA', fontWeight:600, fontSize:13 }}>
+              {mode==='signin'?'Sign up free':'Sign in'}
+            </button>
+          </p>
+
+          <p style={{ textAlign:'center', marginTop:22, fontSize:11, color:'rgba(255,255,255,0.11)', lineHeight:1.6 }}>
+            By continuing you agree to UniFind's Terms of Service and Privacy Policy.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+function Dashboard({ user, items, setSection, setSelectedItem, setShowReport, sq }) {
+  const lost  = items.filter(i => i.status==='lost').length;
+  const found = items.filter(i => i.status==='found').length;
+  const h = new Date().getHours();
+  const greeting = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+
+  const stats = [
+    { label:'Lost Items',     val:lost,   icon:Ico.alert, color:C.red,   bg:'rgba(239,68,68,0.07)',   bd:'rgba(239,68,68,0.16)' },
+    { label:'Found Items',    val:found,  icon:Ico.check, color:C.green, bg:'rgba(16,185,129,0.07)',  bd:'rgba(16,185,129,0.16)' },
+    { label:'Total Recovered',val:47,     icon:Ico.award, color:C.blue,  bg:'rgba(59,130,246,0.07)',  bd:'rgba(59,130,246,0.16)' },
+    { label:'Your Karma',     val:user.karma, icon:Ico.zap, color:C.amber, bg:'rgba(245,158,11,0.07)', bd:'rgba(245,158,11,0.16)' },
+  ];
+
+  const filtered = items.filter(i => !sq || i.title.toLowerCase().includes(sq.toLowerCase()) || i.loc.toLowerCase().includes(sq.toLowerCase()));
+
+  return (
+    <div className="scroll-y" style={{ height:'100%', padding:'28px 28px 48px' }}>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:26, flexWrap:'wrap', gap:12 }}>
+        <div>
+          <div style={{ fontSize:11, color:C.textMuted, fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 }}>Dashboard</div>
+          <h1 style={{ fontSize:22, fontWeight:800, color:C.text, letterSpacing:'-0.04em' }}>Good {greeting}, {user.name.split(' ')[0]}</h1>
+        </div>
+        <div style={{ display:'flex', gap:8 }}>
+          {[{label:'Report Lost',type:'lost',color:C.red},{label:'Report Found',type:'found',color:C.green}].map(a => (
+            <button key={a.type} onClick={()=>setShowReport({type:a.type})} style={{
+              display:'flex', alignItems:'center', gap:6, padding:'8px 14px', borderRadius:8,
+              background: a.color+'14', border:`1px solid ${a.color}28`,
+              fontSize:13, fontWeight:500, color:C.textSub, transition:'all 0.15s',
+            }}
+              onMouseEnter={e=>{e.currentTarget.style.background=a.color+'22';e.currentTarget.style.borderColor=a.color+'55';}}
+              onMouseLeave={e=>{e.currentTarget.style.background=a.color+'14';e.currentTarget.style.borderColor=a.color+'28';}}>
+              <span style={{color:a.color}}>{Ico.plus}</span> {a.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="stat-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:26 }}>
+        {stats.map(s => (
+          <div key={s.label} className="card-hover" style={{ borderRadius:12, padding:'18px', background:s.bg, border:`1px solid ${s.bd}` }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+              <div style={{ width:30, height:30, borderRadius:8, background:s.color+'1a', display:'flex', alignItems:'center', justifyContent:'center', color:s.color }}>{s.icon}</div>
+              <span style={{ color:s.color+'80' }}>{Ico.trend}</span>
+            </div>
+            <div style={{ fontSize:26, fontWeight:800, color:C.text, letterSpacing:'-0.04em', lineHeight:1 }}>{s.val}</div>
+            <div style={{ fontSize:12, color:C.textMuted, marginTop:4 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Main grid */}
+      <div className="dash-grid" style={{ display:'grid', gridTemplateColumns:'1fr 296px', gap:20 }}>
+
+        {/* Recent activity */}
+        <div>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+            <span style={{ fontSize:14, fontWeight:600, color:C.text }}>Recent Activity</span>
+            <button onClick={()=>setSection('items')} style={{ display:'flex', alignItems:'center', gap:4, background:'none', border:'none', color:'#60A5FA', fontWeight:500, fontSize:12 }}>
+              View all {Ico.arrow}
+            </button>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            {filtered.slice(0,7).map((item,i) => (
+              <ItemRow key={item.id} item={item} onClick={()=>setSelectedItem(item)} />
+            ))}
+          </div>
+        </div>
+
+        {/* Widgets */}
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          {/* Mini Map */}
+          <div style={{ borderRadius:12, overflow:'hidden', border:`1px solid ${C.border}`, height:180 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 14px', borderBottom:`1px solid ${C.border}` }}>
+              <span style={{ fontSize:11, fontWeight:600, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em' }}>Live Map</span>
+              <button onClick={()=>setSection('map')} style={{ fontSize:11, color:'#60A5FA', background:'none', border:'none' }}>Expand →</button>
+            </div>
+            <div onClick={()=>setSection('map')} style={{ height:'calc(100% - 36px)', background:'linear-gradient(135deg,#040a1a,#060d1d)', cursor:'pointer', position:'relative', overflow:'hidden' }}>
+              <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(59,130,246,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.05) 1px,transparent 1px)', backgroundSize:'18px 18px' }} />
+              {items.map(it => {
+                const c = it.status==='found' ? C.green : C.blue;
+                return <div key={it.id} style={{ position:'absolute', left:`${it.mx}%`, top:`${it.my}%`, width:8, height:8, borderRadius:'50%', background:c, boxShadow:`0 0 7px ${c}`, transform:'translate(-50%,-50%)' }} />;
+              })}
+            </div>
+          </div>
+
+          {/* Karma */}
+          <div style={{ borderRadius:12, padding:'16px', background:'rgba(245,158,11,0.07)', border:'1px solid rgba(245,158,11,0.16)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+              <div style={{ width:32, height:32, borderRadius:8, background:'rgba(245,158,11,0.18)', display:'flex', alignItems:'center', justifyContent:'center', color:C.amber }}>{Ico.zap}</div>
+              <div>
+                <div style={{ fontSize:10, color:C.textMuted, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em' }}>Karma Score</div>
+                <div style={{ fontSize:20, fontWeight:800, color:C.text, letterSpacing:'-0.04em' }}>{user.karma}</div>
+              </div>
+              <div style={{ marginLeft:'auto', padding:'3px 10px', borderRadius:99, background:'rgba(245,158,11,0.2)', fontSize:11, fontWeight:600, color:C.amber }}>Gold</div>
+            </div>
+            <div style={{ height:4, borderRadius:99, background:'rgba(255,255,255,0.07)' }}>
+              <div style={{ height:'100%', borderRadius:99, background:'linear-gradient(90deg,#F59E0B,#FBBF24)', width:`${(user.karma/150)*100}%`, transition:'width 1.2s ease' }} />
+            </div>
+            <div style={{ fontSize:11, color:C.textMuted, marginTop:8 }}>{150-user.karma} pts to Platinum</div>
+          </div>
+
+          {/* Categories */}
+          <div style={{ borderRadius:12, padding:'16px', background:C.surface, border:`1px solid ${C.border}` }}>
+            <div style={{ fontSize:11, fontWeight:600, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:14 }}>By Category</div>
+            {[['Electronics',3,C.blue],['Documents',2,C.green],['Bags & Keys',2,C.amber],['Jewelry',1,C.red]].map(([n,count,color]) => (
+              <div key={n} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                <div style={{ width:6, height:6, borderRadius:'50%', background:color, flexShrink:0 }} />
+                <span style={{ fontSize:12, color:C.textSub, flex:1 }}>{n}</span>
+                <span style={{ fontSize:12, fontWeight:700, color:C.text }}>{count}</span>
+                <div style={{ width:48, height:3, borderRadius:99, background:'rgba(255,255,255,0.07)', overflow:'hidden' }}>
+                  <div style={{ height:'100%', width:`${(count/3)*100}%`, background:color, borderRadius:99 }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  SHARED ITEM ROW
+// ─────────────────────────────────────────────────────────────────────────────
+function ItemRow({ item, onClick }) {
+  const c = item.status==='found' ? C.green : C.red;
+  return (
+    <button className="row-hover" onClick={onClick} style={{
+      width:'100%', display:'flex', alignItems:'center', gap:12,
+      padding:'10px 14px', borderRadius:10, background:C.surface, border:`1px solid ${C.border}`,
+      textAlign:'left',
+    }}>
+      <div style={{ width:32, height:32, borderRadius:8, background:c+'14', border:`1px solid ${c}22`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, color:c }}>
+        {Ico.package}
+      </div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ fontSize:13, fontWeight:600, color:C.text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.title}</span>
+          {item.verified && <span style={{ color:C.blue, flexShrink:0 }}>{Ico.check}</span>}
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:4, marginTop:3 }}>
+          <span style={{ color:C.textMuted }}>{Ico.pin}</span>
+          <span style={{ fontSize:11, color:C.textMuted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.loc}</span>
+          <span style={{ color:'rgba(255,255,255,0.15)', fontSize:11 }}>·</span>
+          <span style={{ fontSize:11, color:C.textMuted, flexShrink:0 }}>{item.time}</span>
+        </div>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+        <span style={{ fontSize:11, fontWeight:600, padding:'3px 9px', borderRadius:99, background:c+'14', color:c, textTransform:'capitalize' }}>{item.status}</span>
+        <span style={{ color:'rgba(255,255,255,0.15)' }}>{Ico.arrow}</span>
+      </div>
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  MAP VIEW
+// ─────────────────────────────────────────────────────────────────────────────
+function MapView({ items, setSelectedItem }) {
+  const [filter, setFilter] = useState('all');
+  const [hovered, setHovered] = useState(null);
+  const filtered = items.filter(i => filter==='all' || i.status===filter);
+
+  return (
+    <div style={{ height:'100%', display:'flex' }}>
+      {/* Canvas */}
+      <div style={{ flex:1, position:'relative', overflow:'hidden', background:'linear-gradient(145deg,#040a1a,#060d1e)' }}>
+        {/* Grid */}
+        <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(59,130,246,0.032) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.032) 1px,transparent 1px)', backgroundSize:'56px 56px' }} />
+        {/* Roads + buildings SVG */}
+        <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:0.3 }}>
+          <line x1="0" y1="37%" x2="100%" y2="37%" stroke="rgba(59,130,246,0.22)" strokeWidth="10"/>
+          <line x1="0" y1="63%" x2="100%" y2="63%" stroke="rgba(59,130,246,0.16)" strokeWidth="7"/>
+          <line x1="27%" y1="0" x2="27%" y2="100%" stroke="rgba(59,130,246,0.18)" strokeWidth="8"/>
+          <line x1="63%" y1="0" x2="63%" y2="100%" stroke="rgba(59,130,246,0.22)" strokeWidth="10"/>
+          {[[7,7,20,26],[33,7,24,26],[67,7,24,26],[7,44,18,15],[33,44,26,15],[65,44,22,15],[7,67,20,24],[33,67,24,22],[65,67,22,22]].map(([x,y,w,h],i)=>(
+            <rect key={i} x={`${x}%`} y={`${y}%`} width={`${w/2.5}%`} height={`${h/2.5}%`} fill="rgba(59,130,246,0.05)" stroke="rgba(59,130,246,0.18)" strokeWidth="0.8" rx="3"/>
+          ))}
+        </svg>
+        {/* Labels */}
+        {[['Library','8%','8%'],['Science','34%','8%'],['Engineering','68%','8%'],['Admin','8%','45%'],['Cafeteria','34%','45%'],['Sports','66%','45%']].map(([n,l,t])=>(
+          <div key={n} style={{ position:'absolute', left:l, top:t, fontSize:9, color:'rgba(147,197,253,0.24)', fontWeight:500, pointerEvents:'none' }}>{n}</div>
+        ))}
+        {/* Pins */}
+        {filtered.map(item => {
+          const c = item.status==='found' ? C.green : C.blue;
+          const isHov = hovered===item.id;
+          return (
+            <div key={item.id} style={{ position:'absolute', left:`${item.mx}%`, top:`${item.my}%` }}>
+              {/* Pulse rings */}
+              <div style={{ position:'absolute', width:28, height:28, borderRadius:'50%', border:`1px solid ${c}55`, left:'50%', top:'50%', animation:'pinPulse 2.2s ease-out infinite', animationDelay:'0s' }} />
+              <div style={{ position:'absolute', width:28, height:28, borderRadius:'50%', border:`1px solid ${c}40`, left:'50%', top:'50%', animation:'pinPulse 2.2s ease-out infinite', animationDelay:'0.9s' }} />
+              <button
+                onMouseEnter={()=>setHovered(item.id)} onMouseLeave={()=>setHovered(null)}
+                onClick={()=>setSelectedItem(item)}
+                style={{ position:'absolute', left:'50%', top:'50%', transform:'translate(-50%,-50%)', width:32, height:32, borderRadius:9, background:c+'18', border:`1.5px solid ${c}`, display:'flex', alignItems:'center', justifyContent:'center', color:c, boxShadow:`0 0 ${isHov?24:10}px ${c}60`, transition:'all 0.2s', transform: isHov ? 'translate(-50%,-50%) scale(1.22)' : 'translate(-50%,-50%) scale(1)' }}>
+                {Ico.pin}
+              </button>
+              {/* Tooltip */}
+              {isHov && (
+                <div style={{ position:'absolute', bottom:'calc(100% + 8px)', left:'50%', transform:'translateX(-50%)', whiteSpace:'nowrap', zIndex:10, padding:'6px 12px', borderRadius:8, background:'rgba(4,7,20,0.96)', border:`1px solid ${c}45`, boxShadow:'0 8px 24px rgba(0,0,0,0.5)', fontSize:12, fontWeight:600, color:C.text }}>
+                  {item.title} <span style={{ opacity:0.42 }}>· {item.status}</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {/* HUD */}
+        <div style={{ position:'absolute', top:16, left:16, display:'flex', alignItems:'center', gap:8, padding:'7px 14px', borderRadius:9, background:'rgba(3,5,8,0.88)', border:`1px solid ${C.border}`, backdropFilter:'blur(12px)' }}>
+          <div style={{ width:6, height:6, borderRadius:'50%', background:C.green, animation:'pulseGlow 2s ease-in-out infinite' }} />
+          <span style={{ fontSize:12, fontWeight:500, color:C.textSub }}>Live · {filtered.length} pins active</span>
+        </div>
+        {/* Filters */}
+        <div style={{ position:'absolute', bottom:20, left:'50%', transform:'translateX(-50%)', display:'flex', gap:8 }}>
+          {[{id:'all',l:'All',n:items.length},{id:'lost',l:'Lost',n:items.filter(i=>i.status==='lost').length,c:C.red},{id:'found',l:'Found',n:items.filter(i=>i.status==='found').length,c:C.green}].map(f => (
+            <button key={f.id} onClick={()=>setFilter(f.id)} style={{
+              padding:'7px 16px', borderRadius:9,
+              border:`1px solid ${filter===f.id?(f.c||C.blue)+'55':C.border}`,
+              background: filter===f.id ? 'rgba(3,5,12,0.94)' : 'rgba(3,5,8,0.72)',
+              backdropFilter:'blur(12px)', fontSize:12, fontWeight:600,
+              color: filter===f.id ? C.text : C.textMuted, display:'flex', alignItems:'center', gap:6,
+              transition:'all 0.15s',
+            }}>
+              {f.l} <span style={{ color:f.c||'#60A5FA', opacity:0.7 }}>{f.n}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      {/* Side list */}
+      <div className="scroll-y" style={{ width:234, flexShrink:0, borderLeft:`1px solid ${C.border}`, background:'rgba(3,5,8,0.98)' }}>
+        <div style={{ padding:'10px 14px', borderBottom:`1px solid ${C.border}` }}>
+          <span style={{ fontSize:11, fontWeight:600, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em' }}>Items</span>
+        </div>
+        <div style={{ padding:8, display:'flex', flexDirection:'column', gap:5 }}>
+          {items.map(item => {
+            const c = item.status==='found' ? C.green : C.red;
+            return (
+              <button key={item.id} onClick={()=>setSelectedItem(item)} style={{ width:'100%', textAlign:'left', padding:'10px 12px', borderRadius:8, background:C.surface, border:`1px solid ${C.border}`, transition:'background 0.15s' }}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+                onMouseLeave={e=>e.currentTarget.style.background=C.surface}>
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:3 }}>
+                  <div style={{ width:6, height:6, borderRadius:'50%', background:c, flexShrink:0 }} />
+                  <span style={{ fontSize:12, fontWeight:600, color:C.text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.title}</span>
+                </div>
+                <div style={{ fontSize:10, color:C.textMuted, paddingLeft:12 }}>{item.loc}</div>
+                <div style={{ fontSize:10, color:C.textMuted, paddingLeft:12 }}>{item.time}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ITEMS VIEW
+// ─────────────────────────────────────────────────────────────────────────────
+function ItemsView({ items, setSelectedItem, sq }) {
+  const [filter, setFilter] = useState('all');
+  const [cat, setCat]       = useState('All');
+  const [view, setView]     = useState('list');
+
+  const filtered = items.filter(i =>
+    (filter==='all' || i.status===filter) &&
+    (cat==='All' || i.cat===cat) &&
+    (!sq || i.title.toLowerCase().includes(sq.toLowerCase()) || i.loc.toLowerCase().includes(sq.toLowerCase()))
+  );
+
+  return (
+    <div className="scroll-y" style={{ height:'100%', padding:'24px 24px 48px' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:12 }}>
+        <div>
+          <h1 style={{ fontSize:20, fontWeight:800, color:C.text, letterSpacing:'-0.04em' }}>All Items</h1>
+          <p style={{ fontSize:12, color:C.textMuted, marginTop:2 }}>{filtered.length} of {items.length} items</p>
+        </div>
+        <div style={{ display:'flex', borderRadius:8, overflow:'hidden', border:`1px solid ${C.border}` }}>
+          {[{id:'list',i:Ico.list},{id:'grid',i:Ico.grid}].map(v => (
+            <button key={v.id} onClick={()=>setView(v.id)} style={{ padding:'7px 10px', background:view===v.id?'rgba(59,130,246,0.16)':C.surface, border:'none', display:'flex', alignItems:'center', color:view===v.id?'#60A5FA':C.textMuted, transition:'background 0.15s' }}>
+              {v.i}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:20 }}>
+        {['all','lost','found'].map(f => {
+          const c=f==='found'?C.green:f==='lost'?C.red:C.blue;
+          const active = filter===f;
+          return (
+            <button key={f} onClick={()=>setFilter(f)} style={{ padding:'6px 14px', borderRadius:8, background:active?c+'14':C.surface, border:`1px solid ${active?c+'40':C.border}`, fontSize:12, fontWeight:500, color:active?C.text:C.textSub, textTransform:'capitalize', transition:'all 0.15s' }}>
+              {f==='all'?'All Items':f}
+            </button>
+          );
+        })}
+        <div style={{ width:1, background:C.border, margin:'0 4px' }} />
+        {CATS.map(c => {
+          const active = cat===c;
+          return (
+            <button key={c} onClick={()=>setCat(c)} style={{ padding:'6px 12px', borderRadius:8, background:active?'rgba(99,102,241,0.15)':C.surface, border:`1px solid ${active?'rgba(99,102,241,0.4)':C.border}`, fontSize:12, fontWeight:500, color:active?'#A5B4FC':C.textSub, whiteSpace:'nowrap', transition:'all 0.15s' }}>
+              {c}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Items */}
+      {view==='list' ? (
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {filtered.map(item => <ItemRow key={item.id} item={item} onClick={()=>setSelectedItem(item)} />)}
+        </div>
+      ) : (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(210px,1fr))', gap:12 }}>
+          {filtered.map(item => {
+            const c = item.status==='found' ? C.green : C.red;
+            return (
+              <button key={item.id} className="card-hover" onClick={()=>setSelectedItem(item)} style={{ borderRadius:12, padding:'18px', textAlign:'left', background:C.surface, border:`1px solid ${C.border}`, transition:'all 0.18s' }}
+                onMouseEnter={e=>e.currentTarget.style.borderColor=c+'35'}
+                onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+                <div style={{ width:36, height:36, borderRadius:9, background:c+'14', border:`1px solid ${c}22`, display:'flex', alignItems:'center', justifyContent:'center', color:c, marginBottom:14 }}>{Ico.package}</div>
+                <div style={{ fontSize:14, fontWeight:700, color:C.text, marginBottom:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.title}</div>
+                <div style={{ fontSize:12, color:C.textMuted, marginBottom:12, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.loc}</div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                  <span style={{ fontSize:11, fontWeight:600, padding:'3px 9px', borderRadius:99, background:c+'14', color:c, textTransform:'capitalize' }}>{item.status}</span>
+                  <span style={{ fontSize:11, color:C.textMuted }}>{item.time}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {filtered.length===0 && (
+        <div style={{ textAlign:'center', paddingTop:80 }}>
+          <div style={{ color:'rgba(255,255,255,0.08)', marginBottom:12, fontSize:40 }}>📦</div>
+          <p style={{ fontSize:13, color:C.textMuted }}>No items match your filters</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  PROFILE VIEW
+// ─────────────────────────────────────────────────────────────────────────────
+function ProfileView({ user }) {
+  const kColor = user.karma>=100 ? C.amber : '#94A3B8';
+  const kLabel = user.karma>=100 ? 'Gold' : 'Silver';
+
+  return (
+    <div className="scroll-y" style={{ height:'100%', padding:'24px 24px 48px' }}>
+      <div style={{ maxWidth:680 }}>
+        {/* Hero */}
+        <div style={{ borderRadius:14, padding:'24px', background:C.surface, border:`1px solid ${C.border}`, marginBottom:16, position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:0, right:0, width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle,rgba(29,78,216,0.09),transparent)', pointerEvents:'none', transform:'translate(30%,-30%)' }} />
+          <div style={{ display:'flex', alignItems:'center', gap:18, position:'relative', zIndex:1 }}>
+            <div style={{ width:54, height:54, borderRadius:14, overflow:'hidden', background: user.photo?'none':'linear-gradient(135deg,#1D4ED8,#4338CA)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:800, color:'#fff', flexShrink:0 }}>
+              {user.photo ? <img src={user.photo} style={{ width:'100%', height:'100%', objectFit:'cover' }} alt="" /> : user.name[0].toUpperCase()}
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <h2 style={{ fontSize:20, fontWeight:800, color:C.text, letterSpacing:'-0.04em' }}>{user.name}</h2>
+                {user.verified && <span style={{ color:C.blue }}>{Ico.check}</span>}
+              </div>
+              <p style={{ fontSize:13, color:C.textMuted }}>{user.email}</p>
+            </div>
+            <button onClick={()=>auth.signOut()} style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px', borderRadius:8, background:'rgba(239,68,68,0.09)', border:'1px solid rgba(239,68,68,0.2)', fontSize:12, fontWeight:500, color:'#F87171', transition:'background 0.15s' }}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(239,68,68,0.18)'}
+              onMouseLeave={e=>e.currentTarget.style.background='rgba(239,68,68,0.09)'}>
+              {Ico.logout} Sign out
+            </button>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:0, marginTop:20, paddingTop:20, borderTop:`1px solid ${C.border}` }}>
+            {[['Reported',5],['Returned',user.returned],['Helped',12]].map(([l,v]) => (
+              <div key={l} style={{ textAlign:'center' }}>
+                <div style={{ fontSize:22, fontWeight:800, color:C.text, letterSpacing:'-0.04em' }}>{v}</div>
+                <div style={{ fontSize:12, color:C.textMuted, marginTop:3 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+          {/* Karma */}
+          <div style={{ borderRadius:12, padding:'18px', background:kColor+'09', border:`1px solid ${kColor}20` }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+              <div style={{ width:32, height:32, borderRadius:8, background:kColor+'1a', display:'flex', alignItems:'center', justifyContent:'center', color:kColor }}>{Ico.zap}</div>
+              <div>
+                <div style={{ fontSize:10, color:C.textMuted, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em' }}>Karma</div>
+                <div style={{ fontSize:22, fontWeight:800, color:C.text, letterSpacing:'-0.04em' }}>{user.karma}</div>
+              </div>
+              <div style={{ marginLeft:'auto', padding:'4px 12px', borderRadius:99, background:kColor+'22', fontSize:12, fontWeight:600, color:kColor }}>{kLabel}</div>
+            </div>
+            <div style={{ height:4, borderRadius:99, background:'rgba(255,255,255,0.07)' }}>
+              <div style={{ height:'100%', borderRadius:99, background:`linear-gradient(90deg,${kColor},${kColor}bb)`, width:`${(user.karma/150)*100}%`, transition:'width 1.3s ease' }} />
+            </div>
+            <div style={{ fontSize:11, color:C.textMuted, marginTop:8 }}>{150-user.karma} pts to Platinum</div>
+          </div>
+
+          {/* Verification */}
+          <div style={{ borderRadius:12, padding:'18px', background:C.surface, border:`1px solid ${C.border}` }}>
+            <div style={{ fontSize:10, fontWeight:600, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:14 }}>Verification</div>
+            {[['Email address',true],['Google account',!!user.photo],['Student ID',user.verified],['Phone number',false]].map(([l,done]) => (
+              <div key={l} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                <div style={{ width:18, height:18, borderRadius:'50%', background: done?'rgba(16,185,129,0.18)':'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, color: done?C.green:C.textMuted }}>
+                  {done ? Ico.check : Ico.clock}
+                </div>
+                <span style={{ fontSize:12, flex:1, color: done?C.textSub:C.textMuted }}>{l}</span>
+                {!done && <button style={{ fontSize:11, color:'#60A5FA', background:'none', border:'none' }}>Setup →</button>}
+              </div>
+            ))}
+          </div>
+
+          {/* Achievements */}
+          <div style={{ gridColumn:'1/-1', borderRadius:12, padding:'18px', background:C.surface, border:`1px solid ${C.border}` }}>
+            <div style={{ fontSize:10, fontWeight:600, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:16 }}>Achievements</div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:10 }}>
+              {[['🏆','First Return',true],['⭐','5 Found',true],['🛡️','Verified',user.verified],['🔥','10 Found',false],['💎','Diamond',false],['🌟','Campus Hero',false]].map(([icon,l,earned]) => (
+                <div key={l} style={{ padding:'14px 8px', borderRadius:10, textAlign:'center', background:earned?'rgba(255,255,255,0.06)':'rgba(255,255,255,0.02)', border:`1px solid ${earned?'rgba(255,255,255,0.1)':'rgba(255,255,255,0.04)'}`, opacity:earned?1:0.36 }}>
+                  <div style={{ fontSize:22, marginBottom:6 }}>{icon}</div>
+                  <div style={{ fontSize:10, color:C.textMuted }}>{l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ITEM DETAIL MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function ItemModal({ item, onClose }) {
+  const c   = item.status==='found' ? C.green : C.red;
+  const ph  = item.phone.replace(/\D/g,'');
+  const wa  = `https://wa.me/${ph}?text=${encodeURIComponent(`Hi! Saw your UniFind report for "${item.title}" near ${item.loc}. ${item.status==='lost'?'I think I found it!':'Is this yours?'}`)}`;
+
+  return (
+    <Modal onClose={onClose}>
+      <div style={{ background:'#09101f', border:`1px solid ${C.border}`, borderRadius:16, overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,0.75)', maxWidth:460, width:'100%', margin:'0 auto' }}>
+        <div style={{ height:2, background:`linear-gradient(90deg,${c},${c}70)` }} />
+        <div style={{ padding:24 }}>
+          {/* Header */}
+          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:20 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <div style={{ width:44, height:44, borderRadius:11, background:c+'14', border:`1px solid ${c}22`, display:'flex', alignItems:'center', justifyContent:'center', color:c }}>{Ico.package}</div>
+              <div>
+                <h2 style={{ fontSize:18, fontWeight:800, color:C.text, letterSpacing:'-0.03em' }}>{item.title}</h2>
+                <span style={{ fontSize:11, fontWeight:600, padding:'3px 9px', borderRadius:99, background:c+'14', color:c, textTransform:'capitalize' }}>
+                  {item.status==='found'?'✅ Found':'🔴 Lost'} · {item.cat}
+                </span>
+              </div>
+            </div>
+            <button onClick={onClose} style={{ width:28, height:28, borderRadius:7, background:C.surface, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', color:C.textMuted, flexShrink:0 }}>{Ico.x}</button>
+          </div>
+
+          {/* Detail grid */}
+          <div className="detail-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
+            {[[Ico.pin,'Location',item.loc],[Ico.clock,'Reported',item.time],[Ico.user,'By',item.reporter],[Ico.zap,'Karma',`+${item.karma} pts`]].map(([icon,l,v]) => (
+              <div key={l} style={{ padding:'11px 13px', borderRadius:9, background:C.surface, border:`1px solid ${C.border}` }}>
+                <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:4, color:C.textMuted }}>{icon}<span style={{ fontSize:10 }}>{l}</span></div>
+                <span style={{ fontSize:13, fontWeight:600, color:C.text }}>{v}</span>
+              </div>
+            ))}
+          </div>
+
+          {item.desc && (
+            <div style={{ padding:'13px', borderRadius:9, background:C.surface, border:`1px solid ${C.border}`, marginBottom:16 }}>
+              <div style={{ fontSize:10, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:6 }}>Description</div>
+              <p style={{ fontSize:13, color:C.textSub, lineHeight:1.65 }}>{item.desc}</p>
+            </div>
+          )}
+
+          {/* CTAs */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            <a href={wa} target="_blank" rel="noreferrer" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'11px', borderRadius:9, background:'rgba(37,211,102,0.1)', border:'1px solid rgba(37,211,102,0.3)', fontSize:13, fontWeight:600, color:'#25D366', transition:'background 0.15s' }}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(37,211,102,0.2)'}
+              onMouseLeave={e=>e.currentTarget.style.background='rgba(37,211,102,0.1)'}>
+              {Ico.msg} WhatsApp
+            </a>
+            <button onClick={onClose} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'11px', borderRadius:9, background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.3)', fontSize:13, fontWeight:600, color:'#60A5FA', transition:'background 0.15s' }}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(59,130,246,0.2)'}
+              onMouseLeave={e=>e.currentTarget.style.background='rgba(59,130,246,0.1)'}>
+              {Ico.eye} Track
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  REPORT MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function ReportModal({ initial, onClose, onSubmit }) {
+  const [step,     setStep]    = useState(1);
+  const [dragging, setDragging]= useState(false);
+  const [image,    setImage]   = useState(null);
+  const [form,     setForm]    = useState({ type:initial?.type||'lost', title:'', cat:'Electronics', loc:'', desc:'', phone:'' });
+  const upd = (k,v) => setForm(f => ({...f,[k]:v}));
+
+  const handleFile = f => { if(f) setImage(URL.createObjectURL(f)); };
+
+  return (
+    <Modal onClose={onClose}>
+      <div style={{ background:'#09101f', border:`1px solid ${C.border}`, borderRadius:16, overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,0.75)', maxWidth:500, width:'100%', margin:'0 auto' }}>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 22px', borderBottom:`1px solid ${C.border}` }}>
+          <div>
+            <h2 style={{ fontSize:15, fontWeight:700, color:C.text, letterSpacing:'-0.03em' }}>{form.type==='lost'?'Report a Lost Item':'Report a Found Item'}</h2>
+            <div style={{ display:'flex', gap:5, marginTop:8, alignItems:'center' }}>
+              {[1,2,3].map(s => (
+                <div key={s} style={{ height:3, borderRadius:99, overflow:'hidden', width: s<=step?22:10, background:'rgba(255,255,255,0.08)', transition:'width 0.2s' }}>
+                  <div style={{ height:'100%', width:s<=step?'100%':'0%', background:s<step?C.green:s===step?C.blue:'transparent', transition:'width 0.3s' }} />
+                </div>
+              ))}
+              <span style={{ fontSize:11, color:C.textMuted, marginLeft:4 }}>Step {step}/3</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ width:28, height:28, borderRadius:7, background:C.surface, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', color:C.textMuted }}>{Ico.x}</button>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding:'22px 22px 0', minHeight:290 }}>
+          {step===1 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div style={{ display:'flex', gap:10 }}>
+                {['lost','found'].map(t => {
+                  const c=t==='found'?C.green:C.red;
+                  return (
+                    <button key={t} onClick={()=>upd('type',t)} style={{ flex:1, padding:'11px', borderRadius:9, background:form.type===t?c+'14':C.surface, border:`1px solid ${form.type===t?c+'45':C.border}`, fontSize:13, fontWeight:600, color:form.type===t?C.text:C.textMuted, textTransform:'capitalize', transition:'all 0.15s' }}>
+                      {t==='lost'?'🔴 ':'🟢 '}I {t} this
+                    </button>
+                  );
+                })}
+              </div>
+              <div>
+                <label style={{ display:'block', fontSize:12, fontWeight:500, color:C.textMuted, marginBottom:6 }}>Item Name *</label>
+                <div className="field-wrap" style={{ display:'flex', alignItems:'center', borderRadius:10, background:C.surface, boxShadow:`0 0 0 1px ${C.border}` }}>
+                  <span style={{ paddingLeft:13, color:C.textMuted, display:'flex', flexShrink:0 }}>{Ico.package}</span>
+                  <input value={form.title} onChange={e=>upd('title',e.target.value)} placeholder="e.g. MacBook Pro, Student ID…" style={{ flex:1, padding:'11px 13px', fontSize:14, color:C.text, outline:'none', background:'transparent' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display:'block', fontSize:12, fontWeight:500, color:C.textMuted, marginBottom:6 }}>Category</label>
+                <select value={form.cat} onChange={e=>upd('cat',e.target.value)} style={{ width:'100%', padding:'11px 14px', borderRadius:10, background:C.surface, border:`1px solid ${C.border}`, fontSize:14, color:C.text, outline:'none' }}>
+                  {CATS.filter(c=>c!=='All').map(c=><option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {step===2 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div>
+                <label style={{ display:'block', fontSize:12, fontWeight:500, color:C.textMuted, marginBottom:6 }}>Photo <span style={{ color:'rgba(255,255,255,0.2)' }}>(optional)</span></label>
+                <label onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)}
+                  onDrop={e=>{e.preventDefault();setDragging(false);handleFile(e.dataTransfer.files[0]);}}
+                  style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:130, borderRadius:12, border:`2px dashed ${dragging?C.blue:C.border}`, background:dragging?'rgba(59,130,246,0.06)':C.surface, cursor:'pointer', position:'relative', overflow:'hidden', transition:'border-color 0.15s' }}>
+                  {image
+                    ? <><img src={image} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }} alt="preview"/>
+                        <button onClick={e=>{e.preventDefault();setImage(null);}} style={{ position:'absolute', top:8, right:8, width:24, height:24, borderRadius:'50%', background:'rgba(0,0,0,0.6)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}>{Ico.x}</button>
+                      </>
+                    : <><div style={{ color:C.textMuted }}>{Ico.upload}</div>
+                        <span style={{ fontSize:13, color:C.textMuted, marginTop:8 }}>Drag & drop or <span style={{ color:'#60A5FA' }}>browse</span></span>
+                      </>
+                  }
+                  <input type="file" accept="image/*" style={{ display:'none' }} onChange={e=>{if(e.target.files[0])handleFile(e.target.files[0]);}} />
+                </label>
+              </div>
+              <div>
+                <label style={{ display:'block', fontSize:12, fontWeight:500, color:C.textMuted, marginBottom:6 }}>Location *</label>
+                <select value={form.loc} onChange={e=>upd('loc',e.target.value)} style={{ width:'100%', padding:'11px 14px', borderRadius:10, background:C.surface, border:`1px solid ${C.border}`, fontSize:14, color:C.text, outline:'none' }}>
+                  <option value="">Select campus location…</option>
+                  {LOCS.map(l=><option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ display:'block', fontSize:12, fontWeight:500, color:C.textMuted, marginBottom:6 }}>Description</label>
+                <textarea value={form.desc} onChange={e=>upd('desc',e.target.value)} rows={3} placeholder="Color, brand, identifying markings…" style={{ width:'100%', padding:'11px 14px', borderRadius:10, background:C.surface, border:`1px solid ${C.border}`, fontSize:13, color:C.text, resize:'none', outline:'none' }} />
+              </div>
+            </div>
+          )}
+
+          {step===3 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div>
+                <label style={{ display:'block', fontSize:12, fontWeight:500, color:C.textMuted, marginBottom:6 }}>WhatsApp Number *</label>
+                <div className="field-wrap" style={{ display:'flex', alignItems:'center', borderRadius:10, background:C.surface, boxShadow:`0 0 0 1px ${C.border}` }}>
+                  <span style={{ paddingLeft:13, color:C.textMuted, display:'flex', flexShrink:0 }}>{Ico.msg}</span>
+                  <input value={form.phone} onChange={e=>upd('phone',e.target.value)} placeholder="+234 801 234 5678" style={{ flex:1, padding:'11px 13px', fontSize:14, color:C.text, outline:'none', background:'transparent' }} />
+                </div>
+              </div>
+              <div style={{ padding:'14px 16px', borderRadius:10, background:C.surface, border:`1px solid ${C.border}` }}>
+                <div style={{ fontSize:10, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:12 }}>Summary</div>
+                {[['Type',form.type],['Item',form.title||'—'],['Category',form.cat],['Location',form.loc||'—']].map(([k,v]) => (
+                  <div key={k} style={{ display:'flex', justifyContent:'space-between', marginBottom:8, fontSize:13 }}>
+                    <span style={{ color:C.textMuted }}>{k}</span>
+                    <span style={{ fontWeight:600, color:C.text, textTransform:'capitalize' }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderRadius:10, background:'rgba(59,130,246,0.07)', border:'1px solid rgba(59,130,246,0.18)' }}>
+                <span style={{ color:C.blue }}>{Ico.sparkle}</span>
+                <span style={{ fontSize:12, color:'rgba(147,197,253,0.8)' }}>Submitting earns <strong style={{ color:'#93C5FD' }}>+{form.type==='found'?25:10} Karma Points</strong></span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ display:'flex', gap:10, padding:'18px 22px 22px' }}>
+          {step>1 && (
+            <button onClick={()=>setStep(s=>s-1)} style={{ padding:'10px 18px', borderRadius:9, background:C.surface, border:`1px solid ${C.border}`, fontSize:13, fontWeight:500, color:C.textMuted, transition:'background 0.15s' }}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.07)'}
+              onMouseLeave={e=>e.currentTarget.style.background=C.surface}>
+              Back
+            </button>
+          )}
+          <button className="btn-primary shimmer" onClick={()=>step<3?setStep(s=>s+1):onSubmit(form)} style={{ flex:1, padding:'10px', borderRadius:9, background:'linear-gradient(135deg,#1D4ED8,#4338CA)', border:'none', fontSize:13, fontWeight:600, color:'#fff', position:'relative', overflow:'hidden' }}>
+            <span style={{ position:'relative', zIndex:1 }}>{step===3?'Submit Report':'Continue →'}</span>
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  APP SHELL  (post-auth)
+// ─────────────────────────────────────────────────────────────────────────────
+function AppShell({ fbUser }) {
+  const [section,      setSection]      = useState('dashboard');
+  const [items,        setItems]        = useState(SEED);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showReport,   setShowReport]   = useState(null);
+  const [toast,        setToast]        = useState(null);
+  const [collapsed,    setCollapsed]    = useState(false);
+  const [searchQuery,  setSearchQuery]  = useState('');
+  const [showNotifs,   setShowNotifs]   = useState(false);
+
+  const user = {
+    name:     fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
+    email:    fbUser.email,
+    photo:    fbUser.photoURL,
+    karma:    120,
+    verified: !!fbUser.emailVerified || !!fbUser.displayName,
+    returned: 3,
+  };
+
+  const notifs = [
+    { id:1, text:'Your MacBook report got 5 views',        time:'3m ago',  unread:true },
+    { id:2, text:'Amaka O. may have found your item',      time:'1h ago',  unread:true },
+    { id:3, text:'+25 Karma awarded for your report',      time:'3h ago',  unread:false },
+  ];
+
+  const addItem = form => {
+    setItems(p => [{
+      id:Date.now(), title:form.title, cat:form.cat,
+      status:form.type, loc:form.loc, reporter:user.name,
+      time:'just now', desc:form.desc,
+      karma: form.type==='found'?25:10,
+      phone: form.phone||'2340000000000', verified:user.verified,
+      mx:12+Math.random()*72, my:12+Math.random()*72,
+    }, ...p]);
+    setToast(form.type==='found' ? 'Found item reported · +25 Karma ✓' : 'Lost item reported ✓');
+    setShowReport(null);
+  };
+
+  const navLinks = [
+    { id:'dashboard', icon:Ico.home,    label:'Dashboard' },
+    { id:'map',       icon:Ico.map,     label:'Live Map'  },
+    { id:'items',     icon:Ico.package, label:'Items'     },
+    { id:'profile',   icon:Ico.user,    label:'Profile'   },
+  ];
+
+  const SB = collapsed ? 60 : 228;
+
+  return (
+    <div style={{ display:'flex', height:'100vh', background:C.bg, overflow:'hidden' }}>
+
+      {/* ── SIDEBAR ── */}
+      <div className="sidebar" style={{
+        width: SB, minWidth: SB, flexShrink:0, height:'100vh',
+        display:'flex', flexDirection:'column',
+        borderRight:`1px solid ${C.border}`, background:'rgba(3,5,8,0.98)',
+        position:'relative', zIndex:20, transition:'width 0.28s cubic-bezier(0.22,1,0.36,1)',
+        overflow:'hidden',
+      }}>
+        {/* Logo */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'0 14px', height:60, borderBottom:`1px solid ${C.border}`, flexShrink:0, overflow:'hidden' }}>
+          <div style={{ width:28, height:28, borderRadius:7, background:'linear-gradient(135deg,#1D4ED8,#4338CA)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 0 14px rgba(37,99,235,0.3)', color:'#fff', fontSize:14 }}>
+            {Ico.compass}
+          </div>
+          <span className="sidebar-logo-text" style={{ fontSize:15, fontWeight:800, color:C.text, letterSpacing:'-0.045em', whiteSpace:'nowrap', opacity: collapsed?0:1, transition:'opacity 0.2s' }}>
+            UniFind
+          </span>
+        </div>
+
+        {/* Nav items */}
+        <nav style={{ flex:1, padding:'10px 8px', display:'flex', flexDirection:'column', gap:2 }}>
+          {navLinks.map(({ id, icon, label }) => {
+            const active = section===id;
+            return (
+              <button key={id} onClick={()=>setSection(id)}
+                className={`nav-item${active?' nav-active':''}`}
+                style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:8, background:'transparent', border:'none', textAlign:'left', color: active?C.blue:C.textMuted, overflow:'hidden' }}>
+                <span style={{ flexShrink:0, display:'flex', opacity: active?1:0.7 }}>{icon}</span>
+                <span className="sidebar-label" style={{ fontSize:13, fontWeight: active?600:400, color: active?C.text:C.textSub, whiteSpace:'nowrap', opacity: collapsed?0:1, transition:'opacity 0.2s' }}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Report CTA */}
+          <div style={{ marginTop:8 }}>
+            <button onClick={()=>setShowReport({type:'lost'})} style={{
+              width:'100%', display:'flex', alignItems:'center', gap:10,
+              padding:'9px 10px', borderRadius:8,
+              background:'rgba(29,78,216,0.12)', border:'1px solid rgba(59,130,246,0.22)',
+              overflow:'hidden', position:'relative', transition:'border-color 0.15s',
+            }}
+              onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(59,130,246,0.45)'}
+              onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(59,130,246,0.22)'}>
+              <span style={{ color:'#60A5FA', flexShrink:0, display:'flex' }}>{Ico.plus}</span>
+              <span className="sidebar-label" style={{ fontSize:13, fontWeight:600, color:'#93C5FD', whiteSpace:'nowrap', opacity: collapsed?0:1, transition:'opacity 0.2s' }}>
+                Report Item
+              </span>
+            </button>
+          </div>
+        </nav>
+
+        {/* User */}
+        <div style={{ padding:'10px 8px', borderTop:`1px solid ${C.border}`, flexShrink:0 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:9, padding:'8px 10px', borderRadius:8, background:C.surface, overflow:'hidden' }}>
+            <div style={{ width:26, height:26, borderRadius:6, flexShrink:0, overflow:'hidden', background: user.photo?'none':'linear-gradient(135deg,#1D4ED8,#4338CA)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff' }}>
+              {user.photo ? <img src={user.photo} style={{ width:'100%', height:'100%', objectFit:'cover' }} alt="" /> : user.name[0].toUpperCase()}
+            </div>
+            <div className="user-info" style={{ flex:1, minWidth:0, display:'flex', alignItems:'center', justifyContent:'space-between', opacity: collapsed?0:1, transition:'opacity 0.2s' }}>
+              <div style={{ minWidth:0 }}>
+                <div style={{ fontSize:12, fontWeight:600, color:C.text, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user.name}</div>
+                <div style={{ fontSize:10, color:C.textMuted, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user.email}</div>
+              </div>
+              <button onClick={()=>auth.signOut()} style={{ background:'none', border:'none', color:C.textMuted, display:'flex', marginLeft:6, flexShrink:0, transition:'color 0.15s' }}
+                onMouseEnter={e=>e.currentTarget.style.color='#F87171'}
+                onMouseLeave={e=>e.currentTarget.style.color=C.textMuted}>
+                {Ico.logout}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Collapse toggle */}
+        <button onClick={()=>setCollapsed(s=>!s)} style={{
+          position:'absolute', top:20, right:-13, width:26, height:26,
+          borderRadius:'50%', background:'#0c1220', border:`1px solid ${C.border}`,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          zIndex:30, color:C.textMuted, transition:'transform 0.15s',
+        }}
+          onMouseEnter={e=>e.currentTarget.style.transform='scale(1.15)'}
+          onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
+          <span style={{ display:'block', transform: collapsed?'rotate(0deg)':'rotate(180deg)', transition:'transform 0.3s' }}>
+            {Ico.chevron}
+          </span>
+        </button>
+      </div>
+
+      {/* ── MAIN ── */}
+      <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+
+        {/* Topbar */}
+        <header style={{ display:'flex', alignItems:'center', gap:12, padding:'0 24px', height:60, borderBottom:`1px solid ${C.border}`, background:'rgba(3,5,8,0.92)', backdropFilter:'blur(16px)', flexShrink:0, position:'relative', zIndex:10 }}>
+          <div style={{ flex:1, maxWidth:440 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px' }}>
+              <span style={{ color:C.textMuted }}>{Ico.search}</span>
+              <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search items, locations…"
+                style={{ flex:1, fontSize:13, color:C.text, outline:'none', background:'transparent' }} />
+            </div>
+          </div>
+          <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ position:'relative' }}>
+              <button onClick={()=>setShowNotifs(s=>!s)} style={{ width:34, height:34, borderRadius:8, background:C.surface, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', color:C.textMuted, position:'relative' }}>
+                {Ico.bell}
+                {notifs.some(n=>n.unread) && <span style={{ position:'absolute', top:5, right:5, width:7, height:7, borderRadius:'50%', background:C.blue, border:'1.5px solid #030508' }} />}
+              </button>
+              {showNotifs && (
+                <>
+                  <div onClick={()=>setShowNotifs(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
+                  <div style={{ position:'absolute', top:42, right:0, width:278, background:'#0c1220', border:`1px solid ${C.border}`, borderRadius:12, boxShadow:'0 20px 60px rgba(0,0,0,0.6)', zIndex:50, overflow:'hidden', animation:'slideUp 0.22s cubic-bezier(0.22,1,0.36,1)' }}>
+                    <div style={{ padding:'10px 16px', borderBottom:`1px solid ${C.border}` }}>
+                      <span style={{ fontSize:11, fontWeight:600, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.1em' }}>Notifications</span>
+                    </div>
+                    {notifs.map(n => (
+                      <div key={n.id} style={{ display:'flex', gap:10, padding:'11px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
+                        <div style={{ width:6, height:6, borderRadius:'50%', marginTop:5, flexShrink:0, background: n.unread?C.blue:'transparent' }} />
+                        <div>
+                          <div style={{ fontSize:12, color:C.textSub, lineHeight:1.5 }}>{n.text}</div>
+                          <div style={{ fontSize:11, color:C.textMuted, marginTop:2 }}>{n.time}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Section */}
+        <main style={{ flex:1, overflow:'hidden' }}>
+          {section==='dashboard' && <Dashboard user={user} items={items} setSection={setSection} setSelectedItem={setSelectedItem} setShowReport={setShowReport} sq={searchQuery} />}
+          {section==='map'       && <MapView   items={items} setSelectedItem={setSelectedItem} />}
+          {section==='items'     && <ItemsView items={items} setSelectedItem={setSelectedItem} sq={searchQuery} />}
+          {section==='profile'   && <ProfileView user={user} />}
+        </main>
+      </div>
+
+      {/* Modals */}
+      {selectedItem && <ItemModal   item={selectedItem} onClose={()=>setSelectedItem(null)} />}
+      {showReport   && <ReportModal initial={showReport} onClose={()=>setShowReport(null)} onSubmit={addItem} />}
+      {toast        && <Toast msg={toast} onDone={()=>setToast(null)} />}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ROOT — Auth listener
+// ─────────────────────────────────────────────────────────────────────────────
+function Root() {
+  const [fbUser, setFbUser] = useState(undefined);
+
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged(u => setFbUser(u ?? null));
+    return unsub;
+  }, []);
+
+  if (fbUser === undefined) {
+    return (
+      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:C.bg }}>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:'linear-gradient(135deg,#1D4ED8,#4338CA)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 28px rgba(37,99,235,0.4)', color:'#fff' }}>
+            {Ico.compass}
+          </div>
+          <div className="spin" style={{ width:18, height:18, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.14)', borderTopColor:C.blue }} />
+        </div>
+      </div>
+    );
+  }
+
+  return fbUser ? <AppShell fbUser={fbUser} /> : <AuthPage />;
+}
+
+// ─── MOUNT ─────────────────────────────────────────────────────────────────
+ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+</script>
 </body>
 </html>
