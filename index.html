@@ -1,890 +1,1554 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniFind - Premium Lost & Found Marketplace</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/framer-motion@10/dist/framer-motion.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDemoKey"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+/**
+ * UniFind — Production-Grade University Lost & Found Platform
+ * Auth: Firebase (Email/Password + Google)
+ * Design: Editorial dark, Linear/Luma/Vercel-tier quality
+ * Stack: React 19 + Framer Motion + Tailwind v4 (utility classes only where safe)
+ */
 
-        body {
-            font-family: 'Space Grotesk', 'Syne', system-ui, sans-serif;
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
-            color: #fff;
-            overflow-x: hidden;
-        }
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { initializeApp } from "firebase/app";
+import {
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile,
+} from "firebase/auth";
+import {
+  MapPin, Search, Plus, Bell, User, Home, Map, Package,
+  CheckCircle, Clock, AlertCircle, Zap, Award, Eye, ArrowRight,
+  MessageCircle, LogOut, Lock, Mail, ChevronRight, X, Upload,
+  Sparkles, TrendingUp, Filter, List, LayoutGrid, Navigation,
+  Shield, Star, Hash, Compass, ArrowUpRight, Layers,
+} from "lucide-react";
 
-        /* Glassmorphism */
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-        }
+// ─────────────────────────────────────────────────────────────────────────────
+// FIREBASE INIT
+// ─────────────────────────────────────────────────────────────────────────────
+const fbApp = initializeApp({
+  apiKey: "AIzaSyCqFxLS_AvYW8onnkUDZQ_j-orrLiTHqZc",
+  authDomain: "uni-find-9041e.firebaseapp.com",
+  projectId: "uni-find-9041e",
+  storageBucket: "uni-find-9041e.firebasestorage.app",
+  messagingSenderId: "290405330440",
+  appId: "1:290405330440:web:b1e70917b14c784737ebbd",
+  measurementId: "G-7Y1K5P31XC",
+});
+const auth = getAuth(fbApp);
+const gProvider = new GoogleAuthProvider();
 
-        .glass-dark {
-            background: rgba(20, 20, 40, 0.4);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
+// ─────────────────────────────────────────────────────────────────────────────
+// DESIGN TOKENS
+// ─────────────────────────────────────────────────────────────────────────────
+const T = {
+  bg: "#03050C",
+  surface: "rgba(255,255,255,0.04)",
+  surfaceHover: "rgba(255,255,255,0.07)",
+  border: "rgba(255,255,255,0.07)",
+  borderHover: "rgba(255,255,255,0.14)",
+  blue: "#3B82F6",
+  blueDeep: "#1D4ED8",
+  green: "#10B981",
+  red: "#EF4444",
+  amber: "#F59E0B",
+  indigo: "#6366F1",
+  textPrimary: "#F1F5F9",
+  textSecondary: "rgba(241,245,249,0.5)",
+  textMuted: "rgba(241,245,249,0.28)",
+};
 
-        /* Animations */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
+const css = (...c) => c.filter(Boolean).join(" ");
 
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
-        }
+// ─────────────────────────────────────────────────────────────────────────────
+// MOCK DATABASE
+// ─────────────────────────────────────────────────────────────────────────────
+const SEED_ITEMS = [
+  { id: 1, title: 'MacBook Pro 16"', category: "Electronics", status: "lost", location: "Library Block B", reporter: "Chidi A.", time: "2h ago", desc: "Silver MacBook, sticker on lid. Near study pod 3.", karma: 50, phone: "2348012345678", verified: true, mapX: 22, mapY: 28 },
+  { id: 2, title: "Student ID Card", category: "Documents", status: "found", location: "Science Faculty", reporter: "Amaka O.", time: "4h ago", desc: "Found near Chemistry Lab entrance. Owner's photo visible.", karma: 20, phone: "2348023456789", verified: true, mapX: 55, mapY: 38 },
+  { id: 3, title: "AirPods Pro", category: "Electronics", status: "lost", location: "Cafeteria", reporter: "Emeka N.", time: "1d ago", desc: "White AirPods Pro, engraving 'EN' on case.", karma: 30, phone: "2348034567890", verified: false, mapX: 38, mapY: 62 },
+  { id: 4, title: "Navy Backpack", category: "Bags", status: "found", location: "Admin Block", reporter: "Ngozi K.", time: "3h ago", desc: "Jansport backpack — notebooks and water bottle inside.", karma: 25, phone: "2348045678901", verified: true, mapX: 70, mapY: 55 },
+  { id: 5, title: "Honda Car Keys", category: "Keys", status: "lost", location: "Parking Lot C", reporter: "Tunde B.", time: "5h ago", desc: "Honda key fob + 3 keys on red lanyard.", karma: 40, phone: "2348056789012", verified: false, mapX: 15, mapY: 72 },
+  { id: 6, title: "Casio Calculator", category: "Electronics", status: "found", location: "Engineering", reporter: "Blessing I.", time: "6h ago", desc: "Casio fx-991ES Plus. Name written inside.", karma: 15, phone: "2348067890123", verified: true, mapX: 82, mapY: 30 },
+  { id: 7, title: "Gold Wristwatch", category: "Jewelry", status: "lost", location: "Sports Complex", reporter: "Kemi F.", time: "12h ago", desc: "Casio G-Shock, gold face. Very sentimental.", karma: 60, phone: "2348078901234", verified: true, mapX: 48, mapY: 20 },
+  { id: 8, title: "Gray's Anatomy", category: "Books", status: "found", location: "Medical School", reporter: "Tochi M.", time: "2d ago", desc: "41st edition. Name inside front cover.", karma: 18, phone: "2348089012345", verified: false, mapX: 65, mapY: 75 },
+];
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+const CATEGORIES = ["All", "Electronics", "Documents", "Bags", "Keys", "Jewelry", "Books", "Clothing"];
+const LOCATIONS = ["Library Block B", "Science Faculty", "Cafeteria", "Admin Block", "Parking Lot C", "Engineering", "Sports Complex", "Medical School", "Student Union", "Main Gate"];
 
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-        }
+// ─────────────────────────────────────────────────────────────────────────────
+// GLOBAL STYLES  (injected once)
+// ─────────────────────────────────────────────────────────────────────────────
+const GlobalStyles = () => (
+  <>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Cal+Sans:wght@400&family=Bricolage+Grotesque:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>{`
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      html,body,#root{height:100%;background:${T.bg};color:${T.textPrimary}}
+      body{font-family:'Bricolage Grotesque',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+      ::selection{background:rgba(59,130,246,0.28)}
+      ::-webkit-scrollbar{width:3px;height:3px}
+      ::-webkit-scrollbar-track{background:transparent}
+      ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:99px}
+      input,textarea,select{font-family:inherit;background:transparent}
+      input::placeholder,textarea::placeholder{color:${T.textMuted}}
+      select option{background:#0a0f1e}
+      a{color:inherit;text-decoration:none}
+      .no-scrollbar::-webkit-scrollbar{display:none}
+      .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+    `}</style>
+  </>
+);
 
-        .animate-float { animation: float 3s ease-in-out infinite; }
-        .animate-glow { animation: glow 2s ease-in-out infinite; }
-        .animate-slide-in { animation: slideIn 0.6s ease-out; }
+// ─────────────────────────────────────────────────────────────────────────────
+// NOISE LAYER
+// ─────────────────────────────────────────────────────────────────────────────
+function Grain() {
+  return (
+    <svg style={{ position: "fixed", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 1, opacity: 0.028, mixBlendMode: "overlay" }}>
+      <filter id="grain">
+        <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4" stitchTiles="stitch" />
+        <feColorMatrix type="saturate" values="0" />
+      </filter>
+      <rect width="100%" height="100%" filter="url(#grain)" />
+    </svg>
+  );
+}
 
-        .gradient-text {
-            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+// ─────────────────────────────────────────────────────────────────────────────
+// ANIMATED ORBIT — decorative background for auth
+// ─────────────────────────────────────────────────────────────────────────────
+function AuthBackground() {
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+      {/* Primary radial */}
+      <motion.div
+        style={{ position: "absolute", width: 700, height: 700, borderRadius: "50%", top: "50%", left: "42%", x: "-50%", y: "-50%", background: "radial-gradient(circle, rgba(59,130,246,0.09) 0%, transparent 65%)", filter: "blur(1px)" }}
+        animate={{ scale: [1, 1.08, 1], opacity: [0.7, 1, 0.7] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {/* Secondary */}
+      <motion.div
+        style={{ position: "absolute", width: 450, height: 450, borderRadius: "50%", bottom: "10%", left: "55%", background: "radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 65%)" }}
+        animate={{ scale: [1, 1.15, 1], x: [0, 30, 0], y: [0, -20, 0] }}
+        transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {/* Accent */}
+      <motion.div
+        style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", top: "8%", right: "5%", background: "radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 60%)" }}
+        animate={{ scale: [1, 1.2, 1] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+      />
 
-        .neon-blue {
-            color: #3B82F6;
-            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-        }
+      {/* Fine mesh grid */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)`,
+        backgroundSize: "52px 52px",
+      }} />
 
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
+      {/* Diagonal hairlines */}
+      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.06 }}>
+        <line x1="0" y1="0" x2="50%" y2="100%" stroke="url(#dg1)" strokeWidth="1" />
+        <line x1="100%" y1="0" x2="50%" y2="100%" stroke="url(#dg1)" strokeWidth="1" />
+        <defs>
+          <linearGradient id="dg1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#3B82F6" stopOpacity="0" />
+            <stop offset="50%" stopColor="#3B82F6" stopOpacity="1" />
+            <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
 
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
+      {/* Floating data-card mockups */}
+      {[
+        { x: "4%", y: "20%", delay: 0, content: ["🔴 Lost", "MacBook Pro", "Library · 2h ago"] },
+        { x: "6%", y: "52%", delay: 1.5, content: ["🟢 Found", "Student ID", "Science · 4h ago"] },
+        { x: "3%", y: "76%", delay: 3, content: ["🔴 Lost", "AirPods Pro", "Cafeteria · 1d ago"] },
+      ].map((card, i) => (
+        <motion.div key={i}
+          style={{ position: "absolute", left: card.x, top: card.y, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 14px", backdropFilter: "blur(12px)", minWidth: 180 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: [0, 0.7, 0.7, 0], x: 0, y: [0, -8, -8, 0] }}
+          transition={{ delay: card.delay + 1, duration: 6, repeat: Infinity, repeatDelay: 4, ease: "easeInOut" }}>
+          <div style={{ fontSize: 10, color: T.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>{card.content[0]}</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: T.textPrimary, marginBottom: 2 }}>{card.content[1]}</div>
+          <div style={{ fontSize: 11, color: T.textMuted }}>{card.content[2]}</div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
 
-        ::-webkit-scrollbar-thumb {
-            background: rgba(59, 130, 246, 0.4);
-            border-radius: 4px;
-        }
+// ─────────────────────────────────────────────────────────────────────────────
+// ROLLING TEXT TICKER
+// ─────────────────────────────────────────────────────────────────────────────
+function Ticker() {
+  const items = ["1,200+ items recovered", "98% return rate", "4,800 students", "Instant WhatsApp alerts", "Live campus map", "Karma rewards system"];
+  return (
+    <div style={{ overflow: "hidden", display: "flex", gap: 0, maskImage: "linear-gradient(90deg, transparent, black 10%, black 90%, transparent)" }}>
+      <motion.div
+        style={{ display: "flex", gap: 40, whiteSpace: "nowrap" }}
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ duration: 22, repeat: Infinity, ease: "linear" }}>
+        {[...items, ...items].map((item, i) => (
+          <span key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: T.textMuted, fontWeight: 500 }}>
+            <span style={{ width: 4, height: 4, borderRadius: "50%", background: T.blue, display: "inline-block", flexShrink: 0 }} />
+            {item}
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
 
-        .card-hover {
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+// ─────────────────────────────────────────────────────────────────────────────
+// STAT COUNTER
+// ─────────────────────────────────────────────────────────────────────────────
+function Count({ to, suffix = "" }) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    let start;
+    const tick = (ts) => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / 1600, 1);
+      const ease = 1 - (1 - p) ** 3;
+      setV(Math.round(ease * to));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [to]);
+  return <>{v.toLocaleString()}{suffix}</>;
+}
 
-        .card-hover:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4);
-        }
+// ─────────────────────────────────────────────────────────────────────────────
+// FIELD COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+function Field({ label, type = "text", placeholder, value, onChange, icon: Icon, suffix, onKeyDown, autoComplete }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div>
+      {label && (
+        <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: T.textMuted, marginBottom: 6, letterSpacing: "0.04em" }}>
+          {label}
+        </label>
+      )}
+      <motion.div
+        animate={{
+          boxShadow: focused
+            ? `0 0 0 2px rgba(59,130,246,0.4), 0 1px 3px rgba(0,0,0,0.3)`
+            : `0 0 0 1px ${T.border}, 0 1px 2px rgba(0,0,0,0.2)`,
+          background: focused ? "rgba(59,130,246,0.06)" : T.surface,
+        }}
+        transition={{ duration: 0.15 }}
+        style={{ borderRadius: 10, display: "flex", alignItems: "center", overflow: "hidden" }}>
+        {Icon && (
+          <span style={{ paddingLeft: 14, color: focused ? "rgba(96,165,250,0.9)" : T.textMuted, flexShrink: 0, display: "flex" }}>
+            <Icon size={15} strokeWidth={1.8} />
+          </span>
+        )}
+        <input
+          type={type} placeholder={placeholder} value={value}
+          onChange={e => onChange(e.target.value)}
+          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+          onKeyDown={onKeyDown}
+          autoComplete={autoComplete}
+          style={{ flex: 1, padding: "11px 14px", fontSize: 14, color: T.textPrimary, outline: "none", background: "transparent" }}
+        />
+        {suffix && <span style={{ paddingRight: 12 }}>{suffix}</span>}
+      </motion.div>
+    </div>
+  );
+}
 
-        .btn-glow {
-            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
-            transition: all 0.3s;
-        }
+// ─────────────────────────────────────────────────────────────────────────────
+// ███████╗ AUTH PAGE  (THE REAL SHOWPIECE)
+// ─────────────────────────────────────────────────────────────────────────────
+function AuthPage() {
+  const [mode, setMode] = useState("signin"); // "signin" | "signup"
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [gLoading, setGLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [tIdx, setTIdx] = useState(0);
 
-        .btn-glow:hover {
-            box-shadow: 0 0 60px rgba(59, 130, 246, 0.8);
-            transform: scale(1.05);
-        }
+  const testimonials = [
+    { quote: "Got my MacBook back in 3 hours. Completely unreal.", name: "Chidi Amara", role: "CS '25" },
+    { quote: "Found my student ID the same day. The WhatsApp link is genius.", name: "Amaka Obi", role: "Medicine '26" },
+    { quote: "Returned 4 items this semester. The karma system is addictive.", name: "Tunde Bello", role: "Engineering '25" },
+  ];
 
-        @media (max-width: 768px) {
-            .text-7xl { font-size: 2.5rem; }
-            .text-5xl { font-size: 2rem; }
-        }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
+  useEffect(() => {
+    const t = setInterval(() => setTIdx(i => (i + 1) % testimonials.length), 4800);
+    return () => clearInterval(t);
+  }, []);
 
-    <script type="babel">
-        const { useState, useEffect, useRef } = React;
+  const friendlyError = (code) => ({
+    "auth/invalid-credential": "Incorrect email or password",
+    "auth/email-already-in-use": "An account with this email already exists",
+    "auth/weak-password": "Password must be at least 6 characters",
+    "auth/user-not-found": "No account found with this email",
+    "auth/too-many-requests": "Too many attempts — try again later",
+    "auth/popup-closed-by-user": "",
+  }[code] || "Something went wrong. Please try again.");
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // MOCK DATA - PREMIUM ITEMS
-        // ═══════════════════════════════════════════════════════════════════════════
-        const PREMIUM_ITEMS = [
-            {
-                id: 1,
-                title: "iPhone 15 Pro Max",
-                category: "Electronics",
-                location: "Faculty of Science, Room 301",
-                lat: 6.5244,
-                lng: 3.3792,
-                date: "2 hours ago",
-                finder: "Sarah Johnson",
-                finderImg: "https://i.pravatar.cc/150?img=1",
-                emoji: "📱",
-                claimed: false,
-                description: "Space Black, Mint condition, 256GB. Found with charging case.",
-                images: ["https://images.unsplash.com/photo-1511707267537-b85faf00021e?w=500"],
-                whatsapp: "234800000001"
-            },
-            {
-                id: 2,
-                title: "Apple AirPods Pro 2",
-                category: "Electronics",
-                location: "Main Campus Cafeteria",
-                lat: 6.5250,
-                lng: 3.3800,
-                date: "4 hours ago",
-                finder: "Michael Chen",
-                finderImg: "https://i.pravatar.cc/150?img=2",
-                emoji: "🎧",
-                claimed: false,
-                description: "White case, noise cancellation enabled. Original box available.",
-                images: ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500"],
-                whatsapp: "234800000002"
-            },
-            {
-                id: 3,
-                title: "Gold Rolex Watch",
-                category: "Luxury",
-                location: "Student Union Building",
-                lat: 6.5200,
-                lng: 3.3750,
-                date: "Yesterday",
-                finder: "Emma Wilson",
-                finderImg: "https://i.pravatar.cc/150?img=3",
-                emoji: "⌚",
-                claimed: false,
-                description: "18K Gold Submariner. Engraved back. Excellent condition.",
-                images: ["https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=500"],
-                whatsapp: "234800000003"
-            },
-            {
-                id: 4,
-                title: "MacBook Pro 16\"",
-                category: "Electronics",
-                location: "Engineering Block Library",
-                lat: 6.5260,
-                lng: 3.3810,
-                date: "3 days ago",
-                finder: "Alex Rodriguez",
-                finderImg: "https://i.pravatar.cc/150?img=4",
-                emoji: "💻",
-                claimed: false,
-                description: "M3 Max, Space Gray, 512GB SSD. Original charger included.",
-                images: ["https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500"],
-                whatsapp: "234800000004"
-            },
-            {
-                id: 5,
-                title: "Premium Leather Wallet",
-                category: "Accessories",
-                location: "Sports Complex Entrance",
-                lat: 6.5210,
-                lng: 3.3760,
-                date: "5 days ago",
-                finder: "Lisa Park",
-                finderImg: "https://i.pravatar.cc/150?img=5",
-                emoji: "💼",
-                claimed: false,
-                description: "Italian leather, Louis Vuitton. Contains ID & credit cards.",
-                images: ["https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500"],
-                whatsapp: "234800000005"
-            },
-            {
-                id: 6,
-                title: "Vintage Camera",
-                category: "Electronics",
-                location: "Art Building",
-                lat: 6.5270,
-                lng: 3.3820,
-                date: "1 week ago",
-                finder: "David Kim",
-                finderImg: "https://i.pravatar.cc/150?img=6",
-                emoji: "📷",
-                claimed: false,
-                description: "Canon EOS R5. Includes 2 lenses and professional bag.",
-                images: ["https://images.unsplash.com/photo-1517638924702-92b37ca42b2d?w=500"],
-                whatsapp: "234800000006"
-            }
-        ];
+  const handleGoogle = async () => {
+    setGLoading(true); setError("");
+    try { await signInWithPopup(auth, gProvider); }
+    catch (e) { const msg = friendlyError(e.code); if (msg) setError(msg); }
+    setGLoading(false);
+  };
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // NAVBAR COMPONENT
-        // ═══════════════════════════════════════════════════════════════════════════
-        function Navbar({ onAuthClick, currentUser, onLogout }) {
-            const [menuOpen, setMenuOpen] = useState(false);
+  const handleSubmit = async () => {
+    if (!form.email || !form.password) { setError("Please fill in all fields"); return; }
+    if (mode === "signup" && !form.name) { setError("Please enter your name"); return; }
+    setLoading(true); setError("");
+    try {
+      if (mode === "signup") {
+        const r = await createUserWithEmailAndPassword(auth, form.email, form.password);
+        await updateProfile(r.user, { displayName: form.name });
+      } else {
+        await signInWithEmailAndPassword(auth, form.email, form.password);
+      }
+    } catch (e) { setError(friendlyError(e.code)); }
+    setLoading(false);
+  };
 
-            return (
-                <nav className="fixed top-0 left-0 right-0 z-50 glass-dark border-b border-blue-500/20 animate-slide-in">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between items-center h-20">
-                            {/* Logo */}
-                            <div className="flex items-center gap-2 group cursor-pointer">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center font-black text-lg">
-                                    U
-                                </div>
-                                <span className="font-black text-2xl gradient-text hidden sm:inline">UniFind</span>
-                            </div>
+  const switchMode = () => { setMode(m => m === "signin" ? "signup" : "signin"); setError(""); };
 
-                            {/* Desktop Menu */}
-                            <div className="hidden md:flex items-center gap-8">
-                                <button className="text-gray-300 hover:text-blue-400 transition text-sm font-semibold">Browse</button>
-                                <button className="text-gray-300 hover:text-blue-400 transition text-sm font-semibold">How it Works</button>
-                                <button className="text-gray-300 hover:text-blue-400 transition text-sm font-semibold">Contact</button>
-                            </div>
+  // ── LAYOUT: full-screen split with form on RIGHT, editorial panel on LEFT ──
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", background: T.bg, position: "relative" }}>
+      <AuthBackground />
+      <Grain />
 
-                            {/* Auth Buttons */}
-                            <div className="flex items-center gap-4">
-                                {!currentUser ? (
-                                    <>
-                                        <button
-                                            onClick={() => onAuthClick('login')}
-                                            className="text-sm font-semibold text-gray-300 hover:text-blue-400 transition hidden sm:block"
-                                        >
-                                            Login
-                                        </button>
-                                        <button
-                                            onClick={() => onAuthClick('signup')}
-                                            className="btn-glow px-6 py-2 rounded-lg font-semibold text-sm text-white"
-                                        >
-                                            Sign Up
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="hidden sm:flex items-center gap-3">
-                                            <img src={currentUser.avatar} alt="User" className="w-8 h-8 rounded-full border border-blue-500" />
-                                            <span className="text-sm font-semibold">{currentUser.name}</span>
-                                        </div>
-                                        <button
-                                            onClick={onLogout}
-                                            className="text-sm font-semibold text-gray-300 hover:text-red-400 transition"
-                                        >
-                                            Logout
-                                        </button>
-                                    </>
-                                )}
-                                
-                                {/* Mobile Menu Button */}
-                                <button
-                                    onClick={() => setMenuOpen(!menuOpen)}
-                                    className="md:hidden text-white"
-                                >
-                                    ☰
-                                </button>
-                            </div>
-                        </div>
+      {/* ─── LEFT PANEL ─────────────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, x: -40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          display: "none",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          width: "52%",
+          minHeight: "100vh",
+          padding: "48px 56px",
+          position: "relative",
+          borderRight: `1px solid ${T.border}`,
+        }}
+        className="lg-flex" // handled via media query style below
+      >
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#2563EB,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 20px rgba(59,130,246,0.3)" }}>
+            <Compass size={16} color="#fff" strokeWidth={2.5} />
+          </div>
+          <span style={{ fontSize: 17, fontWeight: 700, color: T.textPrimary, letterSpacing: "-0.04em" }}>UniFind</span>
+        </div>
 
-                        {/* Mobile Menu */}
-                        {menuOpen && (
-                            <div className="md:hidden pb-4 border-t border-blue-500/20 glass-dark mt-2 p-4 rounded-lg">
-                                <button className="block w-full text-left py-2 text-gray-300 hover:text-blue-400 mb-2">Browse</button>
-                                <button className="block w-full text-left py-2 text-gray-300 hover:text-blue-400 mb-2">How it Works</button>
-                                <button className="block w-full text-left py-2 text-gray-300 hover:text-blue-400">Contact</button>
-                            </div>
-                        )}
-                    </div>
-                </nav>
-            );
-        }
+        {/* Hero text block */}
+        <div>
+          <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 99, padding: "4px 12px", marginBottom: 28 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block" }} />
+              <span style={{ fontSize: 12, color: "rgba(147,197,253,0.9)", fontWeight: 500 }}>University of Port Harcourt</span>
+            </div>
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // HERO SECTION - THE EYE CATCHER
-        // ═══════════════════════════════════════════════════════════════════════════
-        function HeroSection({ onAuthClick }) {
-            const [searchTerm, setSearchTerm] = useState("");
-            const [activeSlide, setActiveSlide] = useState(0);
+            <h1 style={{ fontSize: "clamp(2.4rem,3.8vw,4rem)", fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.045em", color: T.textPrimary, marginBottom: 20 }}>
+              Lost things{" "}
+              <span style={{ fontStyle: "italic", fontFamily: "'Cal Sans', system-ui", background: "linear-gradient(90deg, #60A5FA 0%, #818CF8 50%, #34D399 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                find their
+              </span>{" "}
+              way back.
+            </h1>
 
-            useEffect(() => {
-                const timer = setInterval(() => {
-                    setActiveSlide((prev) => (prev + 1) % PREMIUM_ITEMS.length);
-                }, 4000);
-                return () => clearInterval(timer);
-            }, []);
+            <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.65, maxWidth: 400, fontWeight: 400 }}>
+              A real-time lost & found platform built for university students. Report items, browse live campus pins, and connect via WhatsApp — all in one place.
+            </p>
+          </motion.div>
 
-            return (
-                <div className="min-h-screen pt-20 pb-20 relative overflow-hidden">
-                    {/* Animated Background Elements */}
-                    <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
-                    <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" style={{animationDelay: '1s'}}></div>
-
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                        {/* Main Headline */}
-                        <div className="text-center mb-12 animate-slide-in">
-                            <h1 className="text-6xl md:text-7xl font-black mb-6 leading-tight">
-                                <span className="block mb-2">Find Your Lost</span>
-                                <span className="gradient-text text-7xl md:text-8xl">Treasures</span>
-                            </h1>
-                            <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
-                                The Premium Lost & Found Marketplace for University Students. 
-                                <span className="text-blue-400"> Drop a pin. Get it back.</span>
-                            </p>
-                        </div>
-
-                        {/* 3D-Style Search Bar */}
-                        <div className="max-w-2xl mx-auto mb-16 animate-slide-in" style={{animationDelay: '0.2s'}}>
-                            <div className="glass-dark p-2 rounded-2xl flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Search for iPhone, wallet, laptop... 🔍"
-                                    className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none px-6 py-4 text-lg"
-                                />
-                                <button className="btn-glow px-8 py-4 rounded-xl font-bold text-white">
-                                    Search
-                                </button>
-                            </div>
-                            <div className="mt-4 flex justify-center gap-2">
-                                {["📱 Electronics", "💼 Accessories", "⌚ Luxury"].map((tag, i) => (
-                                    <button
-                                        key={i}
-                                        className="glass px-4 py-2 rounded-full text-sm text-gray-300 hover:text-blue-400 hover:border-blue-400 transition"
-                                    >
-                                        {tag}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Carousel - High Priority Items */}
-                        <div className="mb-12 animate-slide-in" style={{animationDelay: '0.4s'}}>
-                            <h2 className="text-2xl font-black mb-6">🔥 High Priority Items</h2>
-                            <div className="glass-dark rounded-2xl overflow-hidden p-8">
-                                <div className="flex flex-col md:flex-row gap-8 items-center">
-                                    {/* Carousel Item */}
-                                    <div className="flex-1">
-                                        <div className="relative">
-                                            <img
-                                                src={PREMIUM_ITEMS[activeSlide].images[0]}
-                                                alt={PREMIUM_ITEMS[activeSlide].title}
-                                                className="w-full h-80 object-cover rounded-xl"
-                                            />
-                                            <div className="absolute top-4 right-4 glass px-4 py-2 rounded-full">
-                                                <span className="neon-blue font-bold">{activeSlide + 1}/{PREMIUM_ITEMS.length}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Item Details */}
-                                    <div className="flex-1">
-                                        <div className="text-4xl mb-4">{PREMIUM_ITEMS[activeSlide].emoji}</div>
-                                        <h3 className="text-3xl font-black mb-2">{PREMIUM_ITEMS[activeSlide].title}</h3>
-                                        <p className="text-gray-400 mb-4 text-lg">{PREMIUM_ITEMS[activeSlide].description}</p>
-                                        
-                                        <div className="space-y-3 mb-6">
-                                            <div className="flex items-center gap-2 text-gray-300">
-                                                <span>📍</span> {PREMIUM_ITEMS[activeSlide].location}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-gray-300">
-                                                <span>⏰</span> {PREMIUM_ITEMS[activeSlide].date}
-                                            </div>
-                                            <div className="flex items-center gap-3 pt-4">
-                                                <img src={PREMIUM_ITEMS[activeSlide].finderImg} alt="Finder" className="w-10 h-10 rounded-full border border-blue-500" />
-                                                <div>
-                                                    <p className="text-sm text-gray-400">Found by</p>
-                                                    <p className="font-bold">{PREMIUM_ITEMS[activeSlide].finder}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-4">
-                                            <a
-                                                href={`https://wa.me/${PREMIUM_ITEMS[activeSlide].whatsapp}?text=Hi, I saw the ${PREMIUM_ITEMS[activeSlide].title} you posted on UniFind. Is it still available?`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="btn-glow px-6 py-3 rounded-xl font-bold text-white flex items-center gap-2 flex-1 justify-center"
-                                            >
-                                                💬 WhatsApp Finder
-                                            </a>
-                                            <button className="glass px-6 py-3 rounded-xl font-bold text-blue-400 hover:text-blue-300 transition">
-                                                ❤️
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Carousel Dots */}
-                                <div className="flex justify-center gap-3 mt-8">
-                                    {PREMIUM_ITEMS.map((_, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => setActiveSlide(i)}
-                                            className={`transition-all ${i === activeSlide ? 'bg-blue-500 w-8' : 'bg-gray-600 w-4'} h-2 rounded-full`}
-                                        ></button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* CTA Button */}
-                        <div className="text-center animate-slide-in" style={{animationDelay: '0.6s'}}>
-                            <button
-                                onClick={() => onAuthClick('signup')}
-                                className="btn-glow px-10 py-4 rounded-xl font-black text-white text-lg hover:scale-110 transition-transform"
-                            >
-                                🚀 Post Your Found Item Now
-                            </button>
-                            <p className="text-gray-400 mt-4">Or scroll to browse all lost items →</p>
-                        </div>
-                    </div>
+          {/* Stats */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+            style={{ display: "flex", gap: 36, marginTop: 40 }}>
+            {[{ n: 1247, s: "+", l: "Items recovered" }, { n: 98, s: "%", l: "Return rate" }, { n: 4800, s: "+", l: "Active students" }].map(stat => (
+              <div key={stat.l}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: T.textPrimary, letterSpacing: "-0.04em", lineHeight: 1 }}>
+                  <Count to={stat.n} suffix={stat.s} />
                 </div>
-            );
-        }
+                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{stat.l}</div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // ITEM CARD COMPONENT - INTERACTIVE & PROFESSIONAL
-        // ═══════════════════════════════════════════════════════════════════════════
-        function ItemCard({ item, onViewMap }) {
-            const [liked, setLiked] = useState(false);
+        {/* Testimonial card */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
+          {/* Ticker */}
+          <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: `1px solid ${T.border}` }}>
+            <Ticker />
+          </div>
 
-            return (
-                <div className="glass-dark rounded-2xl overflow-hidden card-hover group animate-slide-in">
-                    {/* Image Container */}
-                    <div className="relative h-64 overflow-hidden bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-                        <img
-                            src={item.images[0]}
-                            alt={item.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                        <div className="absolute top-4 right-4 glass px-3 py-1 rounded-full">
-                            <span className="text-sm font-bold text-blue-400">{item.category}</span>
-                        </div>
-                        <div className="absolute bottom-4 left-4 text-5xl">{item.emoji}</div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-6">
-                        <h3 className="text-2xl font-black mb-2 group-hover:text-blue-400 transition">{item.title}</h3>
-                        <p className="text-gray-400 text-sm mb-4 line-clamp-2">{item.description}</p>
-
-                        {/* Location & Time */}
-                        <div className="space-y-2 mb-4 text-sm text-gray-400">
-                            <div className="flex items-center gap-2">
-                                <span className="text-lg">📍</span>
-                                {item.location}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-lg">⏰</span>
-                                {item.date}
-                            </div>
-                        </div>
-
-                        {/* Finder Info */}
-                        <div className="flex items-center gap-3 mb-6 pb-6 border-b border-blue-500/20">
-                            <img src={item.finderImg} alt="Finder" className="w-10 h-10 rounded-full border border-blue-500" />
-                            <div>
-                                <p className="text-xs text-gray-500">Found by</p>
-                                <p className="font-bold text-sm">{item.finder}</p>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-3">
-                            <a
-                                href={`https://wa.me/${item.whatsapp}?text=Hi, I saw the ${item.title} you posted on UniFind. Is it still available?`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 btn-glow py-3 rounded-lg font-bold text-white text-center transition-all"
-                            >
-                                💬 Contact Finder
-                            </a>
-                            <button
-                                onClick={() => setLiked(!liked)}
-                                className={`px-4 py-3 rounded-lg transition-all ${liked ? 'bg-red-500/30 text-red-400' : 'glass text-gray-400'}`}
-                            >
-                                {liked ? '❤️' : '🤍'}
-                            </button>
-                            <button
-                                onClick={() => onViewMap(item)}
-                                className="px-4 py-3 rounded-lg glass text-gray-400 hover:text-blue-400 transition"
-                                title="View on map"
-                            >
-                                🗺️
-                            </button>
-                        </div>
-                    </div>
+          <div style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 22px", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(59,130,246,0.06), transparent 60%)", pointerEvents: "none" }} />
+            <AnimatePresence mode="wait">
+              <motion.div key={tIdx}
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.4 }}>
+                <p style={{ fontSize: 15, color: T.textPrimary, lineHeight: 1.6, fontWeight: 400, marginBottom: 16, fontStyle: "italic" }}>
+                  "{testimonials[tIdx].quote}"
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#2563EB,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                    {testimonials[tIdx].name[0]}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.textPrimary }}>{testimonials[tIdx].name}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{testimonials[tIdx].role}</div>
+                  </div>
                 </div>
-            );
+              </motion.div>
+            </AnimatePresence>
+            <div style={{ display: "flex", gap: 6, marginTop: 14 }}>
+              {testimonials.map((_, i) => (
+                <button key={i} onClick={() => setTIdx(i)} style={{ height: 4, borderRadius: 99, border: "none", cursor: "pointer", transition: "all 0.25s", background: i === tIdx ? T.blue : "rgba(255,255,255,0.15)", width: i === tIdx ? 20 : 4 }} />
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* ─── RIGHT PANEL — FORM ──────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", position: "relative", minHeight: "100vh" }}>
+
+        {/* Vertical rule on right of left panel */}
+        <div style={{ position: "absolute", left: 0, top: "10%", bottom: "10%", width: 1, background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.08), transparent)" }} />
+
+        <div style={{ width: "100%", maxWidth: 400 }}>
+          {/* Mobile logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }} className="mobile-logo">
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: "linear-gradient(135deg,#2563EB,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Compass size={15} color="#fff" strokeWidth={2.5} />
+            </div>
+            <span style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, letterSpacing: "-0.04em" }}>UniFind</span>
+          </div>
+
+          {/* Form header */}
+          <AnimatePresence mode="wait">
+            <motion.div key={mode} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
+              style={{ marginBottom: 28 }}>
+              <h2 style={{ fontSize: 26, fontWeight: 800, color: T.textPrimary, letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: 8 }}>
+                {mode === "signin" ? "Welcome back" : "Create account"}
+              </h2>
+              <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.5 }}>
+                {mode === "signin"
+                  ? "Sign in to your account to continue"
+                  : "Join UniFind and help your campus community"}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Google button */}
+          <motion.button
+            onClick={handleGoogle} disabled={loading || gLoading}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 0", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}`, fontSize: 14, fontWeight: 500, color: T.textSecondary, cursor: "pointer", marginBottom: 20, position: "relative", overflow: "hidden" }}
+            whileHover={{ background: T.surfaceHover, borderColor: T.borderHover }}
+            whileTap={{ scale: 0.985 }}
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+            {gLoading ? (
+              <motion.div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "#fff" }}
+                animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }} />
+            ) : (
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+              </svg>
+            )}
+            Continue with Google
+          </motion.button>
+
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+            <span style={{ fontSize: 12, color: T.textMuted }}>or</span>
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+          </div>
+
+          {/* Fields */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <AnimatePresence>
+              {mode === "signup" && (
+                <motion.div key="nameField"
+                  initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }}
+                  style={{ overflow: "hidden" }}>
+                  <Field label="Full Name" placeholder="Your full name" value={form.name}
+                    onChange={v => setForm(f => ({ ...f, name: v }))} icon={User}
+                    onKeyDown={e => e.key === "Enter" && handleSubmit()} autoComplete="name" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <Field label="Email address" type="email" placeholder="you@university.edu" value={form.email}
+              onChange={v => setForm(f => ({ ...f, email: v }))} icon={Mail}
+              onKeyDown={e => e.key === "Enter" && handleSubmit()} autoComplete="email" />
+            <Field label="Password" type={showPass ? "text" : "password"} placeholder="Your password" value={form.password}
+              onChange={v => setForm(f => ({ ...f, password: v }))} icon={Lock}
+              onKeyDown={e => e.key === "Enter" && handleSubmit()} autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              suffix={
+                <button type="button" onClick={() => setShowPass(s => !s)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, display: "flex", padding: 2 }}>
+                  <Eye size={14} strokeWidth={1.8} />
+                </button>
+              }
+            />
+          </div>
+
+          {/* Error */}
+          <AnimatePresence>
+            {error && (
+              <motion.div initial={{ opacity: 0, y: -8, height: 0 }} animate={{ opacity: 1, y: 0, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                style={{ marginTop: 12, padding: "10px 14px", borderRadius: 9, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", display: "flex", alignItems: "center", gap: 8 }}>
+                <AlertCircle size={13} color={T.red} strokeWidth={2} />
+                <span style={{ fontSize: 13, color: "#FCA5A5" }}>{error}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Submit */}
+          <motion.button
+            onClick={handleSubmit} disabled={loading || gLoading}
+            style={{ width: "100%", marginTop: 16, padding: "12px 0", borderRadius: 10, background: "linear-gradient(135deg, #1D4ED8 0%, #4338CA 100%)", border: "none", fontSize: 14, fontWeight: 600, color: "#fff", cursor: "pointer", position: "relative", overflow: "hidden", boxShadow: "0 0 0 1px rgba(59,130,246,0.25), 0 4px 24px rgba(29,78,216,0.25)" }}
+            whileHover={{ scale: 1.012, boxShadow: "0 0 0 1px rgba(59,130,246,0.45), 0 8px 32px rgba(29,78,216,0.4)" }}
+            whileTap={{ scale: 0.988 }}
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}>
+            {/* Shimmer sweep */}
+            <motion.div style={{ position: "absolute", inset: 0, background: "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%)", pointerEvents: "none" }}
+              animate={{ x: ["-130%", "230%"] }} transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }} />
+            {loading ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <motion.div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.25)", borderTopColor: "#fff" }}
+                  animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }} />
+                <span style={{ color: "rgba(255,255,255,0.75)" }}>{mode === "signin" ? "Signing in…" : "Creating account…"}</span>
+              </div>
+            ) : (
+              <span style={{ position: "relative", zIndex: 1 }}>{mode === "signin" ? "Sign in" : "Create account"}</span>
+            )}
+          </motion.button>
+
+          {/* Mode toggle */}
+          <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: T.textMuted }}>
+            {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
+            <button onClick={switchMode}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#60A5FA", fontWeight: 600, fontSize: 13 }}>
+              {mode === "signin" ? "Sign up free" : "Sign in"}
+            </button>
+          </p>
+
+          <p style={{ textAlign: "center", marginTop: 24, fontSize: 11, color: "rgba(255,255,255,0.12)", lineHeight: 1.6 }}>
+            By continuing, you agree to UniFind's Terms of Service and Privacy Policy.
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Responsive styles */}
+      <style>{`
+        @media(min-width:900px){
+          .lg-flex{display:flex!important}
+          .mobile-logo{display:none!important}
         }
+        @media(max-width:899px){
+          .mobile-logo{display:flex!important}
+        }
+      `}</style>
+    </div>
+  );
+}
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // MAIN DASHBOARD/GALLERY
-        // ═══════════════════════════════════════════════════════════════════════════
-        function DashboardPage({ onViewMap, onAuthClick, currentUser }) {
-            const [filteredItems, setFilteredItems] = useState(PREMIUM_ITEMS);
-            const [selectedCategory, setSelectedCategory] = useState("All");
-            const [searchTerm, setSearchTerm] = useState("");
+// ─────────────────────────────────────────────────────────────────────────────
+// ███████╗ APP SHELL
+// ─────────────────────────────────────────────────────────────────────────────
+function AppShell({ fbUser }) {
+  const [section, setSection] = useState("dashboard");
+  const [items, setItems] = useState(SEED_ITEMS);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showReport, setShowReport] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showNotifs, setShowNotifs] = useState(false);
 
-            const categories = ["All", "Electronics", "Luxury", "Accessories"];
+  const user = {
+    name: fbUser.displayName || fbUser.email?.split("@")[0] || "User",
+    email: fbUser.email,
+    photo: fbUser.photoURL,
+    karma: 120,
+    verified: !!fbUser.emailVerified || !!fbUser.displayName,
+    returned: 3,
+    uid: fbUser.uid,
+  };
 
-            useEffect(() => {
-                let items = PREMIUM_ITEMS;
+  const notifications = [
+    { id: 1, text: "Your MacBook report got 5 views", time: "3m ago", unread: true },
+    { id: 2, text: "Amaka O. may have found your item", time: "1h ago", unread: true },
+    { id: 3, text: "+25 Karma awarded for your report", time: "3h ago", unread: false },
+  ];
 
-                if (selectedCategory !== "All") {
-                    items = items.filter(item => item.category === selectedCategory);
-                }
+  const navLinks = [
+    { id: "dashboard", Icon: Home, label: "Dashboard" },
+    { id: "map", Icon: Map, label: "Live Map" },
+    { id: "items", Icon: Package, label: "Items" },
+    { id: "profile", Icon: User, label: "Profile" },
+  ];
 
-                if (searchTerm) {
-                    items = items.filter(item =>
-                        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        item.description.toLowerCase().includes(searchTerm.toLowerCase())
-                    );
-                }
+  const addItem = (form) => {
+    setItems(p => [{
+      id: Date.now(), title: form.title, category: form.category,
+      status: form.type, location: form.location, reporter: user.name,
+      time: "just now", desc: form.desc, karma: form.type === "found" ? 25 : 10,
+      phone: form.phone || "2340000000000", verified: user.verified,
+      mapX: 12 + Math.random() * 72, mapY: 12 + Math.random() * 72,
+    }, ...p]);
+    setToast({ msg: form.type === "found" ? "Found item reported · +25 Karma" : "Lost item reported", ok: true });
+    setShowReport(null);
+  };
 
-                setFilteredItems(items);
-            }, [selectedCategory, searchTerm]);
+  const SB_W = sidebarCollapsed ? 68 : 230;
 
+  return (
+    <div style={{ display: "flex", height: "100vh", background: T.bg, overflow: "hidden" }}>
+      <Grain />
+
+      {/* ── SIDEBAR ── */}
+      <motion.aside
+        animate={{ width: SB_W }}
+        transition={{ type: "spring", stiffness: 280, damping: 28 }}
+        style={{ flexShrink: 0, height: "100vh", display: "flex", flexDirection: "column", borderRight: `1px solid ${T.border}`, background: "rgba(3,5,12,0.98)", position: "relative", zIndex: 20 }}>
+
+        {/* Logo row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 16px", height: 60, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: "linear-gradient(135deg,#1D4ED8,#4338CA)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 0 14px rgba(37,99,235,0.3)" }}>
+            <Compass size={14} color="#fff" strokeWidth={2.5} />
+          </div>
+          <AnimatePresence>
+            {!sidebarCollapsed && (
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary, letterSpacing: "-0.04em", whiteSpace: "nowrap" }}>
+                UniFind
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: "10px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
+          {navLinks.map(({ id, Icon, label }) => {
+            const active = section === id;
             return (
-                <div className="min-h-screen pb-20">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-                        {/* Header */}
-                        <div className="mb-12 animate-slide-in">
-                            <h2 className="text-5xl font-black mb-4 gradient-text">All Lost Items</h2>
-                            <p className="text-xl text-gray-400">Browse and find your lost belongings</p>
-                        </div>
+              <motion.button key={id} onClick={() => setSection(id)}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", borderRadius: 8, background: "transparent", border: "none", cursor: "pointer", position: "relative", textAlign: "left" }}
+                whileTap={{ scale: 0.96 }}>
+                {active && (
+                  <motion.div layoutId="sidebarHl"
+                    style={{ position: "absolute", inset: 0, borderRadius: 8, background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.2)" }}
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }} />
+                )}
+                <Icon size={16} color={active ? "#60A5FA" : T.textMuted} strokeWidth={active ? 2.2 : 1.6} style={{ flexShrink: 0, position: "relative", zIndex: 1 }} />
+                <AnimatePresence>
+                  {!sidebarCollapsed && (
+                    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? T.textPrimary : T.textSecondary, whiteSpace: "nowrap", position: "relative", zIndex: 1 }}>
+                      {label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            );
+          })}
 
-                        {/* Search & Filter */}
-                        <div className="mb-12 space-y-6 animate-slide-in" style={{animationDelay: '0.1s'}}>
-                            {/* Search Bar */}
-                            <div className="glass-dark rounded-2xl p-2 flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Search items... 🔍"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none px-6 py-3"
-                                />
-                            </div>
+          {/* Report CTA */}
+          <div style={{ marginTop: 8 }}>
+            <motion.button onClick={() => setShowReport({ type: "lost" })}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", borderRadius: 8, background: "rgba(29,78,216,0.12)", border: "1px solid rgba(59,130,246,0.2)", cursor: "pointer", position: "relative", overflow: "hidden" }}
+              whileHover={{ borderColor: "rgba(59,130,246,0.4)" }} whileTap={{ scale: 0.96 }}>
+              <motion.div style={{ position: "absolute", inset: 0, background: "linear-gradient(105deg,transparent,rgba(255,255,255,0.05),transparent)", pointerEvents: "none" }}
+                animate={{ x: ["-120%", "220%"] }} transition={{ duration: 4, repeat: Infinity }} />
+              <Plus size={16} color="#60A5FA" strokeWidth={2.5} style={{ flexShrink: 0, position: "relative", zIndex: 1 }} />
+              <AnimatePresence>
+                {!sidebarCollapsed && (
+                  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    style={{ fontSize: 13, fontWeight: 600, color: "#93C5FD", whiteSpace: "nowrap", position: "relative", zIndex: 1 }}>
+                    Report Item
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </div>
+        </nav>
 
-                            {/* Category Filter */}
-                            <div className="flex gap-3 flex-wrap">
-                                {categories.map(category => (
-                                    <button
-                                        key={category}
-                                        onClick={() => setSelectedCategory(category)}
-                                        className={`px-6 py-3 rounded-full font-bold transition-all ${
-                                            selectedCategory === category
-                                                ? 'btn-glow text-white'
-                                                : 'glass text-gray-300 hover:text-blue-400'
-                                        }`}
-                                    >
-                                        {category}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+        {/* User row */}
+        <div style={{ padding: "10px 8px", borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 8, background: T.surface }}>
+            <div style={{ width: 26, height: 26, borderRadius: 6, flexShrink: 0, overflow: "hidden", background: user.photo ? "none" : "linear-gradient(135deg,#2563EB,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff" }}>
+              {user.photo ? <img src={user.photo} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : user.name[0].toUpperCase()}
+            </div>
+            <AnimatePresence>
+              {!sidebarCollapsed && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.name}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.email}</div>
+                  </div>
+                  <button onClick={() => signOut(auth)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, display: "flex", marginLeft: 6, flexShrink: 0 }}
+                    onMouseEnter={e => e.currentTarget.style.color = "#F87171"}
+                    onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>
+                    <LogOut size={13} strokeWidth={1.8} />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
 
-                        {/* Items Grid */}
-                        {filteredItems.length === 0 ? (
-                            <div className="text-center py-20">
-                                <div className="text-6xl mb-4">😔</div>
-                                <p className="text-xl text-gray-400">No items found. Try different filters.</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                                {filteredItems.map((item, idx) => (
-                                    <div key={item.id} style={{animationDelay: `${idx * 0.1}s`}}>
-                                        <ItemCard item={item} onViewMap={onViewMap} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+        {/* Collapse toggle */}
+        <motion.button
+          onClick={() => setSidebarCollapsed(s => !s)}
+          style={{ position: "absolute", top: 20, right: -13, width: 26, height: 26, borderRadius: "50%", background: "#0c1220", border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 30 }}
+          whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.9 }}>
+          <motion.div animate={{ rotate: sidebarCollapsed ? 0 : 180 }} transition={{ duration: 0.3 }}>
+            <ChevronRight size={12} color={T.textMuted} />
+          </motion.div>
+        </motion.button>
+      </motion.aside>
 
-                        {/* CTA Section */}
-                        {!currentUser && (
-                            <div className="glass-dark rounded-2xl p-12 text-center mb-8">
-                                <h3 className="text-3xl font-black mb-4">Found Something? Become a Hero!</h3>
-                                <p className="text-gray-300 mb-8 text-lg">Post your found items and help students recover their belongings.</p>
-                                <button
-                                    onClick={() => onAuthClick('signup')}
-                                    className="btn-glow px-10 py-4 rounded-xl font-bold text-white text-lg"
-                                >
-                                    📸 Post Item Now
-                                </button>
-                            </div>
-                        )}
+      {/* ── MAIN AREA ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+        {/* Topbar */}
+        <header style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 24px", height: 60, borderBottom: `1px solid ${T.border}`, background: "rgba(3,5,12,0.92)", backdropFilter: "blur(16px)", flexShrink: 0, position: "relative", zIndex: 10 }}>
+          <div style={{ flex: 1, maxWidth: 440 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 12px" }}>
+              <Search size={14} color={T.textMuted} strokeWidth={1.8} />
+              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search items, locations, reporters…"
+                style={{ flex: 1, fontSize: 13, color: T.textPrimary, outline: "none", background: "transparent" }} />
+            </div>
+          </div>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ position: "relative" }}>
+              <motion.button onClick={() => setShowNotifs(s => !s)}
+                style={{ width: 34, height: 34, borderRadius: 8, background: T.surface, border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}
+                whileTap={{ scale: 0.92 }}>
+                <Bell size={15} color={T.textMuted} strokeWidth={1.8} />
+                {notifications.filter(n => n.unread).length > 0 && (
+                  <span style={{ position: "absolute", top: 5, right: 5, width: 7, height: 7, borderRadius: "50%", background: T.blue, border: "1.5px solid #03050C" }} />
+                )}
+              </motion.button>
+              <AnimatePresence>
+                {showNotifs && (
+                  <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                    style={{ position: "absolute", top: 42, right: 0, width: 280, background: "#0c1220", border: `1px solid ${T.border}`, borderRadius: 12, boxShadow: "0 20px 60px rgba(0,0,0,0.6)", zIndex: 50, overflow: "hidden" }}>
+                    <div style={{ padding: "10px 16px", borderBottom: `1px solid ${T.border}` }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>Notifications</span>
                     </div>
-                </div>
-            );
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════
-        // AUTH MODAL - WhatsApp Centric
-        // ═══════════════════════════════════════════════════════════════════════════
-        function AuthModal({ mode, onClose, onLogin, onSignup }) {
-            const [whatsapp, setWhatsapp] = useState("");
-            const [name, setName] = useState("");
-            const [email, setEmail] = useState("");
-
-            const isSignup = mode === 'signup';
-
-            const handleSubmit = () => {
-                if (isSignup) {
-                    if (!whatsapp || !name || !email) {
-                        alert("Please fill all fields");
-                        return;
-                    }
-                    onSignup({ name, email, whatsapp, avatar: `https://i.pravatar.cc/150?u=${email}` });
-                } else {
-                    if (!whatsapp) {
-                        alert("Please enter WhatsApp number");
-                        return;
-                    }
-                    onLogin({ whatsapp });
-                }
-            };
-
-            return (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                    <div className="glass-dark rounded-3xl p-8 max-w-md w-full space-y-6 animate-slide-in">
-                        <button
-                            onClick={onClose}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl"
-                        >
-                            ×
-                        </button>
-
+                    {notifications.map(n => (
+                      <div key={n.id} style={{ display: "flex", gap: 10, padding: "11px 16px", borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", marginTop: 5, flexShrink: 0, background: n.unread ? T.blue : "transparent" }} />
                         <div>
-                            <h2 className="text-3xl font-black mb-2 gradient-text">{isSignup ? 'Join UniFind' : 'Welcome Back'}</h2>
-                            <p className="text-gray-400">
-                                {isSignup
-                                    ? 'WhatsApp-powered authentication for easy login'
-                                    : 'Sign in with your WhatsApp number'}
-                            </p>
+                          <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{n.text}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{n.time}</div>
                         </div>
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </header>
 
-                        <div className="space-y-4">
-                            {isSignup && (
-                                <>
-                                    <input
-                                        type="text"
-                                        placeholder="Your Full Name"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        className="w-full glass px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:border-blue-500 focus:border"
-                                    />
-                                    <input
-                                        type="email"
-                                        placeholder="University Email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full glass px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:border-blue-500 focus:border"
-                                    />
-                                </>
-                            )}
-                            <div>
-                                <label className="text-sm text-gray-400 mb-2 block">WhatsApp Number</label>
-                                <input
-                                    type="tel"
-                                    placeholder="Enter WhatsApp number with country code (e.g., 234XXXXXXXXXX)"
-                                    value={whatsapp}
-                                    onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, ''))}
-                                    className="w-full glass px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:border-blue-500 focus:border"
-                                />
-                                <p className="text-xs text-gray-500 mt-2">We'll use this for one-click WhatsApp messaging</p>
-                            </div>
-                        </div>
+        {/* Section content */}
+        <main style={{ flex: 1, overflow: "hidden" }}>
+          <AnimatePresence mode="wait">
+            <motion.div key={section} style={{ height: "100%" }}
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
+              {section === "dashboard" && <Dashboard user={user} items={items} setSection={setSection} setSelectedItem={setSelectedItem} setShowReport={setShowReport} sq={searchQuery} />}
+              {section === "map" && <MapView items={items} setSelectedItem={setSelectedItem} />}
+              {section === "items" && <ItemsView items={items} setSelectedItem={setSelectedItem} sq={searchQuery} />}
+              {section === "profile" && <ProfileView user={user} />}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
 
-                        <button
-                            onClick={handleSubmit}
-                            className="w-full btn-glow py-3 rounded-xl font-black text-white text-lg hover:scale-105 transition-transform"
-                        >
-                            💬 {isSignup ? 'Sign Up' : 'Login'} with WhatsApp
-                        </button>
+      {/* Backdrop for notif dropdown */}
+      <AnimatePresence>
+        {showNotifs && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowNotifs(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 9 }} />
+        )}
+      </AnimatePresence>
 
-                        <div className="text-center">
-                            <p className="text-gray-400 text-sm">
-                                {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
-                                <button
-                                    onClick={() => {
-                                        setWhatsapp("");
-                                        setName("");
-                                        setEmail("");
-                                    }}
-                                    className="text-blue-400 hover:text-blue-300 font-bold"
-                                >
-                                    {isSignup ? 'Login' : 'Sign Up'}
-                                </button>
-                            </p>
-                        </div>
+      {/* Overlays */}
+      <AnimatePresence>
+        {selectedItem && <ItemModal item={selectedItem} onClose={() => setSelectedItem(null)} />}
+        {showReport && <ReportModal initial={showReport} onClose={() => setShowReport(null)} onSubmit={addItem} />}
+        {toast && <ToastBar msg={toast.msg} onDone={() => setToast(null)} />}
+      </AnimatePresence>
+    </div>
+  );
+}
 
-                        <div className="border-t border-blue-500/20 pt-6">
-                            <p className="text-xs text-gray-500 text-center">
-                                By continuing, you agree to our Terms of Service and Privacy Policy.
-                                We'll never share your WhatsApp number.
-                            </p>
-                        </div>
-                    </div>
+// ─────────────────────────────────────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+function Dashboard({ user, items, setSection, setSelectedItem, setShowReport, sq }) {
+  const lost = items.filter(i => i.status === "lost").length;
+  const found = items.filter(i => i.status === "found").length;
+  const h = new Date().getHours();
+  const greeting = h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
+
+  const stats = [
+    { label: "Lost Items", val: lost, Icon: AlertCircle, color: T.red, bg: "rgba(239,68,68,0.07)", bd: "rgba(239,68,68,0.15)" },
+    { label: "Found Items", val: found, Icon: CheckCircle, color: T.green, bg: "rgba(16,185,129,0.07)", bd: "rgba(16,185,129,0.15)" },
+    { label: "Recovered", val: 47, Icon: Award, color: T.blue, bg: "rgba(59,130,246,0.07)", bd: "rgba(59,130,246,0.15)" },
+    { label: "Your Karma", val: user.karma, Icon: Zap, color: T.amber, bg: "rgba(245,158,11,0.07)", bd: "rgba(245,158,11,0.15)" },
+  ];
+
+  const filtered = items.filter(i => !sq || i.title.toLowerCase().includes(sq.toLowerCase()) || i.location.toLowerCase().includes(sq.toLowerCase()));
+
+  return (
+    <div style={{ height: "100%", overflowY: "auto", padding: "28px 28px 40px" }} className="no-scrollbar">
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+        <div>
+          <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Dashboard</div>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: T.textPrimary, letterSpacing: "-0.04em" }}>Good {greeting}, {user.name.split(" ")[0]}</h1>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {[{ label: "I lost something", type: "lost", color: T.red }, { label: "I found something", type: "found", color: T.green }].map(a => (
+            <motion.button key={a.type} onClick={() => setShowReport({ type: a.type })}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: a.color + "12", border: `1px solid ${a.color}28`, fontSize: 13, fontWeight: 500, color: T.textSecondary, cursor: "pointer" }}
+              whileHover={{ background: a.color + "20", borderColor: a.color + "50" }} whileTap={{ scale: 0.96 }}>
+              <Plus size={13} color={a.color} strokeWidth={2.5} /> {a.label}
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stat cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 28 }}>
+        {stats.map((s, i) => (
+          <motion.div key={s.label}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
+            style={{ borderRadius: 12, padding: "18px 18px 16px", background: s.bg, border: `1px solid ${s.bd}`, position: "relative", overflow: "hidden" }}
+            whileHover={{ y: -2 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 7, background: s.color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <s.Icon size={14} color={s.color} strokeWidth={2} />
+              </div>
+              <TrendingUp size={11} color={s.color + "70"} />
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: T.textPrimary, letterSpacing: "-0.04em", lineHeight: 1 }}>{s.val}</div>
+            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Two-col content */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 20 }}>
+        {/* Recent items */}
+        <div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary }}>Recent Activity</span>
+            <button onClick={() => setSection("items")} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#60A5FA", fontWeight: 500 }}>
+              View all <ArrowRight size={12} />
+            </button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {filtered.slice(0, 7).map((item, i) => (
+              <ItemRow key={item.id} item={item} delay={0.04 + i * 0.04} onClick={() => setSelectedItem(item)} />
+            ))}
+          </div>
+        </div>
+
+        {/* Right widgets */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Mini map */}
+          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${T.border}`, height: 180 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderBottom: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Live Map</span>
+              <button onClick={() => setSection("map")} style={{ fontSize: 11, color: "#60A5FA", background: "none", border: "none", cursor: "pointer" }}>Expand →</button>
+            </div>
+            <MiniMapPreview items={items} onClick={() => setSection("map")} />
+          </div>
+
+          {/* Karma */}
+          <div style={{ borderRadius: 12, padding: "16px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.14)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Zap size={16} color={T.amber} />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em" }}>Karma Score</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: T.textPrimary, letterSpacing: "-0.04em" }}>{user.karma}</div>
+              </div>
+              <div style={{ marginLeft: "auto", padding: "3px 10px", borderRadius: 99, background: "rgba(245,158,11,0.18)", fontSize: 11, fontWeight: 600, color: T.amber }}>Gold</div>
+            </div>
+            <div style={{ height: 4, borderRadius: 99, background: "rgba(255,255,255,0.07)" }}>
+              <motion.div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg,#F59E0B,#FBBF24)" }}
+                initial={{ width: 0 }} animate={{ width: `${(user.karma / 150) * 100}%` }}
+                transition={{ delay: 0.6, duration: 1.4, ease: "easeOut" }} />
+            </div>
+            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 8 }}>{150 - user.karma} pts to Platinum</div>
+          </div>
+
+          {/* Category breakdown */}
+          <div style={{ borderRadius: 12, padding: "16px", background: T.surface, border: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>By Category</div>
+            {[["Electronics", 3, T.blue], ["Documents", 2, T.green], ["Bags & Keys", 2, T.amber], ["Jewelry", 1, T.red]].map(([name, count, color]) => (
+              <div key={name} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: T.textSecondary, flex: 1 }}>{name}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: T.textPrimary }}>{count}</span>
+                <div style={{ width: 50, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${(count / 3) * 100}%`, background: color, borderRadius: 99 }} />
                 </div>
-            );
-        }
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // MAP VIEW
-        // ═══════════════════════════════════════════════════════════════════════════
-        function MapView({ item, onClose }) {
-            return (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 flex items-center justify-center p-4 animate-fade-in">
-                    <div className="glass-dark rounded-3xl p-6 max-w-2xl w-full max-h-[80vh] overflow-auto animate-slide-in">
-                        <button
-                            onClick={onClose}
-                            className="float-right text-gray-400 hover:text-white text-2xl mb-4"
-                        >
-                            ×
-                        </button>
+// Item row component
+function ItemRow({ item, delay = 0, onClick }) {
+  const c = item.status === "found" ? T.green : T.red;
+  return (
+    <motion.button onClick={onClick}
+      initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay }}
+      style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}`, cursor: "pointer", textAlign: "left" }}
+      whileHover={{ background: T.surfaceHover, x: 2 }}>
+      <div style={{ width: 32, height: 32, borderRadius: 8, background: c + "14", border: `1px solid ${c}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Package size={14} color={c} strokeWidth={1.5} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: T.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
+          {item.verified && <CheckCircle size={11} color={T.blue} strokeWidth={2} />}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+          <MapPin size={9} color={T.textMuted} />
+          <span style={{ fontSize: 11, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.location}</span>
+          <span style={{ color: "rgba(255,255,255,0.14)", fontSize: 11 }}>·</span>
+          <span style={{ fontSize: 11, color: T.textMuted }}>{item.time}</span>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 99, background: c + "14", color: c, textTransform: "capitalize" }}>{item.status}</span>
+        <ArrowRight size={12} color="rgba(255,255,255,0.15)" />
+      </div>
+    </motion.button>
+  );
+}
 
-                        <h2 className="text-2xl font-black mb-4">{item.title} Location</h2>
+// Mini map
+function MiniMapPreview({ items, onClick }) {
+  return (
+    <div onClick={onClick} style={{ flex: 1, position: "relative", background: "linear-gradient(135deg,#050c1f,#060e1c)", cursor: "pointer", height: "calc(100% - 0px)" }}>
+      <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(rgba(59,130,246,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.05) 1px,transparent 1px)`, backgroundSize: "18px 18px" }} />
+      {items.map(item => {
+        const c = item.status === "found" ? T.green : T.blue;
+        return (
+          <motion.div key={item.id} style={{ position: "absolute", left: `${item.mapX}%`, top: `${item.mapY}%`, width: 8, height: 8, borderRadius: "50%", background: c, transform: "translate(-50%,-50%)", boxShadow: `0 0 6px ${c}` }}
+            animate={{ scale: [1, 1.4, 1], opacity: [0.8, 1, 0.8] }}
+            transition={{ duration: 2 + Math.random(), repeat: Infinity, delay: Math.random() * 2 }} />
+        );
+      })}
+    </div>
+  );
+}
 
-                        <div className="glass rounded-xl p-4 mb-4">
-                            <div className="w-full h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-                                <div className="text-center">
-                                    <div className="text-6xl mb-4">📍</div>
-                                    <p className="text-gray-300">
-                                        <strong>Latitude:</strong> {item.lat.toFixed(4)}<br />
-                                        <strong>Longitude:</strong> {item.lng.toFixed(4)}
-                                    </p>
-                                    <p className="text-sm text-gray-400 mt-4">
-                                        📍 {item.location}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+// ─────────────────────────────────────────────────────────────────────────────
+// MAP VIEW
+// ─────────────────────────────────────────────────────────────────────────────
+function MapView({ items, setSelectedItem }) {
+  const [filter, setFilter] = useState("all");
+  const [hovered, setHovered] = useState(null);
+  const filtered = items.filter(i => filter === "all" || i.status === filter);
 
-                        <div className="flex gap-3">
-                            <a
-                                href={`https://wa.me/${item.whatsapp}?text=Hi, I saw the ${item.title} at ${item.location}. I think I found it!`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 btn-glow py-3 rounded-xl font-bold text-white text-center"
-                            >
-                                💬 Contact About Item
-                            </a>
-                            <a
-                                href={`https://maps.google.com/?q=${item.lat},${item.lng}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 glass py-3 rounded-xl font-bold text-blue-400 hover:text-blue-300 text-center"
-                            >
-                                🗺️ Open in Google Maps
-                            </a>
-                        </div>
+  return (
+    <div style={{ height: "100%", display: "flex" }}>
+      {/* Map canvas */}
+      <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "linear-gradient(145deg,#04091a,#060d1e)" }}>
+        {/* Grid */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(rgba(59,130,246,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.035) 1px,transparent 1px)`, backgroundSize: "56px 56px" }} />
+        {/* Roads + buildings */}
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.28 }}>
+          <line x1="0" y1="37%" x2="100%" y2="37%" stroke="rgba(59,130,246,0.22)" strokeWidth="10" />
+          <line x1="0" y1="63%" x2="100%" y2="63%" stroke="rgba(59,130,246,0.16)" strokeWidth="7" />
+          <line x1="27%" y1="0" x2="27%" y2="100%" stroke="rgba(59,130,246,0.18)" strokeWidth="8" />
+          <line x1="63%" y1="0" x2="63%" y2="100%" stroke="rgba(59,130,246,0.22)" strokeWidth="10" />
+          {[[7,7,20,26],[33,7,24,26],[67,7,24,26],[7,44,18,15],[33,44,26,15],[65,44,22,15],[7,67,20,24],[33,67,24,22],[65,67,22,22]].map(([x,y,w,h],i)=>(
+            <rect key={i} x={`${x}%`} y={`${y}%`} width={`${w/2.4}%`} height={`${h/2.4}%`} fill="rgba(59,130,246,0.05)" stroke="rgba(59,130,246,0.18)" strokeWidth="0.8" rx="3"/>
+          ))}
+        </svg>
+        {/* Building labels */}
+        {[["Library","8%","8%"],["Science","34%","8%"],["Engineering","68%","8%"],["Admin","8%","45%"],["Cafeteria","34%","45%"],["Sports","66%","45%"]].map(([n,l,t])=>(
+          <div key={n} style={{ position:"absolute", left:l, top:t, fontSize:9, color:"rgba(147,197,253,0.25)", fontWeight:500, pointerEvents:"none"}}>{n}</div>
+        ))}
+
+        {/* Pins */}
+        {filtered.map(item => {
+          const c = item.status === "found" ? T.green : T.blue;
+          const isHov = hovered === item.id;
+          return (
+            <motion.button key={item.id}
+              style={{ position:"absolute", left:`${item.mapX}%`, top:`${item.mapY}%`, transform:"translate(-50%,-50%)", background:"none", border:"none", cursor:"pointer" }}
+              onHoverStart={()=>setHovered(item.id)} onHoverEnd={()=>setHovered(null)}
+              onClick={()=>setSelectedItem(item)}
+              initial={{scale:0}} animate={{scale:1}} transition={{type:"spring",stiffness:400,damping:20}}>
+              {[1,2].map(r=>(
+                <motion.div key={r} style={{ position:"absolute", inset:-(r*9), borderRadius:"50%", border:`1px solid ${c}42`}}
+                  animate={{opacity:[0.5,0],scale:[1,1.8]}} transition={{duration:2.2,delay:r*0.7,repeat:Infinity}}/>
+              ))}
+              <motion.div animate={{scale:isHov?1.22:1}}
+                style={{width:32,height:32,borderRadius:9,background:c+"18",border:`1.5px solid ${c}`,boxShadow:`0 0 ${isHov?24:10}px ${c}55`,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
+                <MapPin size={13} color={c} />
+              </motion.div>
+              <AnimatePresence>
+                {isHov && (
+                  <motion.div initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} exit={{opacity:0,y:6}}
+                    style={{position:"absolute",bottom:"100%",left:"50%",transform:"translateX(-50%)",marginBottom:8,whiteSpace:"nowrap",zIndex:10}}>
+                    <div style={{padding:"6px 12px",borderRadius:8,background:"rgba(4,7,20,0.96)",border:`1px solid ${c}40`,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",fontSize:12,fontWeight:600,color:T.textPrimary}}>
+                      {item.title} <span style={{opacity:0.42}}>· {item.status}</span>
                     </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          );
+        })}
+
+        {/* HUD */}
+        <div style={{position:"absolute",top:16,left:16,display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:9,background:"rgba(3,5,12,0.88)",border:`1px solid ${T.border}`,backdropFilter:"blur(12px)"}}>
+          <motion.div style={{width:6,height:6,borderRadius:"50%",background:T.green}} animate={{opacity:[1,0.3,1]}} transition={{duration:2,repeat:Infinity}}/>
+          <span style={{fontSize:12,fontWeight:500,color:T.textSecondary}}>Live · {filtered.length} pins active</span>
+        </div>
+
+        {/* Filters */}
+        <div style={{position:"absolute",bottom:20,left:"50%",transform:"translateX(-50%)",display:"flex",gap:8}}>
+          {[{id:"all",l:"All",n:items.length},{id:"lost",l:"Lost",n:items.filter(i=>i.status==="lost").length,c:T.red},{id:"found",l:"Found",n:items.filter(i=>i.status==="found").length,c:T.green}].map(f=>(
+            <motion.button key={f.id} onClick={()=>setFilter(f.id)}
+              style={{padding:"7px 16px",borderRadius:9,border:`1px solid ${filter===f.id?(f.c||T.blue)+"55":T.border}`,background:filter===f.id?"rgba(3,5,12,0.94)":"rgba(3,5,12,0.72)",backdropFilter:"blur(12px)",fontSize:12,fontWeight:600,color:filter===f.id?T.textPrimary:T.textMuted,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}
+              whileHover={{scale:1.04}} whileTap={{scale:0.96}}>
+              {f.l} <span style={{color:f.c||"#60A5FA",opacity:0.7}}>{f.n}</span>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      {/* Item sidebar */}
+      <div style={{width:240,flexShrink:0,borderLeft:`1px solid ${T.border}`,background:"rgba(3,5,12,0.98)",overflowY:"auto"}} className="no-scrollbar">
+        <div style={{padding:"12px 14px",borderBottom:`1px solid ${T.border}`}}>
+          <span style={{fontSize:11,fontWeight:600,color:T.textMuted,textTransform:"uppercase",letterSpacing:"0.08em"}}>Items</span>
+        </div>
+        <div style={{padding:10,display:"flex",flexDirection:"column",gap:6}}>
+          {items.map(item=>{
+            const c=item.status==="found"?T.green:T.red;
+            return(
+              <button key={item.id} onClick={()=>setSelectedItem(item)}
+                style={{width:"100%",textAlign:"left",padding:"10px 12px",borderRadius:8,background:T.surface,border:`1px solid ${T.border}`,cursor:"pointer"}}
+                onMouseEnter={e=>{e.currentTarget.style.background=T.surfaceHover}}
+                onMouseLeave={e=>{e.currentTarget.style.background=T.surface}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:c,flexShrink:0}}/>
+                  <span style={{fontSize:12,fontWeight:600,color:T.textPrimary,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.title}</span>
                 </div>
+                <div style={{fontSize:10,color:T.textMuted,paddingLeft:12}}>{item.location}</div>
+                <div style={{fontSize:10,color:T.textMuted,paddingLeft:12}}>{item.time}</div>
+              </button>
             );
-        }
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        // ═══════════════════════════════════════════════════════════════════════════
-        // MAIN APP
-        // ═══════════════════════════════════════════════════════════════════════════
-        function App() {
-            const [currentPage, setCurrentPage] = useState('home');
-            const [authMode, setAuthMode] = useState(null);
-            const [currentUser, setCurrentUser] = useState(null);
-            const [selectedItem, setSelectedItem] = useState(null);
+// ─────────────────────────────────────────────────────────────────────────────
+// ITEMS VIEW
+// ─────────────────────────────────────────────────────────────────────────────
+function ItemsView({ items, setSelectedItem, sq }) {
+  const [filter, setFilter] = useState("all");
+  const [cat, setCat] = useState("All");
+  const [view, setView] = useState("list");
 
-            const handleAuthClick = (mode) => {
-                setAuthMode(mode);
-            };
+  const filtered = items.filter(i =>
+    (filter === "all" || i.status === filter) &&
+    (cat === "All" || i.category === cat) &&
+    (!sq || i.title.toLowerCase().includes(sq.toLowerCase()) || i.location.toLowerCase().includes(sq.toLowerCase()))
+  );
 
-            const handleLogin = (data) => {
-                setCurrentUser({ whatsapp: data.whatsapp, name: "UniFind User", avatar: "https://i.pravatar.cc/150?u=unifind" });
-                setAuthMode(null);
-            };
+  return (
+    <div style={{height:"100%",overflowY:"auto",padding:"24px 24px 40px"}} className="no-scrollbar">
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+        <div>
+          <h1 style={{fontSize:20,fontWeight:800,color:T.textPrimary,letterSpacing:"-0.04em"}}>All Items</h1>
+          <p style={{fontSize:12,color:T.textMuted,marginTop:2}}>{filtered.length} of {items.length} items</p>
+        </div>
+        <div style={{display:"flex",borderRadius:8,overflow:"hidden",border:`1px solid ${T.border}`}}>
+          {[{id:"list",I:List},{id:"grid",I:LayoutGrid}].map(v=>(
+            <button key={v.id} onClick={()=>setView(v.id)}
+              style={{padding:"7px 10px",background:view===v.id?"rgba(59,130,246,0.15)":T.surface,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:view===v.id?"#60A5FA":T.textMuted}}>
+              <v.I size={14} strokeWidth={1.8}/>
+            </button>
+          ))}
+        </div>
+      </div>
 
-            const handleSignup = (data) => {
-                setCurrentUser(data);
-                setAuthMode(null);
-            };
+      {/* Filters */}
+      <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:20}}>
+        {["all","lost","found"].map(f=>{
+          const c=f==="found"?T.green:f==="lost"?T.red:T.blue;
+          return(
+            <button key={f} onClick={()=>setFilter(f)}
+              style={{padding:"6px 14px",borderRadius:8,background:filter===f?c+"14":T.surface,border:`1px solid ${filter===f?c+"40":T.border}`,fontSize:12,fontWeight:500,color:filter===f?T.textPrimary:T.textSecondary,cursor:"pointer",textTransform:"capitalize"}}>
+              {f==="all"?"All Items":f}
+            </button>
+          );
+        })}
+        <div style={{width:1,background:T.border,margin:"0 4px"}}/>
+        {CATEGORIES.map(c=>(
+          <button key={c} onClick={()=>setCat(c)}
+            style={{padding:"6px 12px",borderRadius:8,background:cat===c?"rgba(99,102,241,0.15)":T.surface,border:`1px solid ${cat===c?"rgba(99,102,241,0.4)":T.border}`,fontSize:12,fontWeight:500,color:cat===c?"#A5B4FC":T.textSecondary,cursor:"pointer",whiteSpace:"nowrap"}}>
+            {c}
+          </button>
+        ))}
+      </div>
 
-            const handleLogout = () => {
-                setCurrentUser(null);
-                setCurrentPage('home');
-            };
+      {/* Items */}
+      <AnimatePresence mode="popLayout">
+        {view==="list" ? (
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {filtered.map((item,i)=>(
+              <motion.div key={item.id} layout initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0}} transition={{delay:i*0.03}}>
+                <ItemRow item={item} onClick={()=>setSelectedItem(item)}/>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
+            {filtered.map((item,i)=>{
+              const c=item.status==="found"?T.green:T.red;
+              return(
+                <motion.button key={item.id} layout onClick={()=>setSelectedItem(item)}
+                  initial={{opacity:0,scale:0.96}} animate={{opacity:1,scale:1}} exit={{opacity:0}} transition={{delay:i*0.03}}
+                  style={{borderRadius:12,padding:"18px",textAlign:"left",background:T.surface,border:`1px solid ${T.border}`,cursor:"pointer"}}
+                  whileHover={{y:-3,borderColor:c+"35"}}>
+                  <div style={{width:36,height:36,borderRadius:9,background:c+"14",border:`1px solid ${c}22`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14}}>
+                    <Package size={16} color={c} strokeWidth={1.5}/>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:700,color:T.textPrimary,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.title}</div>
+                  <div style={{fontSize:12,color:T.textMuted,marginBottom:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.location}</div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <span style={{fontSize:11,fontWeight:600,padding:"3px 9px",borderRadius:99,background:c+"14",color:c,textTransform:"capitalize"}}>{item.status}</span>
+                    <span style={{fontSize:11,color:T.textMuted}}>{item.time}</span>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        )}
+      </AnimatePresence>
+      {filtered.length===0&&(
+        <div style={{textAlign:"center",padding:"80px 0"}}>
+          <Package size={36} color="rgba(255,255,255,0.08)" strokeWidth={1}/>
+          <p style={{fontSize:13,color:T.textMuted,marginTop:12}}>No items match your filters</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-                    <Navbar onAuthClick={handleAuthClick} currentUser={currentUser} onLogout={handleLogout} />
+// ─────────────────────────────────────────────────────────────────────────────
+// PROFILE VIEW
+// ─────────────────────────────────────────────────────────────────────────────
+function ProfileView({ user }) {
+  const kColor = user.karma >= 100 ? T.amber : "#94A3B8";
+  const kLabel = user.karma >= 100 ? "Gold" : "Silver";
 
-                    {currentPage === 'home' && (
-                        <>
-                            <HeroSection onAuthClick={handleAuthClick} />
-                            <DashboardPage
-                                onViewMap={setSelectedItem}
-                                onAuthClick={handleAuthClick}
-                                currentUser={currentUser}
-                            />
-                        </>
+  return (
+    <div style={{height:"100%",overflowY:"auto",padding:"24px 24px 40px"}} className="no-scrollbar">
+      <div style={{maxWidth:680}}>
+        {/* Profile hero */}
+        <div style={{borderRadius:14,padding:"24px",background:T.surface,border:`1px solid ${T.border}`,marginBottom:16,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:0,right:0,width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle,rgba(37,99,235,0.08),transparent)",pointerEvents:"none",transform:"translate(30%,-30%)"}}/>
+          <div style={{display:"flex",alignItems:"center",gap:18}}>
+            <div style={{width:56,height:56,borderRadius:14,overflow:"hidden",background:user.photo?"none":"linear-gradient(135deg,#1D4ED8,#4338CA)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:800,color:"#fff",flexShrink:0}}>
+              {user.photo?<img src={user.photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:user.name[0]}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <h2 style={{fontSize:20,fontWeight:800,color:T.textPrimary,letterSpacing:"-0.04em"}}>{user.name}</h2>
+                {user.verified&&<CheckCircle size={15} color={T.blue} strokeWidth={2}/>}
+              </div>
+              <p style={{fontSize:13,color:T.textMuted}}>{user.email}</p>
+            </div>
+            <button onClick={()=>signOut(auth)}
+              style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",borderRadius:8,background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.18)",fontSize:12,fontWeight:500,color:"#F87171",cursor:"pointer"}}>
+              <LogOut size={13} strokeWidth={1.8}/> Sign out
+            </button>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:0,marginTop:20,paddingTop:20,borderTop:`1px solid ${T.border}`}}>
+            {[["Reported",5],["Returned",user.returned],["Helped",12]].map(([l,v])=>(
+              <div key={l} style={{textAlign:"center"}}>
+                <div style={{fontSize:22,fontWeight:800,color:T.textPrimary,letterSpacing:"-0.04em"}}>{v}</div>
+                <div style={{fontSize:12,color:T.textMuted,marginTop:3}}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          {/* Karma */}
+          <div style={{borderRadius:12,padding:"18px",background:kColor+"08",border:`1px solid ${kColor}20`}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+              <div style={{width:32,height:32,borderRadius:8,background:kColor+"1a",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <Zap size={16} color={kColor}/>
+              </div>
+              <div>
+                <div style={{fontSize:10,color:T.textMuted,fontWeight:500,textTransform:"uppercase",letterSpacing:"0.08em"}}>Karma Score</div>
+                <div style={{fontSize:22,fontWeight:800,color:T.textPrimary,letterSpacing:"-0.04em"}}>{user.karma}</div>
+              </div>
+              <div style={{marginLeft:"auto",padding:"4px 12px",borderRadius:99,background:kColor+"22",fontSize:12,fontWeight:600,color:kColor}}>{kLabel}</div>
+            </div>
+            <div style={{height:4,borderRadius:99,background:"rgba(255,255,255,0.07)"}}>
+              <motion.div style={{height:"100%",borderRadius:99,background:`linear-gradient(90deg,${kColor},${kColor}cc)`}}
+                initial={{width:0}} animate={{width:`${(user.karma/150)*100}%`}}
+                transition={{delay:0.5,duration:1.3,ease:"easeOut"}}/>
+            </div>
+            <div style={{fontSize:11,color:T.textMuted,marginTop:8}}>{150-user.karma} pts to Platinum</div>
+          </div>
+
+          {/* Verification */}
+          <div style={{borderRadius:12,padding:"18px",background:T.surface,border:`1px solid ${T.border}`}}>
+            <div style={{fontSize:10,fontWeight:600,color:T.textMuted,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>Verification</div>
+            {[["Email address",true],["Google account",!!user.photo],["Student ID",user.verified],["Phone number",false]].map(([l,d])=>(
+              <div key={l} style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <div style={{width:18,height:18,borderRadius:"50%",background:d?"rgba(16,185,129,0.18)":"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  {d?<CheckCircle size={10} color={T.green} strokeWidth={2}/>:<Clock size={9} color={T.textMuted} strokeWidth={2}/>}
+                </div>
+                <span style={{fontSize:12,flex:1,color:d?T.textSecondary:T.textMuted}}>{l}</span>
+                {!d&&<button style={{fontSize:11,color:"#60A5FA",background:"none",border:"none",cursor:"pointer"}}>Setup →</button>}
+              </div>
+            ))}
+          </div>
+
+          {/* Achievements */}
+          <div style={{gridColumn:"1/-1",borderRadius:12,padding:"18px",background:T.surface,border:`1px solid ${T.border}`}}>
+            <div style={{fontSize:10,fontWeight:600,color:T.textMuted,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:16}}>Achievements</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10}}>
+              {[["🏆","First Return",true],["⭐","5 Found",true],["🛡️","Verified",user.verified],["🔥","10 Found",false],["💎","Diamond",false],["🌟","Campus Hero",false]].map(([icon,l,earned])=>(
+                <div key={l} style={{padding:"14px 8px",borderRadius:10,textAlign:"center",background:earned?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.02)",border:`1px solid ${earned?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.04)"}`,opacity:earned?1:0.35}}>
+                  <div style={{fontSize:22,marginBottom:6}}>{icon}</div>
+                  <div style={{fontSize:10,color:T.textMuted}}>{l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ITEM DETAIL MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function ItemModal({ item, onClose }) {
+  const c = item.status === "found" ? T.green : T.red;
+  const phone = item.phone.replace(/\D/g, "");
+  const waMsg = encodeURIComponent(`Hi! Saw your UniFind report for "${item.title}" near ${item.location}. ${item.status === "lost" ? "I think I found it!" : "Is this yours?"}`);
+
+  return (
+    <Overlay onClose={onClose}>
+      <motion.div style={{ background: "#09101f", border: `1px solid ${T.border}`, borderRadius: 16, overflow: "hidden", width: "100%", maxWidth: 460, boxShadow: "0 40px 100px rgba(0,0,0,0.75)" }}
+        initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.94, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 280, damping: 24 }}>
+        <div style={{ height: 2, background: `linear-gradient(90deg,${c},${c}70)` }} />
+        <div style={{ padding: 24 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 11, background: c + "14", border: `1px solid ${c}22`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Package size={20} color={c} strokeWidth={1.5} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: T.textPrimary, letterSpacing: "-0.03em" }}>{item.title}</h2>
+                <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 99, background: c + "14", color: c, textTransform: "capitalize" }}>
+                  {item.status === "found" ? "✅ Found" : "🔴 Lost"} · {item.category}
+                </span>
+              </div>
+            </div>
+            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 7, background: T.surface, border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <X size={13} color={T.textMuted} />
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+            {[[<MapPin size={12} />, "Location", item.location], [<Clock size={12} />, "Reported", item.time], [<User size={12} />, "Reported by", item.reporter], [<Zap size={12} />, "Karma reward", `+${item.karma} pts`]].map(([icon, l, v]) => (
+              <div key={l} style={{ padding: "11px 13px", borderRadius: 9, background: T.surface, border: `1px solid ${T.border}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4, color: T.textMuted }}>{icon}<span style={{ fontSize: 10 }}>{l}</span></div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: T.textPrimary }}>{v}</span>
+              </div>
+            ))}
+          </div>
+
+          {item.desc && (
+            <div style={{ padding: "13px", borderRadius: 9, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 16 }}>
+              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Description</div>
+              <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.65 }}>{item.desc}</p>
+            </div>
+          )}
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <motion.a href={`https://wa.me/${phone}?text=${waMsg}`} target="_blank" rel="noreferrer"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px", borderRadius: 9, background: "rgba(37,211,102,0.1)", border: "1px solid rgba(37,211,102,0.28)", fontSize: 13, fontWeight: 600, color: "#25D366", cursor: "pointer" }}
+              whileHover={{ background: "rgba(37,211,102,0.2)" }} whileTap={{ scale: 0.97 }}>
+              <MessageCircle size={15} /> WhatsApp
+            </motion.a>
+            <motion.button onClick={onClose}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px", borderRadius: 9, background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.28)", fontSize: 13, fontWeight: 600, color: "#60A5FA", cursor: "pointer" }}
+              whileHover={{ background: "rgba(59,130,246,0.2)" }} whileTap={{ scale: 0.97 }}>
+              <Eye size={15} /> Track
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </Overlay>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REPORT MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function ReportModal({ initial, onClose, onSubmit }) {
+  const [step, setStep] = useState(1);
+  const [image, setImage] = useState(null);
+  const [dragging, setDragging] = useState(false);
+  const [form, setForm] = useState({ type: initial?.type || "lost", title: "", category: "Electronics", location: "", desc: "", phone: "" });
+  const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  return (
+    <Overlay onClose={onClose}>
+      <motion.div style={{ background: "#09101f", border: `1px solid ${T.border}`, borderRadius: 16, overflow: "hidden", width: "100%", maxWidth: 500, boxShadow: "0 40px 100px rgba(0,0,0,0.75)" }}
+        initial={{ scale: 0.93, opacity: 0, y: 16 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.93, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 280, damping: 24 }}>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: `1px solid ${T.border}` }}>
+          <div>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, letterSpacing: "-0.03em" }}>{form.type === "lost" ? "Report a Lost Item" : "Report a Found Item"}</h2>
+            <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+              {[1, 2, 3].map(s => (
+                <div key={s} style={{ height: 3, borderRadius: 99, overflow: "hidden", width: s <= step ? 22 : 10, background: "rgba(255,255,255,0.08)", transition: "width 0.2s" }}>
+                  <motion.div style={{ height: "100%", background: s < step ? T.green : s === step ? T.blue : "transparent" }} animate={{ width: s <= step ? "100%" : "0%" }} transition={{ duration: 0.3 }} />
+                </div>
+              ))}
+              <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Step {step}/3</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 7, background: T.surface, border: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <X size={13} color={T.textMuted} />
+          </button>
+        </div>
+
+        <div style={{ padding: "22px", minHeight: 300 }}>
+          <AnimatePresence mode="wait">
+            {step === 1 && (
+              <motion.div key="s1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
+                style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ display: "flex", gap: 10 }}>
+                  {["lost", "found"].map(t => {
+                    const c = t === "found" ? T.green : T.red;
+                    return (
+                      <button key={t} onClick={() => upd("type", t)}
+                        style={{ flex: 1, padding: "11px", borderRadius: 9, background: form.type === t ? c + "14" : T.surface, border: `1px solid ${form.type === t ? c + "45" : T.border}`, fontSize: 13, fontWeight: 600, color: form.type === t ? T.textPrimary : T.textMuted, cursor: "pointer", textTransform: "capitalize" }}>
+                        {t === "lost" ? "🔴 " : "🟢 "}I {t} something
+                      </button>
+                    );
+                  })}
+                </div>
+                <Field label="Item Name" placeholder="e.g. MacBook Pro, Student ID…" value={form.title} onChange={v => upd("title", v)} icon={Package} />
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: T.textMuted, marginBottom: 6, letterSpacing: "0.04em" }}>Category</label>
+                  <select value={form.category} onChange={e => upd("category", e.target.value)}
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}`, fontSize: 14, color: T.textPrimary, outline: "none" }}>
+                    {CATEGORIES.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </motion.div>
+            )}
+            {step === 2 && (
+              <motion.div key="s2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
+                style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: T.textMuted, marginBottom: 6, letterSpacing: "0.04em" }}>Photo <span style={{ color: "rgba(255,255,255,0.2)" }}>(optional)</span></label>
+                  <motion.label
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 130, borderRadius: 12, border: `2px dashed ${dragging ? T.blue : T.border}`, background: dragging ? "rgba(59,130,246,0.06)" : T.surface, cursor: "pointer", position: "relative", overflow: "hidden", transition: "border-color 0.15s" }}
+                    onDragOver={e => { e.preventDefault(); setDragging(true); }}
+                    onDragLeave={() => setDragging(false)}
+                    onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) setImage(URL.createObjectURL(f)); }}
+                    whileHover={{ borderColor: T.blue }}>
+                    {image ? (
+                      <>
+                        <img src={image} style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} alt="preview" />
+                        <button onClick={e => { e.preventDefault(); setImage(null); }} style={{ position: "absolute", top: 8, right: 8, width: 24, height: 24, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <X size={11} color="#fff" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={20} color={T.textMuted} strokeWidth={1.5} />
+                        <span style={{ fontSize: 13, color: T.textMuted, marginTop: 8 }}>Drag & drop or <span style={{ color: "#60A5FA" }}>browse</span></span>
+                      </>
                     )}
-
-                    {/* Footer */}
-                    <footer className="border-t border-blue-500/10 glass-dark py-12">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                                <div>
-                                    <h3 className="font-black text-lg mb-4 gradient-text">UniFind</h3>
-                                    <p className="text-gray-400 text-sm">Premium Lost & Found Marketplace for University Students</p>
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-sm mb-4 text-blue-400">Product</h4>
-                                    <ul className="space-y-2 text-sm text-gray-400">
-                                        <li><button className="hover:text-blue-400 transition">Browse Items</button></li>
-                                        <li><button className="hover:text-blue-400 transition">Post Item</button></li>
-                                        <li><button className="hover:text-blue-400 transition">How it Works</button></li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-sm mb-4 text-blue-400">Company</h4>
-                                    <ul className="space-y-2 text-sm text-gray-400">
-                                        <li><button className="hover:text-blue-400 transition">About Us</button></li>
-                                        <li><button className="hover:text-blue-400 transition">Privacy</button></li>
-                                        <li><button className="hover:text-blue-400 transition">Terms</button></li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-sm mb-4 text-blue-400">Support</h4>
-                                    <a
-                                        href="https://wa.me/2349123456789?text=Hi, I'm interested in UniFind. Tell me more!"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="btn-glow px-6 py-2 rounded-lg font-bold text-white text-sm block text-center"
-                                    >
-                                        💬 Talk to Developer
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div className="border-t border-blue-500/10 pt-8 text-center text-gray-500 text-sm">
-                                <p>© 2024 UniFind. All rights reserved. Built with ❤️ for students.</p>
-                            </div>
-                        </div>
-                    </footer>
-
-                    {/* Modals */}
-                    {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} onLogin={handleLogin} onSignup={handleSignup} />}
-                    {selectedItem && <MapView item={selectedItem} onClose={() => setSelectedItem(null)} />}
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { if (e.target.files[0]) setImage(URL.createObjectURL(e.target.files[0])); }} />
+                  </motion.label>
                 </div>
-            );
-        }
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: T.textMuted, marginBottom: 6 }}>Location</label>
+                  <select value={form.location} onChange={e => upd("location", e.target.value)}
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}`, fontSize: 14, color: T.textPrimary, outline: "none" }}>
+                    <option value="">Select campus location…</option>
+                    {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: T.textMuted, marginBottom: 6 }}>Description</label>
+                  <textarea value={form.desc} onChange={e => upd("desc", e.target.value)} rows={3}
+                    placeholder="Describe the item — color, brand, markings…"
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}`, fontSize: 13, color: T.textPrimary, resize: "none", outline: "none" }} />
+                </div>
+              </motion.div>
+            )}
+            {step === 3 && (
+              <motion.div key="s3" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
+                style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <Field label="WhatsApp Number" placeholder="+234 801 234 5678" value={form.phone} onChange={v => upd("phone", v)} icon={MessageCircle} />
+                <div style={{ padding: "14px 16px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}` }}>
+                  <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Summary</div>
+                  {[["Type", form.type], ["Item", form.title || "—"], ["Category", form.category], ["Location", form.location || "—"]].map(([k, v]) => (
+                    <div key={k} style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13 }}>
+                      <span style={{ color: T.textMuted }}>{k}</span>
+                      <span style={{ fontWeight: 600, color: T.textPrimary, textTransform: "capitalize" }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 10, background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.18)" }}>
+                  <Sparkles size={14} color={T.blue} />
+                  <span style={{ fontSize: 12, color: "rgba(147,197,253,0.8)" }}>Submitting earns <strong style={{ color: "#93C5FD" }}>+{form.type === "found" ? 25 : 10} Karma Points</strong></span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+        <div style={{ display: "flex", gap: 10, padding: "0 22px 22px" }}>
+          {step > 1 && (
+            <button onClick={() => setStep(s => s - 1)}
+              style={{ padding: "10px 18px", borderRadius: 9, background: T.surface, border: `1px solid ${T.border}`, fontSize: 13, fontWeight: 500, color: T.textMuted, cursor: "pointer" }}>
+              Back
+            </button>
+          )}
+          <motion.button onClick={() => step < 3 ? setStep(s => s + 1) : onSubmit(form)}
+            style={{ flex: 1, padding: "10px", borderRadius: 9, background: "linear-gradient(135deg,#1D4ED8,#4338CA)", border: "none", fontSize: 13, fontWeight: 600, color: "#fff", cursor: "pointer", position: "relative", overflow: "hidden" }}
+            whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.985 }}>
+            <motion.div style={{ position: "absolute", inset: 0, background: "linear-gradient(105deg,transparent,rgba(255,255,255,0.1),transparent)", pointerEvents: "none" }}
+              animate={{ x: ["-130%", "230%"] }} transition={{ duration: 2.8, repeat: Infinity }} />
+            <span style={{ position: "relative", zIndex: 1 }}>{step === 3 ? "Submit Report" : "Continue →"}</span>
+          </motion.button>
+        </div>
+      </motion.div>
+    </Overlay>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED OVERLAY WRAPPER
+// ─────────────────────────────────────────────────────────────────────────────
+function Overlay({ onClose, children }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)" }} />
+      <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────────────────────────────────────
+function ToastBar({ msg, onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, 3600); return () => clearTimeout(t); }, []);
+  return (
+    <motion.div initial={{ x: 80, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 80, opacity: 0 }}
+      style={{ position: "fixed", bottom: 24, right: 24, zIndex: 100, display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", borderRadius: 12, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.28)", backdropFilter: "blur(20px)", boxShadow: "0 12px 40px rgba(0,0,0,0.5)" }}>
+      <CheckCircle size={15} color={T.green} strokeWidth={2} />
+      <span style={{ fontSize: 13, fontWeight: 600, color: T.textPrimary }}>{msg}</span>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ███████╗ ROOT — Firebase auth listener
+// ─────────────────────────────────────────────────────────────────────────────
+export default function Root() {
+  const [fbUser, setFbUser] = useState(undefined); // undefined = loading
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, u => setFbUser(u ?? null));
+    return unsub;
+  }, []);
+
+  return (
+    <>
+      <GlobalStyles />
+      {fbUser === undefined ? (
+        // Loading splash
+        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}>
+          <motion.div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg,#1D4ED8,#4338CA)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 28px rgba(37,99,235,0.4)" }}>
+              <Compass size={20} color="#fff" strokeWidth={2.5} />
+            </div>
+            <motion.div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.15)", borderTopColor: T.blue }}
+              animate={{ rotate: 360 }} transition={{ duration: 0.75, repeat: Infinity, ease: "linear" }} />
+          </motion.div>
+        </div>
+      ) : (
+        <AnimatePresence mode="wait">
+          {fbUser
+            ? <motion.div key="app" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><AppShell fbUser={fbUser} /></motion.div>
+            : <motion.div key="auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><AuthPage /></motion.div>
+          }
+        </AnimatePresence>
+      )}
+    </>
+  );
+}
