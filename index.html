@@ -5,31 +5,41 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>UniFind — Campus Lost & Found</title>
 
-<!-- ═══════════════════════════════════════════════════════
-     FONTS
-════════════════════════════════════════════════════════ -->
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  SECURITY NOTICE — READ BEFORE DEPLOYING TO GITHUB          ║
+  ║                                                              ║
+  ║  1. Your Firebase API key below IS visible in public repos.  ║
+  ║     Firebase keys are SAFE to expose ONLY if you set         ║
+  ║     Firebase Security Rules correctly AND restrict the key   ║
+  ║     in Google Cloud Console to your domain only.            ║
+  ║                                                              ║
+  ║  2. Go to: console.cloud.google.com → APIs & Services →      ║
+  ║     Credentials → click your API key → under               ║
+  ║     "Application restrictions" choose HTTP referrers and    ║
+  ║     add:  https://yourdomain.github.io/*                    ║
+  ║                                                              ║
+  ║  3. NoSQL Injection: Firebase uses NoSQL — traditional SQL   ║
+  ║     injection does NOT apply. We prevent XSS injection       ║
+  ║     by sanitizing all user inputs before rendering.          ║
+  ║                                                              ║
+  ║  4. Firebase Security Rules must be set in Firebase Console  ║
+  ║     to block unauthorized reads/writes.                      ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
 
-<!-- ═══════════════════════════════════════════════════════
-     REACT 18 + BABEL (correct working versions)
-════════════════════════════════════════════════════════ -->
 <script src="https://unpkg.com/react@18.2.0/umd/react.development.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone@7.23.4/babel.min.js"></script>
 
-<!-- ═══════════════════════════════════════════════════════
-     FIREBASE (compat build — works without import/export)
-════════════════════════════════════════════════════════ -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 
-<!-- ═══════════════════════════════════════════════════════
-     GLOBAL CSS
-════════════════════════════════════════════════════════ -->
 <style>
-/* ── Reset ─────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body,#root{height:100%;min-height:100%}
 body{
@@ -49,7 +59,6 @@ button{cursor:pointer;border:none;background:none}
 select option{background:#0a0f1e;color:#F1F5F9}
 input::placeholder,textarea::placeholder{color:rgba(241,245,249,.22)}
 
-/* ── Animations ─────────────────────────────────────── */
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -60,54 +69,39 @@ input::placeholder,textarea::placeholder{color:rgba(241,245,249,.22)}
 @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
 @keyframes pinRing{0%{transform:translate(-50%,-50%) scale(1);opacity:.7}80%{transform:translate(-50%,-50%) scale(2.6);opacity:0}100%{transform:translate(-50%,-50%) scale(2.6);opacity:0}}
 @keyframes toastIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes gradMove{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 
-/* ── Utility classes ────────────────────────────────── */
 .fade-up{animation:fadeUp .5s cubic-bezier(.22,1,.36,1) both}
 .fade-in{animation:fadeIn .4s ease both}
 .slide-up{animation:slideUp .32s cubic-bezier(.22,1,.36,1) both}
 .spin-el{animation:spin .75s linear infinite}
 .ticker-track{display:flex;gap:44px;animation:ticker 24s linear infinite;white-space:nowrap}
 .toast-el{animation:toastIn .35s cubic-bezier(.22,1,.36,1)}
-
-/* ── Auth grid bg ────────────────────────────────────── */
 .auth-grid-bg{
   background-image:
     linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
     linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
   background-size:54px 54px;
 }
-
-/* ── Shimmer button ──────────────────────────────────── */
 .btn-shimmer{position:relative;overflow:hidden}
 .btn-shimmer::after{
   content:'';position:absolute;inset:0;
   background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.13) 50%,transparent 70%);
   animation:shimmer 3.2s infinite ease-in-out;pointer-events:none
 }
-
-/* ── Field focus ─────────────────────────────────────── */
 .field-box{transition:box-shadow .15s,background .15s}
 .field-box:focus-within{
   box-shadow:0 0 0 2px rgba(59,130,246,.45)!important;
   background:rgba(59,130,246,.07)!important
 }
-
-/* ── Nav ─────────────────────────────────────────────── */
 .nav-btn{transition:background .14s;border-left:2px solid transparent!important}
 .nav-btn:hover{background:rgba(255,255,255,.055)!important}
 .nav-active{background:rgba(59,130,246,.11)!important;border-left-color:#3B82F6!important}
-
-/* ── Cards/rows ──────────────────────────────────────── */
 .card-hover{transition:transform .18s,border-color .18s}
 .card-hover:hover{transform:translateY(-2px)}
 .row-hover{transition:background .14s,transform .14s}
 .row-hover:hover{background:rgba(255,255,255,.07)!important;transform:translateX(2px)}
-
-/* ── Floating preview cards ──────────────────────────── */
 .preview-card{animation:float 7s ease-in-out infinite}
 
-/* ── Responsive ──────────────────────────────────────── */
 @media(max-width:900px){
   .auth-left-panel{display:none!important}
   .auth-right-panel{width:100%!important;padding:40px 24px!important}
@@ -126,7 +120,6 @@ input::placeholder,textarea::placeholder{color:rgba(241,245,249,.22)}
 </head>
 <body>
 
-<!-- Loading fallback shown until React mounts -->
 <div id="root">
   <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#030508">
     <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
@@ -139,7 +132,9 @@ input::placeholder,textarea::placeholder{color:rgba(241,245,249,.22)}
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
-     FIREBASE INIT (runs before React)
+     FIREBASE INIT
+     SECURITY: Restrict this API key in Google Cloud Console
+     to only your GitHub Pages domain. See header comment.
 ════════════════════════════════════════════════════════ -->
 <script>
   firebase.initializeApp({
@@ -153,12 +148,44 @@ input::placeholder,textarea::placeholder{color:rgba(241,245,249,.22)}
   });
   window._auth = firebase.auth();
   window._gProvider = new firebase.auth.GoogleAuthProvider();
+  // Force account selection every time for Google OAuth
+  window._gProvider.setCustomParameters({ prompt: 'select_account' });
 </script>
 
-<!-- ═══════════════════════════════════════════════════════
-     REACT APP  (Babel transpiles JSX in the browser)
-════════════════════════════════════════════════════════ -->
 <script type="text/babel" data-presets="react">
+
+// ── Security: XSS / Injection Prevention ───────────────
+// Sanitize any user-provided string before rendering as text.
+// Since we use React (which auto-escapes JSX), raw HTML injection
+// is already blocked. This helper gives extra safety for edge cases.
+function sanitize(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+    .trim();
+}
+
+// Validate phone number — only digits, +, spaces, dashes allowed
+function validatePhone(phone) {
+  return /^[+\d\s\-()]{7,20}$/.test(phone.trim());
+}
+
+// Validate email format
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+// Strip dangerous characters from form fields
+function cleanInput(str, maxLen = 200) {
+  if (typeof str !== 'string') return '';
+  // Remove null bytes and control characters — key NoSQL injection prevention
+  return str.replace(/[\x00-\x1F\x7F$]/g, '').substring(0, maxLen).trim();
+}
 
 // ── Design tokens ───────────────────────────────────────
 const C={
@@ -169,7 +196,6 @@ const C={
   txt:'#F1F5F9',sub:'rgba(241,245,249,.52)',muted:'rgba(241,245,249,.28)',
 };
 
-// ── Mock data ───────────────────────────────────────────
 const SEED=[
   {id:1,title:'MacBook Pro 16"',   cat:'Electronics',status:'lost', loc:'Library Block B',  rep:'Chidi A.',  time:'2h ago',  desc:'Silver MacBook, sticker on lid. Near study pod 3.',           karma:50,phone:'2348012345678',verified:true, mx:22,my:28},
   {id:2,title:'Student ID Card',   cat:'Documents',  status:'found',loc:'Science Faculty', rep:'Amaka O.',  time:'4h ago',  desc:"Found near Chemistry Lab. Owner's photo visible.",            karma:20,phone:'2348023456789',verified:true, mx:55,my:38},
@@ -187,17 +213,26 @@ const LOCS=['Library Block B','Science Faculty','Cafeteria','Admin Block','Parki
 const auth = window._auth;
 const gProvider = window._gProvider;
 
+// Comprehensive Firebase error mapping
 const fbErr = code => ({
-  'auth/invalid-credential':'Incorrect email or password.',
-  'auth/email-already-in-use':'Email already registered.',
-  'auth/weak-password':'Password must be at least 6 characters.',
-  'auth/user-not-found':'No account with this email.',
-  'auth/too-many-requests':'Too many attempts — try again later.',
-  'auth/popup-closed-by-user':'',
-  'auth/network-request-failed':'Network error. Check connection.',
-}[code] || 'Something went wrong. Please try again.');
+  'auth/invalid-credential':   'Incorrect email or password.',
+  'auth/invalid-email':        'Please enter a valid email address.',
+  'auth/user-disabled':        'This account has been disabled.',
+  'auth/email-already-in-use': 'Email already registered — try signing in.',
+  'auth/weak-password':        'Password must be at least 6 characters.',
+  'auth/user-not-found':       'No account found with this email.',
+  'auth/wrong-password':       'Incorrect password. Try again.',
+  'auth/too-many-requests':    'Too many attempts — wait a few minutes and try again.',
+  'auth/popup-closed-by-user': '',
+  'auth/popup-blocked':        'Popup was blocked. Please allow popups for this site and try again.',
+  'auth/cancelled-popup-request': '',
+  'auth/network-request-failed':'Network error — check your internet connection.',
+  'auth/operation-not-allowed':'Google sign-in is not enabled yet. Enable it in Firebase Console → Authentication → Sign-in method → Google.',
+  'auth/unauthorized-domain':  'This domain is not authorised. Add it in Firebase Console → Authentication → Settings → Authorised domains.',
+  'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
+}[code] || `Something went wrong (${code || 'unknown'}). Please try again.`);
 
-// ── Reusable hooks ──────────────────────────────────────
+// ── Hooks ───────────────────────────────────────────────
 function useCount(to){
   const [v,setV]=React.useState(0);
   React.useEffect(()=>{
@@ -217,7 +252,7 @@ function useInterval(fn,ms){
   React.useEffect(()=>{const t=setInterval(()=>cb.current(),ms);return()=>clearInterval(t);},[ms]);
 }
 
-// ── SVG icons (no extra deps) ───────────────────────────
+// ── Icons ───────────────────────────────────────────────
 const I={
   compass:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
   home:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
@@ -246,12 +281,11 @@ const I={
   list:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
   trend:<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   sparkle:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a1 1 0 0 1 1 1 7 7 0 0 0 7 7 1 1 0 0 1 0 2 7 7 0 0 0-7 7 1 1 0 0 1-2 0 7 7 0 0 0-7-7 1 1 0 0 1 0-2 7 7 0 0 0 7-7 1 1 0 0 1 1-1Z"/></svg>,
+  google:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>,
 };
 
-const GoogleLogo=()=><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>;
-
 // ══════════════════════════════════════════════════════
-//  MODAL WRAPPER
+//  MODAL
 // ══════════════════════════════════════════════════════
 function Modal({children,onClose}){
   React.useEffect(()=>{
@@ -294,15 +328,22 @@ function Toast({msg,onDone}){
 // ══════════════════════════════════════════════════════
 //  FIELD
 // ══════════════════════════════════════════════════════
-function Field({label,type='text',placeholder,value,onChange,icon,suffix,onKeyDown,autoComplete}){
+function Field({label,type='text',placeholder,value,onChange,icon,suffix,onKeyDown,autoComplete,maxLength=200}){
   return(
     <div>
       {label&&<label style={{display:'block',fontSize:12,fontWeight:500,color:C.muted,marginBottom:6,letterSpacing:'.04em'}}>{label}</label>}
       <div className="field-box" style={{display:'flex',alignItems:'center',borderRadius:10,background:C.sf,boxShadow:`0 0 0 1px ${C.bd}`,overflow:'hidden'}}>
         {icon&&<span style={{paddingLeft:13,color:C.muted,display:'flex',flexShrink:0}}>{icon}</span>}
-        <input type={type} placeholder={placeholder} value={value}
-          onChange={e=>onChange(e.target.value)} onKeyDown={onKeyDown} autoComplete={autoComplete}
-          style={{flex:1,padding:'11px 13px',fontSize:14,color:C.txt,outline:'none',background:'transparent'}}/>
+        <input
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={e=>onChange(e.target.value)}
+          onKeyDown={onKeyDown}
+          autoComplete={autoComplete}
+          maxLength={maxLength}
+          style={{flex:1,padding:'11px 13px',fontSize:14,color:C.txt,outline:'none',background:'transparent'}}
+        />
         {suffix&&<span style={{paddingRight:12}}>{suffix}</span>}
       </div>
     </div>
@@ -310,7 +351,7 @@ function Field({label,type='text',placeholder,value,onChange,icon,suffix,onKeyDo
 }
 
 // ══════════════════════════════════════════════════════
-//  AUTH PAGE  ← SHOWPIECE
+//  AUTH PAGE — FIXED GOOGLE + EMAIL SIGN-IN
 // ══════════════════════════════════════════════════════
 function AuthPage(){
   const [mode,setMode]=React.useState('signin');
@@ -333,32 +374,64 @@ function AuthPage(){
 
   const upd=(k,v)=>setForm(f=>({...f,[k]:v}));
 
+  // ── GOOGLE SIGN-IN (FIXED) ─────────────────────────────
+  // Uses popup first, falls back to redirect if popup blocked
   const handleGoogle=async()=>{
     setGLoad(true);setErr('');
-    try{await auth.signInWithPopup(gProvider);}
-    catch(e){const m=fbErr(e.code);if(m)setErr(m);}
-    setGLoad(false);
+    try{
+      await auth.signInWithPopup(gProvider);
+      // On success Firebase auth state listener will fire automatically
+    }catch(e){
+      if(e.code==='auth/popup-blocked'){
+        // Popup was blocked — fall back to redirect flow
+        try{
+          await auth.signInWithRedirect(gProvider);
+        }catch(re){
+          const m=fbErr(re.code);
+          if(m)setErr(m);
+          setGLoad(false);
+        }
+      } else {
+        const m=fbErr(e.code);
+        if(m)setErr(m);
+        setGLoad(false);
+      }
+    }
   };
 
+  // ── EMAIL SIGN-IN / SIGN-UP (FIXED) ───────────────────
   const handleSubmit=async()=>{
-    if(!form.email||!form.password){setErr('Please fill in all fields');return;}
-    if(mode==='signup'&&!form.name){setErr('Please enter your name');return;}
-    setLoading(true);setErr('');
+    setErr('');
+
+    // Client-side validation — prevents empty/invalid data hitting Firebase
+    if(!form.email||!form.password){setErr('Please fill in all fields.');return;}
+    if(!validateEmail(form.email)){setErr('Please enter a valid email address.');return;}
+    if(form.password.length<6){setErr('Password must be at least 6 characters.');return;}
+    if(mode==='signup'&&!form.name.trim()){setErr('Please enter your full name.');return;}
+    if(mode==='signup'&&form.name.trim().length<2){setErr('Name must be at least 2 characters.');return;}
+
+    // Sanitize inputs before sending to Firebase
+    const cleanEmail = form.email.trim().toLowerCase();
+    const cleanName  = cleanInput(form.name, 80);
+
+    setLoading(true);
     try{
       if(mode==='signup'){
-        const r=await auth.createUserWithEmailAndPassword(form.email,form.password);
-        await r.user.updateProfile({displayName:form.name});
+        const r=await auth.createUserWithEmailAndPassword(cleanEmail, form.password);
+        await r.user.updateProfile({displayName: cleanName});
+        // Email verified badge will update once user verifies
       }else{
-        await auth.signInWithEmailAndPassword(form.email,form.password);
+        await auth.signInWithEmailAndPassword(cleanEmail, form.password);
       }
-    }catch(e){setErr(fbErr(e.code));}
+    }catch(e){
+      setErr(fbErr(e.code));
+    }
     setLoading(false);
   };
 
   const onKey=e=>{if(e.key==='Enter')handleSubmit();};
-  const sw=()=>{setMode(m=>m==='signin'?'signup':'signin');setErr('');};
+  const sw=()=>{setMode(m=>m==='signin'?'signup':'signin');setErr('');setForm({name:'',email:'',password:''});};
 
-  // preview cards for left panel
   const cards=[
     {label:'🔴 Lost',title:'MacBook Pro',sub:'Library · 2h ago',delay:'0s',top:'20%'},
     {label:'🟢 Found',title:'Student ID',sub:'Science · 4h ago',delay:'1.8s',top:'47%'},
@@ -368,25 +441,19 @@ function AuthPage(){
   return(
     <div style={{minHeight:'100vh',display:'flex',background:C.bg}}>
 
-      {/* ── LEFT EDITORIAL PANEL ── */}
+      {/* LEFT PANEL */}
       <div className="auth-left-panel auth-grid-bg" style={{
         width:'52%',minHeight:'100vh',position:'relative',
         display:'flex',flexDirection:'column',justifyContent:'space-between',
         padding:'48px 56px',borderRight:`1px solid ${C.bd}`,overflow:'hidden',
       }}>
-
-        {/* Ambient glows */}
         <div style={{position:'absolute',width:580,height:580,top:'0%',left:'25%',borderRadius:'50%',background:'radial-gradient(circle,rgba(29,78,216,.1) 0%,transparent 65%)',pointerEvents:'none',animation:'float 12s ease-in-out infinite'}}/>
         <div style={{position:'absolute',width:360,height:360,bottom:'10%',left:'-8%',borderRadius:'50%',background:'radial-gradient(circle,rgba(99,102,241,.08) 0%,transparent 65%)',pointerEvents:'none',animation:'float 9s ease-in-out infinite reverse'}}/>
-
-        {/* Diagonal SVG lines */}
         <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',opacity:.07,pointerEvents:'none'}}>
           <defs><linearGradient id="dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3B82F6" stopOpacity="0"/><stop offset="50%" stopColor="#3B82F6" stopOpacity="1"/><stop offset="100%" stopColor="#3B82F6" stopOpacity="0"/></linearGradient></defs>
           <line x1="5%" y1="0" x2="50%" y2="100%" stroke="url(#dg)" strokeWidth="1"/>
           <line x1="95%" y1="0" x2="50%" y2="100%" stroke="url(#dg)" strokeWidth="1"/>
         </svg>
-
-        {/* Floating item preview cards */}
         {cards.map((c,i)=>(
           <div key={i} className="preview-card" style={{
             position:'absolute',left:'4%',top:c.top,
@@ -399,23 +466,17 @@ function AuthPage(){
             <div style={{fontSize:11,color:C.muted}}>{c.sub}</div>
           </div>
         ))}
-
-        {/* Logo */}
         <div className="fade-up" style={{display:'flex',alignItems:'center',gap:10,position:'relative',zIndex:3}}>
           <div style={{width:34,height:34,borderRadius:9,background:'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 0 22px rgba(59,130,246,.32)',color:'#fff',flexShrink:0}}>
             {I.compass}
           </div>
           <span style={{fontSize:18,fontWeight:800,color:C.txt,letterSpacing:'-.045em'}}>UniFind</span>
         </div>
-
-        {/* Hero headline + stats */}
         <div style={{position:'relative',zIndex:3}}>
-          {/* Badge */}
           <div className="fade-up" style={{display:'inline-flex',alignItems:'center',gap:7,background:'rgba(59,130,246,.1)',border:'1px solid rgba(59,130,246,.22)',borderRadius:99,padding:'5px 13px',marginBottom:24,animationDelay:'.1s'}}>
             <span style={{width:6,height:6,borderRadius:'50%',background:C.green,display:'block'}}/>
             <span style={{fontSize:12,color:'rgba(147,197,253,.95)',fontWeight:500}}>University of Port Harcourt</span>
           </div>
-
           <div className="fade-up" style={{animationDelay:'.15s'}}>
             <h1 style={{fontSize:'clamp(2.1rem,3.3vw,3.7rem)',fontWeight:800,lineHeight:1.04,letterSpacing:'-.045em',color:C.txt,marginBottom:18}}>
               Lost things{' '}
@@ -428,8 +489,6 @@ function AuthPage(){
               Real-time campus lost &amp; found. Report items, browse live map pins, and connect via WhatsApp.
             </p>
           </div>
-
-          {/* Stats */}
           <div className="fade-up" style={{display:'flex',gap:36,marginTop:36,animationDelay:'.25s'}}>
             {[{n:n1,s:'+',l:'Items recovered'},{n:n2,s:'%',l:'Return rate'},{n:n3,s:'+',l:'Active students'}].map(s=>(
               <div key={s.l}>
@@ -439,10 +498,7 @@ function AuthPage(){
             ))}
           </div>
         </div>
-
-        {/* Testimonial + ticker */}
-        <div style={{position:'relative',zIndex:3}} className="fade-up" style={{animationDelay:'.3s'}}>
-          {/* Scrolling ticker */}
+        <div style={{position:'relative',zIndex:3}} className="fade-up">
           <div style={{overflow:'hidden',marginBottom:18,paddingBottom:18,borderBottom:`1px solid ${C.bd}`,maskImage:'linear-gradient(90deg,transparent,black 8%,black 92%,transparent)'}}>
             <div className="ticker-track">
               {['1,200+ items recovered','98% return rate','4,800 students','Instant WhatsApp alerts','Live campus map','Karma rewards system',
@@ -454,8 +510,6 @@ function AuthPage(){
               ))}
             </div>
           </div>
-
-          {/* Quote card */}
           <div style={{background:'rgba(255,255,255,.042)',border:`1px solid ${C.bd}`,borderRadius:14,padding:'20px 22px',position:'relative',overflow:'hidden'}}>
             <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(59,130,246,.07),transparent 55%)',pointerEvents:'none'}}/>
             <div style={{position:'relative',zIndex:1}}>
@@ -481,23 +535,20 @@ function AuthPage(){
         </div>
       </div>
 
-      {/* ── RIGHT FORM PANEL ── */}
+      {/* RIGHT FORM PANEL */}
       <div className="auth-right-panel" style={{
         flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
         padding:'60px 48px',position:'relative',minHeight:'100vh',
       }}>
         <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 60% 50% at 70% 50%,rgba(29,78,216,.05),transparent)',pointerEvents:'none'}}/>
-
         <div style={{width:'100%',maxWidth:400,position:'relative',zIndex:1}}>
-          {/* Mobile logo */}
           <div className="mobile-logo" style={{display:'flex',alignItems:'center',gap:10,marginBottom:36}}>
             <div style={{width:30,height:30,borderRadius:8,background:'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}>{I.compass}</div>
             <span style={{fontSize:16,fontWeight:800,color:C.txt,letterSpacing:'-.04em'}}>UniFind</span>
           </div>
 
-          {/* Heading */}
           <div className="fade-up" style={{marginBottom:26}}>
-            <h2 key={mode} style={{fontSize:26,fontWeight:800,color:C.txt,letterSpacing:'-.04em',lineHeight:1.1,marginBottom:8}}>
+            <h2 style={{fontSize:26,fontWeight:800,color:C.txt,letterSpacing:'-.04em',lineHeight:1.1,marginBottom:8}}>
               {mode==='signin'?'Welcome back':'Create account'}
             </h2>
             <p style={{fontSize:14,color:C.sub}}>
@@ -505,41 +556,39 @@ function AuthPage(){
             </p>
           </div>
 
-          {/* Google */}
-          <button className="btn-google fade-up" onClick={handleGoogle} disabled={loading||gLoad} style={{
-            animationDelay:'.05s',width:'100%',display:'flex',alignItems:'center',
+          {/* GOOGLE BUTTON */}
+          <button onClick={handleGoogle} disabled={loading||gLoad} style={{
+            width:'100%',display:'flex',alignItems:'center',
             justifyContent:'center',gap:10,padding:'11px 0',borderRadius:10,
             background:C.sf,border:`1px solid ${C.bd}`,
             fontSize:14,fontWeight:500,color:C.sub,marginBottom:20,
             transition:'background .15s,border-color .15s',
+            opacity:(loading||gLoad)?0.6:1,cursor:(loading||gLoad)?'not-allowed':'pointer',
           }}
-            onMouseEnter={e=>{e.currentTarget.style.background=C.sfh;e.currentTarget.style.borderColor=C.bdh;}}
+            onMouseEnter={e=>{if(!loading&&!gLoad){e.currentTarget.style.background=C.sfh;e.currentTarget.style.borderColor=C.bdh;}}}
             onMouseLeave={e=>{e.currentTarget.style.background=C.sf;e.currentTarget.style.borderColor=C.bd;}}>
             {gLoad
               ?<div className="spin-el" style={{width:16,height:16,borderRadius:'50%',border:'2px solid rgba(255,255,255,.2)',borderTopColor:'#fff'}}/>
-              :<GoogleLogo/>}
+              :I.google}
             Continue with Google
           </button>
 
-          {/* Divider */}
           <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
             <div style={{flex:1,height:1,background:C.bd}}/><span style={{fontSize:12,color:C.muted}}>or</span><div style={{flex:1,height:1,background:C.bd}}/>
           </div>
 
-          {/* Fields */}
           <div className="fade-up" style={{display:'flex',flexDirection:'column',gap:12,animationDelay:'.08s'}}>
             {mode==='signup'&&(
-              <Field label="Full Name" placeholder="Your full name" value={form.name} onChange={v=>upd('name',v)} icon={I.user} onKeyDown={onKey} autoComplete="name"/>
+              <Field label="Full Name" placeholder="Your full name" value={form.name} onChange={v=>upd('name',v)} icon={I.user} onKeyDown={onKey} autoComplete="name" maxLength={80}/>
             )}
-            <Field label="Email address" type="email" placeholder="you@university.edu" value={form.email} onChange={v=>upd('email',v)} icon={I.mail} onKeyDown={onKey} autoComplete="email"/>
-            <Field label="Password" type={showPass?'text':'password'} placeholder="Your password" value={form.password} onChange={v=>upd('password',v)} icon={I.lock} onKeyDown={onKey}
-              autoComplete={mode==='signup'?'new-password':'current-password'}
+            <Field label="Email address" type="email" placeholder="you@university.edu" value={form.email} onChange={v=>upd('email',v)} icon={I.mail} onKeyDown={onKey} autoComplete="email" maxLength={254}/>
+            <Field label="Password" type={showPass?'text':'password'} placeholder="Your password (min 6 characters)" value={form.password} onChange={v=>upd('password',v)} icon={I.lock} onKeyDown={onKey}
+              autoComplete={mode==='signup'?'new-password':'current-password'} maxLength={128}
               suffix={<button onClick={()=>setShowPass(s=>!s)} style={{color:C.muted,display:'flex',background:'none',border:'none',transition:'color .15s'}}
                 onMouseEnter={e=>e.currentTarget.style.color=C.sub}
                 onMouseLeave={e=>e.currentTarget.style.color=C.muted}>{I.eye}</button>}/>
           </div>
 
-          {/* Error */}
           {err&&(
             <div className="fade-up" style={{marginTop:12,padding:'10px 14px',borderRadius:9,background:'rgba(239,68,68,.09)',border:'1px solid rgba(239,68,68,.22)',display:'flex',alignItems:'center',gap:8}}>
               <span style={{color:C.red,flexShrink:0}}>{I.alert}</span>
@@ -547,15 +596,15 @@ function AuthPage(){
             </div>
           )}
 
-          {/* Submit */}
           <button className="btn-shimmer fade-up" onClick={handleSubmit} disabled={loading||gLoad} style={{
-            animationDelay:'.12s',width:'100%',marginTop:16,padding:'12px 0',
+            width:'100%',marginTop:16,padding:'12px 0',
             borderRadius:10,background:'linear-gradient(135deg,#1D4ED8 0%,#4338CA 100%)',
             border:'none',fontSize:14,fontWeight:600,color:'#fff',
             boxShadow:'0 0 0 1px rgba(59,130,246,.25),0 4px 24px rgba(29,78,216,.28)',
             transition:'transform .15s,box-shadow .18s',
+            opacity:(loading||gLoad)?0.7:1,cursor:(loading||gLoad)?'not-allowed':'pointer',
           }}
-            onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.012)';e.currentTarget.style.boxShadow='0 0 0 1px rgba(59,130,246,.5),0 8px 32px rgba(29,78,216,.42)';}}
+            onMouseEnter={e=>{if(!loading&&!gLoad){e.currentTarget.style.transform='scale(1.012)';e.currentTarget.style.boxShadow='0 0 0 1px rgba(59,130,246,.5),0 8px 32px rgba(29,78,216,.42)';}}}
             onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.boxShadow='0 0 0 1px rgba(59,130,246,.25),0 4px 24px rgba(29,78,216,.28)';}}>
             {loading
               ?<div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
@@ -565,8 +614,7 @@ function AuthPage(){
               :<span style={{position:'relative',zIndex:1}}>{mode==='signin'?'Sign in':'Create account'}</span>}
           </button>
 
-          {/* Toggle */}
-          <p className="fade-up" style={{textAlign:'center',marginTop:20,fontSize:13,color:C.muted,animationDelay:'.16s'}}>
+          <p className="fade-up" style={{textAlign:'center',marginTop:20,fontSize:13,color:C.muted}}>
             {mode==='signin'?'No account yet? ':'Already have one? '}
             <button onClick={sw} style={{background:'none',border:'none',color:'#60A5FA',fontWeight:600,fontSize:13}}>
               {mode==='signin'?'Sign up free':'Sign in'}
@@ -632,8 +680,7 @@ function Dashboard({user,items,setSection,setSelectedItem,setShowReport,sq}){
   const filtered=items.filter(i=>!sq||i.title.toLowerCase().includes(sq.toLowerCase())||i.loc.toLowerCase().includes(sq.toLowerCase()));
 
   return(
-    <div className="scroll-y" style={{height:'100%',overflowY:'auto',padding:'28px 28px 48px'}}>
-      {/* Header */}
+    <div style={{height:'100%',overflowY:'auto',padding:'28px 28px 48px'}}>
       <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:26,flexWrap:'wrap',gap:12}}>
         <div>
           <div style={{fontSize:11,color:C.muted,fontWeight:600,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:4}}>Dashboard</div>
@@ -653,8 +700,6 @@ function Dashboard({user,items,setSection,setSelectedItem,setShowReport,sq}){
           ))}
         </div>
       </div>
-
-      {/* Stats */}
       <div className="stat-grid" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:26}}>
         {stats.map(s=>(
           <div key={s.label} className="card-hover" style={{borderRadius:12,padding:'18px',background:s.bg,border:`1px solid ${s.bd}`}}>
@@ -667,10 +712,7 @@ function Dashboard({user,items,setSection,setSelectedItem,setShowReport,sq}){
           </div>
         ))}
       </div>
-
-      {/* Main layout */}
       <div className="dash-main-grid" style={{display:'grid',gridTemplateColumns:'1fr 292px',gap:20}}>
-        {/* Recent items */}
         <div>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
             <span style={{fontSize:14,fontWeight:600,color:C.txt}}>Recent Activity</span>
@@ -682,10 +724,7 @@ function Dashboard({user,items,setSection,setSelectedItem,setShowReport,sq}){
             {filtered.slice(0,7).map(item=><ItemRow key={item.id} item={item} onClick={()=>setSelectedItem(item)}/>)}
           </div>
         </div>
-
-        {/* Widgets */}
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
-          {/* Mini map */}
           <div style={{borderRadius:12,overflow:'hidden',border:`1px solid ${C.bd}`,height:180}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 14px',borderBottom:`1px solid ${C.bd}`}}>
               <span style={{fontSize:11,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em'}}>Live Map</span>
@@ -699,8 +738,6 @@ function Dashboard({user,items,setSection,setSelectedItem,setShowReport,sq}){
               })}
             </div>
           </div>
-
-          {/* Karma */}
           <div style={{borderRadius:12,padding:'16px',background:'rgba(245,158,11,.07)',border:'1px solid rgba(245,158,11,.16)'}}>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
               <div style={{width:32,height:32,borderRadius:8,background:'rgba(245,158,11,.18)',display:'flex',alignItems:'center',justifyContent:'center',color:C.amber}}>{I.zap}</div>
@@ -715,8 +752,6 @@ function Dashboard({user,items,setSection,setSelectedItem,setShowReport,sq}){
             </div>
             <div style={{fontSize:11,color:C.muted,marginTop:8}}>{150-user.karma} pts to Platinum</div>
           </div>
-
-          {/* Categories */}
           <div style={{borderRadius:12,padding:'16px',background:C.sf,border:`1px solid ${C.bd}`}}>
             <div style={{fontSize:11,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:14}}>By Category</div>
             {[['Electronics',3,C.blue],['Documents',2,C.green],['Bags & Keys',2,C.amber],['Jewelry',1,C.red]].map(([n,count,color])=>(
@@ -743,7 +778,6 @@ function MapView({items,setSelectedItem}){
   const [filter,setFilter]=React.useState('all');
   const [hovered,setHovered]=React.useState(null);
   const filtered=items.filter(i=>filter==='all'||i.status===filter);
-
   return(
     <div style={{height:'100%',display:'flex',overflow:'hidden'}}>
       <div style={{flex:1,position:'relative',overflow:'hidden',background:'linear-gradient(145deg,#040a1a,#060d1e)'}}>
@@ -760,14 +794,12 @@ function MapView({items,setSelectedItem}){
         {[['Library','8%','8%'],['Science','34%','8%'],['Engineering','68%','8%'],['Admin','8%','45%'],['Cafeteria','34%','45%'],['Sports','66%','45%']].map(([n,l,t])=>(
           <div key={n} style={{position:'absolute',left:l,top:t,fontSize:9,color:'rgba(147,197,253,.24)',fontWeight:500,pointerEvents:'none'}}>{n}</div>
         ))}
-
-        {/* Pins */}
         {filtered.map(item=>{
           const c=item.status==='found'?C.green:C.blue;
           const isH=hovered===item.id;
           return(
             <div key={item.id} style={{position:'absolute',left:`${item.mx}%`,top:`${item.my}%`}}>
-              <div style={{position:'absolute',width:28,height:28,borderRadius:'50%',border:`1px solid ${c}50`,left:'50%',top:'50%',animation:'pinRing 2.2s ease-out infinite',animationDelay:'0s'}}/>
+              <div style={{position:'absolute',width:28,height:28,borderRadius:'50%',border:`1px solid ${c}50`,left:'50%',top:'50%',animation:'pinRing 2.2s ease-out infinite'}}/>
               <div style={{position:'absolute',width:28,height:28,borderRadius:'50%',border:`1px solid ${c}35`,left:'50%',top:'50%',animation:'pinRing 2.2s ease-out infinite',animationDelay:'.9s'}}/>
               <button
                 onMouseEnter={()=>setHovered(item.id)} onMouseLeave={()=>setHovered(null)}
@@ -783,13 +815,10 @@ function MapView({items,setSelectedItem}){
             </div>
           );
         })}
-
-        {/* HUD */}
         <div style={{position:'absolute',top:16,left:16,display:'flex',alignItems:'center',gap:8,padding:'7px 14px',borderRadius:9,background:'rgba(3,5,8,.88)',border:`1px solid ${C.bd}`,backdropFilter:'blur(12px)'}}>
           <div style={{width:6,height:6,borderRadius:'50%',background:C.green,animation:'pulseDot 2s ease-in-out infinite'}}/>
           <span style={{fontSize:12,fontWeight:500,color:C.sub}}>Live · {filtered.length} pins active</span>
         </div>
-        {/* Filters */}
         <div style={{position:'absolute',bottom:20,left:'50%',transform:'translateX(-50%)',display:'flex',gap:8}}>
           {[{id:'all',l:'All',n:items.length},{id:'lost',l:'Lost',n:items.filter(i=>i.status==='lost').length,c:C.red},{id:'found',l:'Found',n:items.filter(i=>i.status==='found').length,c:C.green}].map(f=>(
             <button key={f.id} onClick={()=>setFilter(f.id)} style={{
@@ -805,8 +834,6 @@ function MapView({items,setSelectedItem}){
           ))}
         </div>
       </div>
-
-      {/* Sidebar list */}
       <div style={{width:234,flexShrink:0,borderLeft:`1px solid ${C.bd}`,background:'rgba(3,5,8,.98)',overflowY:'auto'}}>
         <div style={{padding:'10px 14px',borderBottom:`1px solid ${C.bd}`}}>
           <span style={{fontSize:11,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em'}}>Items</span>
@@ -840,13 +867,11 @@ function ItemsView({items,setSelectedItem,sq}){
   const [filter,setFilter]=React.useState('all');
   const [cat,setCat]=React.useState('All');
   const [view,setView]=React.useState('list');
-
   const filtered=items.filter(i=>
     (filter==='all'||i.status===filter)&&
     (cat==='All'||i.cat===cat)&&
     (!sq||i.title.toLowerCase().includes(sq.toLowerCase())||i.loc.toLowerCase().includes(sq.toLowerCase()))
   );
-
   return(
     <div style={{height:'100%',overflowY:'auto',padding:'24px 24px 48px'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:12}}>
@@ -862,7 +887,6 @@ function ItemsView({items,setSelectedItem,sq}){
           ))}
         </div>
       </div>
-
       <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:20}}>
         {['all','lost','found'].map(f=>{
           const c=f==='found'?C.green:f==='lost'?C.red:C.blue;
@@ -879,7 +903,6 @@ function ItemsView({items,setSelectedItem,sq}){
           </button>
         ))}
       </div>
-
       {view==='list'?(
         <div style={{display:'flex',flexDirection:'column',gap:6}}>
           {filtered.map(item=><ItemRow key={item.id} item={item} onClick={()=>setSelectedItem(item)}/>)}
@@ -951,7 +974,6 @@ function ProfileView({user}){
             ))}
           </div>
         </div>
-
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
           <div style={{borderRadius:12,padding:'18px',background:kC+'09',border:`1px solid ${kC}20`}}>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
@@ -967,7 +989,6 @@ function ProfileView({user}){
             </div>
             <div style={{fontSize:11,color:C.muted,marginTop:8}}>{150-user.karma} pts to Platinum</div>
           </div>
-
           <div style={{borderRadius:12,padding:'18px',background:C.sf,border:`1px solid ${C.bd}`}}>
             <div style={{fontSize:10,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:14}}>Verification</div>
             {[['Email address',true],['Google account',!!user.photo],['Student ID',user.verified],['Phone number',false]].map(([l,done])=>(
@@ -980,7 +1001,6 @@ function ProfileView({user}){
               </div>
             ))}
           </div>
-
           <div className="achieve-grid" style={{gridColumn:'1/-1',borderRadius:12,padding:'18px',background:C.sf,border:`1px solid ${C.bd}`}}>
             <div style={{fontSize:10,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:16}}>Achievements</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:10}}>
@@ -1003,8 +1023,11 @@ function ProfileView({user}){
 // ══════════════════════════════════════════════════════
 function ItemModal({item,onClose}){
   const c=item.status==='found'?C.green:C.red;
+  // Sanitize phone before building WhatsApp URL
   const ph=item.phone.replace(/\D/g,'');
-  const wa=`https://wa.me/${ph}?text=${encodeURIComponent(`Hi! Saw your UniFind report for "${item.title}" near ${item.loc}. ${item.status==='lost'?'I think I found it!':'Is this yours?'}`)}`;
+  const safeTitle=sanitize(item.title);
+  const safeLoc=sanitize(item.loc);
+  const wa=`https://wa.me/${ph}?text=${encodeURIComponent(`Hi! Saw your UniFind report for "${safeTitle}" near ${safeLoc}. ${item.status==='lost'?'I think I found it!':'Is this yours?'}`)}`;
   return(
     <Modal onClose={onClose}>
       <div style={{background:'#09101f',border:`1px solid ${C.bd}`,borderRadius:16,overflow:'hidden',boxShadow:'0 40px 100px rgba(0,0,0,.75)'}}>
@@ -1037,7 +1060,7 @@ function ItemModal({item,onClose}){
             </div>
           )}
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <a href={wa} target="_blank" rel="noreferrer" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'11px',borderRadius:9,background:'rgba(37,211,102,.1)',border:'1px solid rgba(37,211,102,.3)',fontSize:13,fontWeight:600,color:'#25D366',transition:'background .15s'}}
+            <a href={wa} target="_blank" rel="noreferrer noopener" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'11px',borderRadius:9,background:'rgba(37,211,102,.1)',border:'1px solid rgba(37,211,102,.3)',fontSize:13,fontWeight:600,color:'#25D366',transition:'background .15s'}}
               onMouseEnter={e=>e.currentTarget.style.background='rgba(37,211,102,.2)'}
               onMouseLeave={e=>e.currentTarget.style.background='rgba(37,211,102,.1)'}>
               {I.msg} WhatsApp
@@ -1055,21 +1078,47 @@ function ItemModal({item,onClose}){
 }
 
 // ══════════════════════════════════════════════════════
-//  REPORT MODAL
+//  REPORT MODAL — with input sanitization
 // ══════════════════════════════════════════════════════
 function ReportModal({initial,onClose,onSubmit}){
   const [step,setStep]=React.useState(1);
   const [drag,setDrag]=React.useState(false);
   const [img,setImg]=React.useState(null);
+  const [formErr,setFormErr]=React.useState('');
   const [form,setForm]=React.useState({type:initial?.type||'lost',title:'',cat:'Electronics',loc:'',desc:'',phone:''});
   const upd=(k,v)=>setForm(f=>({...f,[k]:v}));
   const fileUrl=f=>{if(f)setImg(URL.createObjectURL(f));};
+
+  const goNext=()=>{
+    setFormErr('');
+    if(step===1){
+      if(!form.title.trim()){setFormErr('Please enter the item name.');return;}
+      if(form.title.trim().length<2){setFormErr('Item name is too short.');return;}
+    }
+    if(step===2){
+      if(!form.loc){setFormErr('Please select a location.');return;}
+    }
+    if(step===3){
+      if(!form.phone.trim()){setFormErr('Please enter your WhatsApp number.');return;}
+      if(!validatePhone(form.phone)){setFormErr('Enter a valid phone number (e.g. +234 801 234 5678).');return;}
+      // Sanitize all fields before submit
+      onSubmit({
+        ...form,
+        title: cleanInput(form.title, 120),
+        desc:  cleanInput(form.desc, 500),
+        phone: form.phone.replace(/[^+\d\s\-()]/g,'').trim(),
+      });
+      return;
+    }
+    setStep(s=>s+1);
+  };
+
   return(
     <Modal onClose={onClose}>
       <div style={{background:'#09101f',border:`1px solid ${C.bd}`,borderRadius:16,overflow:'hidden',boxShadow:'0 40px 100px rgba(0,0,0,.75)'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 22px',borderBottom:`1px solid ${C.bd}`}}>
           <div>
-            <h2 style={{fontSize:15,fontWeight:700,color:C.txt,letterSpacing:'-.03em'}}>{form.type==='lost'?'Report Lost Item':'Report Found Item'}</h2>
+            <h2 style={{fontSize:15,fontWeight:700,color:C.txt}}>{form.type==='lost'?'Report Lost Item':'Report Found Item'}</h2>
             <div style={{display:'flex',gap:5,marginTop:8,alignItems:'center'}}>
               {[1,2,3].map(s=>(
                 <div key={s} style={{height:3,borderRadius:99,overflow:'hidden',width:s<=step?22:10,background:'rgba(255,255,255,.08)',transition:'width .2s'}}>
@@ -1081,7 +1130,6 @@ function ReportModal({initial,onClose,onSubmit}){
           </div>
           <button onClick={onClose} style={{width:28,height:28,borderRadius:7,background:C.sf,border:`1px solid ${C.bd}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted}}>{I.x}</button>
         </div>
-
         <div style={{padding:'22px',minHeight:290}}>
           {step===1&&(
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
@@ -1092,7 +1140,7 @@ function ReportModal({initial,onClose,onSubmit}){
                   </button>
                 );})}
               </div>
-              <Field label="Item Name" placeholder="e.g. MacBook Pro, Student ID…" value={form.title} onChange={v=>upd('title',v)} icon={I.pkg}/>
+              <Field label="Item Name" placeholder="e.g. MacBook Pro, Student ID…" value={form.title} onChange={v=>upd('title',v)} icon={I.pkg} maxLength={120}/>
               <div>
                 <label style={{display:'block',fontSize:12,fontWeight:500,color:C.muted,marginBottom:6}}>Category</label>
                 <select value={form.cat} onChange={e=>upd('cat',e.target.value)} style={{width:'100%',padding:'11px 14px',borderRadius:10,background:C.sf,border:`1px solid ${C.bd}`,fontSize:14,color:C.txt,outline:'none'}}>
@@ -1117,7 +1165,7 @@ function ReportModal({initial,onClose,onSubmit}){
                       <span style={{fontSize:13,color:C.muted,marginTop:8}}>Drag & drop or <span style={{color:'#60A5FA'}}>browse</span></span>
                     </>
                   )}
-                  <input type="file" accept="image/*" style={{display:'none'}} onChange={e=>{if(e.target.files[0])fileUrl(e.target.files[0]);}}/>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{display:'none'}} onChange={e=>{if(e.target.files[0])fileUrl(e.target.files[0]);}}/>
                 </label>
               </div>
               <div>
@@ -1129,13 +1177,13 @@ function ReportModal({initial,onClose,onSubmit}){
               </div>
               <div>
                 <label style={{display:'block',fontSize:12,fontWeight:500,color:C.muted,marginBottom:6}}>Description</label>
-                <textarea value={form.desc} onChange={e=>upd('desc',e.target.value)} rows={3} placeholder="Color, brand, markings…" style={{width:'100%',padding:'11px 14px',borderRadius:10,background:C.sf,border:`1px solid ${C.bd}`,fontSize:13,color:C.txt,resize:'none',outline:'none'}}/>
+                <textarea value={form.desc} onChange={e=>upd('desc',e.target.value)} rows={3} placeholder="Color, brand, markings…" maxLength={500} style={{width:'100%',padding:'11px 14px',borderRadius:10,background:C.sf,border:`1px solid ${C.bd}`,fontSize:13,color:C.txt,resize:'none',outline:'none'}}/>
               </div>
             </div>
           )}
           {step===3&&(
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
-              <Field label="WhatsApp Number" placeholder="+234 801 234 5678" value={form.phone} onChange={v=>upd('phone',v)} icon={I.msg}/>
+              <Field label="WhatsApp Number" placeholder="+234 801 234 5678" value={form.phone} onChange={v=>upd('phone',v)} icon={I.msg} maxLength={20}/>
               <div style={{padding:'14px 16px',borderRadius:10,background:C.sf,border:`1px solid ${C.bd}`}}>
                 <div style={{fontSize:10,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:12}}>Summary</div>
                 {[['Type',form.type],['Item',form.title||'—'],['Category',form.cat],['Location',form.loc||'—']].map(([k,v])=>(
@@ -1151,15 +1199,20 @@ function ReportModal({initial,onClose,onSubmit}){
               </div>
             </div>
           )}
+          {formErr&&(
+            <div style={{marginTop:12,padding:'9px 13px',borderRadius:8,background:'rgba(239,68,68,.09)',border:'1px solid rgba(239,68,68,.22)',display:'flex',alignItems:'center',gap:8}}>
+              <span style={{color:C.red,flexShrink:0}}>{I.alert}</span>
+              <span style={{fontSize:12,color:'#FCA5A5'}}>{formErr}</span>
+            </div>
+          )}
         </div>
-
         <div style={{display:'flex',gap:10,padding:'0 22px 22px'}}>
           {step>1&&(
-            <button onClick={()=>setStep(s=>s-1)} style={{padding:'10px 18px',borderRadius:9,background:C.sf,border:`1px solid ${C.bd}`,fontSize:13,fontWeight:500,color:C.muted,transition:'background .14s'}}
+            <button onClick={()=>{setStep(s=>s-1);setFormErr('');}} style={{padding:'10px 18px',borderRadius:9,background:C.sf,border:`1px solid ${C.bd}`,fontSize:13,fontWeight:500,color:C.muted}}
               onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.075)'}
               onMouseLeave={e=>e.currentTarget.style.background=C.sf}>Back</button>
           )}
-          <button className="btn-shimmer" onClick={()=>step<3?setStep(s=>s+1):onSubmit(form)} style={{flex:1,padding:'10px',borderRadius:9,background:'linear-gradient(135deg,#1D4ED8,#4338CA)',border:'none',fontSize:13,fontWeight:600,color:'#fff',position:'relative',overflow:'hidden',transition:'transform .15s'}}
+          <button className="btn-shimmer" onClick={goNext} style={{flex:1,padding:'10px',borderRadius:9,background:'linear-gradient(135deg,#1D4ED8,#4338CA)',border:'none',fontSize:13,fontWeight:600,color:'#fff',position:'relative',overflow:'hidden',transition:'transform .15s'}}
             onMouseEnter={e=>e.currentTarget.style.transform='scale(1.015)'}
             onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
             <span style={{position:'relative',zIndex:1}}>{step===3?'Submit Report':'Continue →'}</span>
@@ -1196,29 +1249,37 @@ function AppShell({fbUser}){
   ];
 
   const addItem=form=>{
-    setItems(p=>[{id:Date.now(),title:form.title,cat:form.cat,status:form.type,loc:form.loc,rep:user.name,time:'just now',desc:form.desc,karma:form.type==='found'?25:10,phone:form.phone||'2340000000000',verified:user.verified,mx:12+Math.random()*72,my:12+Math.random()*72},...p]);
+    setItems(p=>[{
+      id:Date.now(),
+      title:form.title,cat:form.cat,status:form.type,
+      loc:form.loc,rep:user.name,time:'just now',desc:form.desc,
+      karma:form.type==='found'?25:10,
+      phone:form.phone||'2340000000000',
+      verified:user.verified,
+      mx:12+Math.random()*72,my:12+Math.random()*72,
+    },...p]);
     setToast(form.type==='found'?'Found item reported · +25 Karma ✓':'Lost item reported ✓');
     setShowRep(null);
   };
 
-  const nav=[{id:'dashboard',icon:I.home,label:'Dashboard'},{id:'map',icon:I.map,label:'Live Map'},{id:'items',icon:I.pkg,label:'Items'},{id:'profile',icon:I.user,label:'Profile'}];
+  const nav=[
+    {id:'dashboard',icon:I.home,label:'Dashboard'},
+    {id:'map',icon:I.map,label:'Live Map'},
+    {id:'items',icon:I.pkg,label:'Items'},
+    {id:'profile',icon:I.user,label:'Profile'},
+  ];
   const SB=collapsed?60:228;
 
   return(
     <div style={{display:'flex',height:'100vh',background:C.bg,overflow:'hidden'}}>
-
       {/* SIDEBAR */}
       <div className="sidebar" style={{width:SB,minWidth:SB,flexShrink:0,height:'100vh',display:'flex',flexDirection:'column',borderRight:`1px solid ${C.bd}`,background:'rgba(3,5,8,.98)',position:'relative',zIndex:20,transition:'width .28s cubic-bezier(.22,1,.36,1)',overflow:'hidden'}}>
-
-        {/* Logo */}
         <div style={{display:'flex',alignItems:'center',gap:10,padding:'0 14px',height:60,borderBottom:`1px solid ${C.bd}`,flexShrink:0,overflow:'hidden'}}>
           <div style={{width:28,height:28,borderRadius:7,background:'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'#fff',boxShadow:'0 0 14px rgba(37,99,235,.3)'}}>
             {I.compass}
           </div>
           <span className="sb-logo-text" style={{fontSize:15,fontWeight:800,color:C.txt,letterSpacing:'-.045em',whiteSpace:'nowrap',opacity:collapsed?0:1,transition:'opacity .2s'}}>UniFind</span>
         </div>
-
-        {/* Nav */}
         <nav style={{flex:1,padding:'10px 8px',display:'flex',flexDirection:'column',gap:2}}>
           {nav.map(({id,icon,label})=>{
             const active=section===id;
@@ -1238,8 +1299,6 @@ function AppShell({fbUser}){
             </button>
           </div>
         </nav>
-
-        {/* User */}
         <div style={{padding:'10px 8px',borderTop:`1px solid ${C.bd}`,flexShrink:0}}>
           <div style={{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:8,background:C.sf,overflow:'hidden'}}>
             <div style={{width:26,height:26,borderRadius:6,flexShrink:0,overflow:'hidden',background:user.photo?'none':'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'#fff'}}>
@@ -1258,8 +1317,6 @@ function AppShell({fbUser}){
             </div>
           </div>
         </div>
-
-        {/* Collapse toggle */}
         <button onClick={()=>setCollapsed(s=>!s)} style={{position:'absolute',top:20,right:-13,width:26,height:26,borderRadius:'50%',background:'#0c1220',border:`1px solid ${C.bd}`,display:'flex',alignItems:'center',justifyContent:'center',zIndex:30,color:C.muted,transition:'transform .14s'}}
           onMouseEnter={e=>e.currentTarget.style.transform='scale(1.14)'}
           onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
@@ -1269,12 +1326,11 @@ function AppShell({fbUser}){
 
       {/* MAIN */}
       <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
-        {/* Topbar */}
         <header style={{display:'flex',alignItems:'center',gap:12,padding:'0 24px',height:60,borderBottom:`1px solid ${C.bd}`,background:'rgba(3,5,8,.92)',backdropFilter:'blur(16px)',flexShrink:0,zIndex:10}}>
           <div style={{flex:1,maxWidth:440}}>
             <div style={{display:'flex',alignItems:'center',gap:8,background:C.sf,border:`1px solid ${C.bd}`,borderRadius:8,padding:'6px 12px'}}>
               <span style={{color:C.muted}}>{I.search}</span>
-              <input value={sq} onChange={e=>setSq(e.target.value)} placeholder="Search items, locations…" style={{flex:1,fontSize:13,color:C.txt,outline:'none',background:'transparent'}}/>
+              <input value={sq} onChange={e=>setSq(e.target.value)} placeholder="Search items, locations…" maxLength={100} style={{flex:1,fontSize:13,color:C.txt,outline:'none',background:'transparent'}}/>
             </div>
           </div>
           <div style={{marginLeft:'auto',position:'relative'}}>
@@ -1303,8 +1359,6 @@ function AppShell({fbUser}){
             )}
           </div>
         </header>
-
-        {/* Page content */}
         <main style={{flex:1,overflow:'hidden'}}>
           {section==='dashboard'&&<Dashboard user={user} items={items} setSection={setSection} setSelectedItem={setSelItem} setShowReport={setShowRep} sq={sq}/>}
           {section==='map'&&<MapView items={items} setSelectedItem={setSelItem}/>}
@@ -1321,12 +1375,14 @@ function AppShell({fbUser}){
 }
 
 // ══════════════════════════════════════════════════════
-//  ROOT — auth state listener
+//  ROOT
 // ══════════════════════════════════════════════════════
 function Root(){
   const [fbUser,setFbUser]=React.useState(undefined);
 
   React.useEffect(()=>{
+    // Handle redirect result (for popup-blocked fallback)
+    auth.getRedirectResult().catch(()=>{});
     const unsub=auth.onAuthStateChanged(u=>setFbUser(u??null));
     return()=>unsub();
   },[]);
@@ -1343,7 +1399,6 @@ function Root(){
   return fbUser?<AppShell fbUser={fbUser}/>:<AuthPage/>;
 }
 
-// Mount
 const root=ReactDOM.createRoot(document.getElementById('root'));
 root.render(<Root/>);
 </script>
