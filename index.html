@@ -2,117 +2,450 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 <title>UniFind — Campus Lost & Found</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
-
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/react@18.2.0/umd/react.development.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone@7.23.4/babel.min.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 
 <style>
+/* ── Reset ──────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body,#root{height:100%;min-height:100%}
+html{scroll-behavior:smooth}
+html,body,#root{min-height:100%;height:100%}
 body{
-  font-family:'Bricolage Grotesque',system-ui,sans-serif;
-  background:#030508;
-  color:#F1F5F9;
-  -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:#04060F;color:#F0F4FF;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
 }
 input,textarea,select,button{font-family:inherit;font-size:inherit}
 a{color:inherit;text-decoration:none}
 button{cursor:pointer;border:none;background:none}
-::selection{background:rgba(59,130,246,.28)}
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:99px}
-select option{background:#0a0f1e;color:#F1F5F9}
-input::placeholder,textarea::placeholder{color:rgba(241,245,249,.22)}
+::selection{background:rgba(99,102,241,.3)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:rgba(99,102,241,.3);border-radius:99px}
+select option{background:#0a0d1c}
 
+/* ── CSS Variables ──────────────────────────────────── */
+:root{
+  --bg: #04060F;
+  --bg2: #080B18;
+  --indigo: #6366F1;
+  --cyan: #22D3EE;
+  --violet: #A78BFA;
+  --green: #34D399;
+  --rose: #FB7185;
+  --amber: #FBBF24;
+  --txt: #F0F4FF;
+  --sub: rgba(220,228,255,.55);
+  --muted: rgba(180,195,240,.32);
+  --bd: rgba(99,102,241,.12);
+  --sf: rgba(255,255,255,.04);
+}
+
+/* ── Keyframes ──────────────────────────────────────── */
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes shimmer{0%{transform:translateX(-130%)}100%{transform:translateX(230%)}}
-@keyframes float{0%,100%{transform:translateY(0);opacity:.65}50%{transform:translateY(-10px);opacity:.9}}
-@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
-@keyframes pinRing{0%{transform:translate(-50%,-50%) scale(1);opacity:.7}80%{transform:translate(-50%,-50%) scale(2.6);opacity:0}100%{transform:translate(-50%,-50%) scale(2.6);opacity:0}}
-@keyframes toastIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideBottom{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+@keyframes revealClip{from{clip-path:inset(0 100% 0 0);opacity:0}to{clip-path:inset(0 0% 0 0);opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+@keyframes floatA{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-18px) rotate(1.5deg)}}
+@keyframes floatB{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(-1deg)}}
+@keyframes floatC{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-22px) rotate(2deg)}}
+@keyframes blobA{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(60px,-40px) scale(1.12)}66%{transform:translate(-30px,50px) scale(.92)}}
+@keyframes blobB{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-80px,30px) scale(1.08)}66%{transform:translate(40px,-60px) scale(.96)}}
+@keyframes blobC{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,60px) scale(1.15)}66%{transform:translate(-50px,-30px) scale(.88)}}
+@keyframes shimmerText{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.0)}50%{box-shadow:0 0 40px 8px rgba(99,102,241,.18)}}
+@keyframes toastIn{from{transform:translateX(110px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes ping{0%{transform:translate(-50%,-50%) scale(1);opacity:.7}100%{transform:translate(-50%,-50%) scale(2.8);opacity:0}}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes borderShimmer{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes waveIn{from{transform:translateX(-12px) rotate(-2deg);opacity:0}to{transform:translateX(0) rotate(0deg);opacity:1}}
+@keyframes cardPop{from{opacity:0;transform:translateY(20px) rotateX(8deg) scale(.95)}to{opacity:1;transform:translateY(0) rotateX(0deg) scale(1)}}
 
-.fade-up{animation:fadeUp .5s cubic-bezier(.22,1,.36,1) both}
-.fade-in{animation:fadeIn .4s ease both}
-.slide-up{animation:slideUp .32s cubic-bezier(.22,1,.36,1) both}
+/* ── Animated blobs background ──────────────────────── */
+.bg-scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(100px);will-change:transform}
+.blob-1{width:680px;height:680px;top:-10%;left:-8%;background:radial-gradient(circle,rgba(99,102,241,.22) 0%,transparent 70%);animation:blobA 22s ease-in-out infinite}
+.blob-2{width:550px;height:550px;top:20%;right:-10%;background:radial-gradient(circle,rgba(34,211,238,.14) 0%,transparent 70%);animation:blobB 28s ease-in-out infinite}
+.blob-3{width:460px;height:460px;bottom:-8%;left:30%;background:radial-gradient(circle,rgba(167,139,250,.18) 0%,transparent 70%);animation:blobC 19s ease-in-out infinite}
+.bg-noise{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.028;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");background-size:200px}
+.bg-grid{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(rgba(99,102,241,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.028) 1px,transparent 1px);background-size:72px 72px}
+.bg-vignette{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 80% 80% at 50% 50%,transparent 40%,rgba(4,6,15,.7) 100%)}
+
+/* ── Utility ────────────────────────────────────────── */
 .spin-el{animation:spin .75s linear infinite}
-.ticker-track{display:flex;gap:44px;animation:ticker 24s linear infinite;white-space:nowrap}
 .toast-el{animation:toastIn .35s cubic-bezier(.22,1,.36,1)}
-.auth-grid-bg{
-  background-image:
-    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
-  background-size:54px 54px;
-}
-.btn-shimmer{position:relative;overflow:hidden}
-.btn-shimmer::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.13) 50%,transparent 70%);
-  animation:shimmer 3.2s infinite ease-in-out;pointer-events:none
-}
-.field-box{transition:box-shadow .15s,background .15s}
-.field-box:focus-within{
-  box-shadow:0 0 0 2px rgba(59,130,246,.45)!important;
-  background:rgba(59,130,246,.07)!important
-}
-.nav-btn{transition:background .14s;border-left:2px solid transparent!important}
-.nav-btn:hover{background:rgba(255,255,255,.055)!important}
-.nav-active{background:rgba(59,130,246,.11)!important;border-left-color:#3B82F6!important}
-.card-hover{transition:transform .18s,border-color .18s}
-.card-hover:hover{transform:translateY(-2px)}
-.row-hover{transition:background .14s,transform .14s}
-.row-hover:hover{background:rgba(255,255,255,.07)!important;transform:translateX(2px)}
-.preview-card{animation:float 7s ease-in-out infinite}
 
+/* ── Glass surfaces ─────────────────────────────────── */
+.glass{
+  background:rgba(8,11,24,.82);
+  border:1px solid rgba(99,102,241,.14);
+  backdrop-filter:blur(28px) saturate(1.4);
+  -webkit-backdrop-filter:blur(28px) saturate(1.4);
+}
+.glass-xs{
+  background:rgba(255,255,255,.042);
+  border:1px solid rgba(255,255,255,.07);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+
+/* ── Nav ────────────────────────────────────────────── */
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  padding:16px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  animation:slideUp .7s cubic-bezier(.22,1,.36,1) .1s both;
+}
+.nav-pill{
+  background:rgba(8,11,24,.78);
+  border:1px solid rgba(99,102,241,.16);
+  backdrop-filter:blur(24px);
+  border-radius:99px;padding:6px 8px 6px 18px;
+  display:flex;align-items:center;gap:12px;
+}
+@media(max-width:640px){.nav-wrap{padding:14px 18px}}
+
+/* ── Hero ───────────────────────────────────────────── */
+.hero-section{
+  position:relative;z-index:10;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  justify-content:center;
+  padding:100px 64px 60px;
+  overflow:hidden;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(99,102,241,.1);
+  border:1px solid rgba(99,102,241,.24);
+  border-radius:99px;padding:5px 14px 5px 8px;
+  font-size:12px;font-weight:600;letter-spacing:.06em;
+  color:rgba(167,139,250,.9);
+  animation:slideUp .7s cubic-bezier(.22,1,.36,1) .3s both;
+}
+.hero-eyebrow-dot{width:20px;height:20px;border-radius:50%;background:rgba(99,102,241,.2);display:flex;align-items:center;justify-content:center}
+.hero-eyebrow-dot::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--indigo);display:block}
+
+.hero-headline{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(3.2rem,8vw,7.5rem);
+  font-weight:800;line-height:.96;
+  letter-spacing:-.06em;
+  color:var(--txt);
+  margin-top:24px;
+}
+.word-reveal{
+  display:inline-block;
+  animation:revealClip .9s cubic-bezier(.22,1,.36,1) both;
+  will-change:clip-path;
+}
+.w1{animation-delay:.42s}
+.w2{animation-delay:.56s}
+.w3{animation-delay:.7s}
+.w4{animation-delay:.84s}
+.w5{animation-delay:.98s}
+
+.gradient-word{
+  background:linear-gradient(135deg,var(--indigo) 0%,var(--violet) 35%,var(--cyan) 70%,var(--green) 100%);
+  background-size:200% 200%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:shimmerText 5s ease infinite;
+}
+
+.hero-sub{
+  font-size:clamp(14px,1.6vw,17px);
+  color:var(--sub);line-height:1.8;
+  max-width:440px;margin-top:22px;font-weight:400;
+  animation:slideUp .8s cubic-bezier(.22,1,.36,1) 1.1s both;
+}
+
+/* ── CTA button ─────────────────────────────────────── */
+.btn-cta{
+  position:relative;display:inline-flex;align-items:center;gap:10px;
+  padding:15px 32px;border-radius:14px;
+  font-size:15px;font-weight:700;color:#fff;
+  background:linear-gradient(135deg,#4338CA 0%,#6366F1 45%,#818CF8 100%);
+  border:none;cursor:pointer;overflow:hidden;
+  box-shadow:0 8px 32px rgba(99,102,241,.38),inset 0 1px 0 rgba(255,255,255,.12);
+  transition:transform .18s,box-shadow .2s;
+  animation:scaleIn .7s cubic-bezier(.22,1,.36,1) 1.2s both;
+}
+.btn-cta::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.14) 50%,transparent 70%);
+  background-size:200% 100%;animation:shimmerText 2.8s infinite;
+}
+.btn-cta:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 16px 48px rgba(99,102,241,.55),inset 0 1px 0 rgba(255,255,255,.12)}
+.btn-cta:active{transform:translateY(0) scale(.98)}
+
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 24px;border-radius:14px;
+  font-size:14px;font-weight:600;color:var(--sub);
+  background:transparent;border:1px solid rgba(255,255,255,.08);
+  transition:background .15s,border-color .15s,color .15s,transform .15s;
+  animation:scaleIn .7s cubic-bezier(.22,1,.36,1) 1.3s both;
+}
+.btn-ghost:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15);color:var(--txt);transform:translateY(-1px)}
+
+/* ── Feature pills ──────────────────────────────────── */
+.pill-track{
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:28px;
+  animation:slideUp .7s cubic-bezier(.22,1,.36,1) 1.35s both;
+}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:8px;padding:6px 13px;font-size:12.5px;
+  color:rgba(210,220,255,.6);font-weight:500;
+  transition:background .15s,border-color .15s,color .15s,transform .15s;
+}
+.pill:hover{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.25);color:rgba(180,190,255,.9);transform:translateY(-1px)}
+.pill-icon{font-size:13px}
+
+/* ── Floating preview cards (right side) ────────────── */
+.preview-area{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  width:min(430px, 38vw);padding-right:48px;
+  display:flex;flex-direction:column;gap:12px;
+  pointer-events:none;
+}
+.pcard{
+  border-radius:16px;padding:14px 16px;
+  position:relative;overflow:hidden;
+}
+.pcard::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+}
+.pcard-1{animation:cardPop .9s cubic-bezier(.22,1,.36,1) 1.0s both,floatA 7s ease-in-out 2s infinite}
+.pcard-2{animation:cardPop .9s cubic-bezier(.22,1,.36,1) 1.15s both,floatB 9s ease-in-out 2s infinite}
+.pcard-3{animation:cardPop .9s cubic-bezier(.22,1,.36,1) 1.3s both,floatC 6s ease-in-out 2s infinite}
+.pcard-4{animation:cardPop .9s cubic-bezier(.22,1,.36,1) 1.45s both,floatA 8s ease-in-out 2s infinite reverse}
+
+.status-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:700;letter-spacing:.07em;
+  padding:3px 9px;border-radius:99px;text-transform:uppercase;
+}
+
+/* ── Stats row ──────────────────────────────────────── */
+.stats-row{
+  position:relative;z-index:10;
+  display:flex;gap:1px;
+  border-top:1px solid rgba(99,102,241,.1);
+  border-bottom:1px solid rgba(99,102,241,.1);
+  overflow:hidden;
+  animation:slideUp .7s cubic-bezier(.22,1,.36,1) 1.5s both;
+}
+.stat-cell{
+  flex:1;padding:28px 32px;
+  border-right:1px solid rgba(99,102,241,.1);
+  position:relative;overflow:hidden;
+  transition:background .2s;
+}
+.stat-cell:last-child{border-right:none}
+.stat-cell::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(99,102,241,.0),rgba(99,102,241,.0));
+  transition:background .2s;
+}
+.stat-cell:hover::before{background:linear-gradient(135deg,rgba(99,102,241,.06),rgba(167,139,250,.04))}
+.stat-num{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(1.6rem,3vw,2.4rem);
+  font-weight:800;letter-spacing:-.04em;color:var(--txt);
+  line-height:1;
+}
+.stat-label{font-size:12px;color:var(--muted);margin-top:6px;font-weight:500}
+
+/* ── Features section ───────────────────────────────── */
+.features-section{
+  position:relative;z-index:10;
+  padding:80px 64px;
+}
+.section-label{
+  font-size:11px;font-weight:700;letter-spacing:.14em;
+  color:var(--indigo);text-transform:uppercase;margin-bottom:14px;
+}
+.section-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(1.8rem,3.5vw,3rem);
+  font-weight:800;letter-spacing:-.045em;color:var(--txt);
+  line-height:1.08;max-width:560px;
+}
+
+.feat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px;
+}
+.feat-card{
+  border-radius:20px;padding:28px;
+  background:rgba(8,11,24,.6);
+  border:1px solid rgba(99,102,241,.1);
+  position:relative;overflow:hidden;
+  transition:transform .22s,border-color .22s,box-shadow .22s;
+  cursor:default;
+}
+.feat-card::before{
+  content:'';position:absolute;inset:0;border-radius:20px;
+  background:linear-gradient(135deg,rgba(99,102,241,.0),rgba(167,139,250,.0));
+  transition:background .25s;
+}
+.feat-card:hover{transform:translateY(-4px);border-color:rgba(99,102,241,.28);box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 0 1px rgba(99,102,241,.12)}
+.feat-card:hover::before{background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(167,139,250,.04))}
+.feat-icon{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:18px;
+  position:relative;z-index:1;
+}
+.feat-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--txt);margin-bottom:10px;position:relative;z-index:1}
+.feat-desc{font-size:13.5px;color:var(--sub);line-height:1.7;position:relative;z-index:1;font-weight:400}
+
+/* ── Ticker ─────────────────────────────────────────── */
+.ticker-section{
+  position:relative;z-index:10;padding:0;
+  overflow:hidden;
+  mask-image:linear-gradient(90deg,transparent,black 8%,black 92%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,transparent,black 8%,black 92%,transparent);
+}
+.ticker-inner{display:flex;gap:0;animation:ticker 30s linear infinite}
+.ticker-item{
+  display:flex;align-items:center;gap:32px;
+  padding:18px 0;white-space:nowrap;
+  font-size:12.5px;font-weight:600;letter-spacing:.06em;
+  color:rgba(180,190,240,.4);text-transform:uppercase;
+}
+.ticker-sep{width:5px;height:5px;border-radius:50%;background:rgba(99,102,241,.5);flex-shrink:0}
+
+/* ── Testimonials ───────────────────────────────────── */
+.testimonials-section{
+  position:relative;z-index:10;
+  padding:80px 64px;
+}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px}
+.testi-card{
+  border-radius:18px;padding:24px;
+  background:rgba(8,11,24,.7);
+  border:1px solid rgba(99,102,241,.1);
+  transition:transform .2s,border-color .2s;
+}
+.testi-card:hover{transform:translateY(-3px);border-color:rgba(99,102,241,.22)}
+
+/* ── CTA section ────────────────────────────────────── */
+.cta-section{
+  position:relative;z-index:10;
+  padding:80px 64px 100px;
+  text-align:center;
+}
+.cta-glow{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:600px;height:300px;
+  background:radial-gradient(ellipse,rgba(99,102,241,.18) 0%,transparent 65%);
+  pointer-events:none;
+}
+.cta-card{
+  max-width:640px;margin:0 auto;
+  border-radius:28px;padding:56px;
+  background:rgba(8,11,24,.88);
+  border:1px solid rgba(99,102,241,.18);
+  backdrop-filter:blur(32px);
+  position:relative;overflow:hidden;
+}
+.cta-card::before{
+  content:'';position:absolute;
+  top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(99,102,241,.6),transparent);
+}
+
+/* ── Auth overlay ───────────────────────────────────── */
+.auth-overlay{
+  position:fixed;inset:0;z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  animation:fadeIn .25s ease;
+}
+.auth-scrim{position:absolute;inset:0;background:rgba(2,3,12,.82);backdrop-filter:blur(16px)}
+.auth-sheet{
+  position:relative;z-index:1;
+  width:100%;max-width:420px;
+  background:linear-gradient(160deg,rgba(10,13,28,.98) 0%,rgba(6,8,20,.98) 100%);
+  border:1px solid rgba(99,102,241,.2);
+  border-radius:24px;
+  padding:40px;
+  box-shadow:0 0 0 1px rgba(99,102,241,.08),0 48px 100px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.05);
+  animation:slideRight .4s cubic-bezier(.22,1,.36,1);
+}
+.auth-topline{
+  position:absolute;top:0;left:20%;right:20%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(99,102,241,.7),transparent);
+}
+.auth-field-wrap{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(99,102,241,.14);
+  border-radius:11px;
+  transition:border-color .15s,background .15s,box-shadow .15s;
+  display:flex;align-items:center;overflow:hidden;
+}
+.auth-field-wrap:focus-within{
+  border-color:rgba(99,102,241,.55);
+  background:rgba(99,102,241,.07);
+  box-shadow:0 0 0 3px rgba(99,102,241,.12);
+}
+
+/* ── Dashboard (unchanged from previous, clean) ─────── */
+.nav-btn-dash{transition:background .14s;border-left:2px solid transparent!important}
+.nav-btn-dash:hover{background:rgba(99,102,241,.07)!important}
+.nav-active-dash{background:rgba(99,102,241,.1)!important;border-left-color:var(--indigo)!important}
+.row-hover{transition:background .14s,transform .14s}
+.row-hover:hover{background:rgba(99,102,241,.06)!important;transform:translateX(2px)}
+.card-hover{transition:transform .18s,border-color .18s,box-shadow .18s}
+.card-hover:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,.3)}
+
+/* ── Responsive ─────────────────────────────────────── */
 @media(max-width:900px){
-  .auth-left-panel{display:none!important}
-  .auth-right-panel{width:100%!important;padding:40px 24px!important}
-  .sb-label{display:none!important}
-  .sb-logo-text{display:none!important}
-  .sb-user-info{display:none!important}
-  .sidebar{width:60px!important;min-width:60px!important}
-  .dash-main-grid{grid-template-columns:1fr!important}
-  .stat-grid{grid-template-columns:1fr 1fr!important}
-  .achieve-grid{grid-template-columns:repeat(3,1fr)!important}
+  .hero-section{padding:100px 24px 60px}
+  .preview-area{display:none}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .testi-grid{grid-template-columns:1fr}
+  .features-section,.testimonials-section,.cta-section{padding:60px 24px}
+  .stats-row{flex-wrap:wrap}
+  .stat-cell{flex:1 1 45%;border-right:none;border-bottom:1px solid rgba(99,102,241,.1)}
+  .cta-card{padding:36px 24px}
+  .auth-sheet{max-width:100%;border-radius:20px 20px 0 0;padding:32px 22px 44px}
+  .auth-overlay{align-items:flex-end}
+  .auth-sheet{animation:slideBottom .4s cubic-bezier(.22,1,.36,1)}
+}
+@media(max-width:640px){
+  .feat-grid{grid-template-columns:1fr}
+  .hero-headline{letter-spacing:-.05em}
+  .stats-row{flex-direction:column}
+  .stat-cell{border-right:none;padding:20px 24px}
+  .nav-pill{padding:5px 6px 5px 14px}
+  .sidebar-dash{width:56px!important;min-width:56px!important}
+  .sb-label,.sb-name,.sb-email{display:none!important}
+  .dash-stats{grid-template-columns:1fr 1fr!important}
+  .dash-main{grid-template-columns:1fr!important}
 }
 @media(min-width:901px){
-  .mobile-logo{display:none!important}
+  .mobile-only{display:none!important}
 }
 </style>
 </head>
 <body>
 
-<div id="root">
-  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#030508">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
-      <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#1D4ED8,#4338CA);display:flex;align-items:center;justify-content:center">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-      </div>
-      <div class="spin-el" style="width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.15);border-top-color:#3B82F6"></div>
-    </div>
-  </div>
-</div>
+<div id="root"></div>
 
-<!-- ═══════════════════════════════════════════════════════
-     FIREBASE INIT
-     SECURITY: Restrict this API key in Google Cloud Console
-     to only your GitHub Pages domain. See header comment.
-════════════════════════════════════════════════════════ -->
 <script>
   firebase.initializeApp({
     apiKey:"AIzaSyCqFxLS_AvYW8onnkUDZQ_j-orrLiTHqZc",
@@ -120,133 +453,84 @@ input::placeholder,textarea::placeholder{color:rgba(241,245,249,.22)}
     projectId:"uni-find-9041e",
     storageBucket:"uni-find-9041e.firebasestorage.app",
     messagingSenderId:"290405330440",
-    appId:"1:290405330440:web:b1e70917b14c784737ebbd",
-    measurementId:"G-7Y1K5P31XC"
+    appId:"1:290405330440:web:b1e70917b14c784737ebbd"
   });
   window._auth = firebase.auth();
   window._gProvider = new firebase.auth.GoogleAuthProvider();
-  // Force account selection every time for Google OAuth
-  window._gProvider.setCustomParameters({ prompt: 'select_account' });
+  window._gProvider.setCustomParameters({prompt:'select_account'});
 </script>
 
 <script type="text/babel" data-presets="react">
 
-// ── Security: XSS / Injection Prevention ───────────────
-// Sanitize any user-provided string before rendering as text.
-// Since we use React (which auto-escapes JSX), raw HTML injection
-// is already blocked. This helper gives extra safety for edge cases.
-function sanitize(str) {
-  if (typeof str !== 'string') return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
-    .trim();
-}
+/* ── Security ───────────────────────────────────────── */
+const san=s=>typeof s!=='string'?'':s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').trim();
+const clean=(s,n=200)=>typeof s!=='string'?'':s.replace(/[\x00-\x1F\x7F$]/g,'').substring(0,n).trim();
+const validEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+const validPhone=p=>/^[+\d\s\-(]{7,20}$/.test(p.trim());
 
-// Validate phone number — only digits, +, spaces, dashes allowed
-function validatePhone(phone) {
-  return /^[+\d\s\-()]{7,20}$/.test(phone.trim());
-}
+/* ── Auth helpers ───────────────────────────────────── */
+const auth=window._auth, gp=window._gProvider;
+const fbErr=c=>({
+  'auth/invalid-credential':'Incorrect email or password.',
+  'auth/invalid-email':'Enter a valid email address.',
+  'auth/email-already-in-use':'Email already registered — sign in instead.',
+  'auth/weak-password':'Password needs at least 6 characters.',
+  'auth/user-not-found':'No account found with this email.',
+  'auth/wrong-password':'Incorrect password.',
+  'auth/too-many-requests':'Too many attempts — wait a minute.',
+  'auth/popup-closed-by-user':'','auth/cancelled-popup-request':'',
+  'auth/popup-blocked':'Popup blocked — trying redirect…',
+  'auth/network-request-failed':'Network error. Check your connection.',
+  'auth/operation-not-allowed':'Enable Google sign-in in Firebase Console → Auth → Sign-in method.',
+  'auth/unauthorized-domain':'Add this domain in Firebase Console → Auth → Settings → Authorised domains.',
+}[c]||`Error (${c||'unknown'})`);
 
-// Validate email format
-function validateEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-}
-
-// Strip dangerous characters from form fields
-function cleanInput(str, maxLen = 200) {
-  if (typeof str !== 'string') return '';
-  // Remove null bytes and control characters — key NoSQL injection prevention
-  return str.replace(/[\x00-\x1F\x7F$]/g, '').substring(0, maxLen).trim();
-}
-
-// ── Design tokens ───────────────────────────────────────
-const C={
-  bg:'#030508',sf:'rgba(255,255,255,.042)',sfh:'rgba(255,255,255,.075)',
-  bd:'rgba(255,255,255,.072)',bdh:'rgba(255,255,255,.14)',
-  blue:'#3B82F6',deep:'#1D4ED8',green:'#10B981',red:'#EF4444',
-  amber:'#F59E0B',indigo:'#6366F1',
-  txt:'#F1F5F9',sub:'rgba(241,245,249,.52)',muted:'rgba(241,245,249,.28)',
-};
-
+/* ── Data ───────────────────────────────────────────── */
 const SEED=[
-  {id:1,title:'MacBook Pro 16"',   cat:'Electronics',status:'lost', loc:'Library Block B',  rep:'Chidi A.',  time:'2h ago',  desc:'Silver MacBook, sticker on lid. Near study pod 3.',           karma:50,phone:'2348012345678',verified:true, mx:22,my:28},
-  {id:2,title:'Student ID Card',   cat:'Documents',  status:'found',loc:'Science Faculty', rep:'Amaka O.',  time:'4h ago',  desc:"Found near Chemistry Lab. Owner's photo visible.",            karma:20,phone:'2348023456789',verified:true, mx:55,my:38},
-  {id:3,title:'AirPods Pro',       cat:'Electronics',status:'lost', loc:'Cafeteria',        rep:'Emeka N.',  time:'1d ago',  desc:"White AirPods Pro, engraving 'EN' on case.",                  karma:30,phone:'2348034567890',verified:false,mx:38,my:62},
-  {id:4,title:'Navy Backpack',     cat:'Bags',       status:'found',loc:'Admin Block',      rep:'Ngozi K.',  time:'3h ago',  desc:'Jansport — notebooks and water bottle inside.',              karma:25,phone:'2348045678901',verified:true, mx:70,my:55},
-  {id:5,title:'Honda Car Keys',    cat:'Keys',       status:'lost', loc:'Parking Lot C',    rep:'Tunde B.',  time:'5h ago',  desc:'Honda key fob + 3 keys on red lanyard.',                     karma:40,phone:'2348056789012',verified:false,mx:15,my:72},
-  {id:6,title:'Casio Calculator',  cat:'Electronics',status:'found',loc:'Engineering Dept', rep:'Blessing I.',time:'6h ago', desc:'Casio fx-991ES Plus. Name written inside.',                  karma:15,phone:'2348067890123',verified:true, mx:82,my:30},
-  {id:7,title:'Gold Wristwatch',   cat:'Jewelry',    status:'lost', loc:'Sports Complex',   rep:'Kemi F.',   time:'12h ago', desc:'Gold Casio G-Shock. Very sentimental.',                      karma:60,phone:'2348078901234',verified:true, mx:48,my:20},
-  {id:8,title:"Gray's Anatomy",    cat:'Books',      status:'found',loc:'Medical School',   rep:'Tochi M.',  time:'2d ago',  desc:'41st edition. Name inside front cover.',                     karma:18,phone:'2348089012345',verified:false,mx:65,my:75},
+  {id:1,title:'MacBook Pro 16"',cat:'Electronics',status:'lost',loc:'Library Block B',rep:'Chidi A.',time:'2h ago',desc:'Silver MacBook, sticker on lid.',karma:50,phone:'2348012345678',verified:true,mx:22,my:28},
+  {id:2,title:'Student ID Card',cat:'Documents',status:'found',loc:'Science Faculty',rep:'Amaka O.',time:'4h ago',desc:"Found near Chemistry Lab. Owner's photo visible.",karma:20,phone:'2348023456789',verified:true,mx:55,my:38},
+  {id:3,title:'AirPods Pro',cat:'Electronics',status:'lost',loc:'Cafeteria',rep:'Emeka N.',time:'1d ago',desc:"White AirPods Pro, engraving 'EN'.",karma:30,phone:'2348034567890',verified:false,mx:38,my:62},
+  {id:4,title:'Navy Backpack',cat:'Bags',status:'found',loc:'Admin Block',rep:'Ngozi K.',time:'3h ago',desc:'Jansport — notebooks inside.',karma:25,phone:'2348045678901',verified:true,mx:70,my:55},
+  {id:5,title:'Honda Car Keys',cat:'Keys',status:'lost',loc:'Parking Lot C',rep:'Tunde B.',time:'5h ago',desc:'Honda key fob + 3 keys, red lanyard.',karma:40,phone:'2348056789012',verified:false,mx:15,my:72},
+  {id:6,title:'Casio Calculator',cat:'Electronics',status:'found',loc:'Engineering Dept',rep:'Blessing I.',time:'6h ago',desc:'Casio fx-991ES Plus.',karma:15,phone:'2348067890123',verified:true,mx:82,my:30},
+  {id:7,title:'Gold Wristwatch',cat:'Jewelry',status:'lost',loc:'Sports Complex',rep:'Kemi F.',time:'12h ago',desc:'Gold Casio G-Shock. Sentimental.',karma:60,phone:'2348078901234',verified:true,mx:48,my:20},
+  {id:8,title:"Gray's Anatomy",cat:'Books',status:'found',loc:'Medical School',rep:'Tochi M.',time:'2d ago',desc:'41st edition.',karma:18,phone:'2348089012345',verified:false,mx:65,my:75},
 ];
 const CATS=['All','Electronics','Documents','Bags','Keys','Jewelry','Books','Clothing'];
 const LOCS=['Library Block B','Science Faculty','Cafeteria','Admin Block','Parking Lot C','Engineering Dept','Sports Complex','Medical School','Student Union','Main Gate'];
 
-// ── Firebase helpers ────────────────────────────────────
-const auth = window._auth;
-const gProvider = window._gProvider;
-
-// Comprehensive Firebase error mapping
-const fbErr = code => ({
-  'auth/invalid-credential':   'Incorrect email or password.',
-  'auth/invalid-email':        'Please enter a valid email address.',
-  'auth/user-disabled':        'This account has been disabled.',
-  'auth/email-already-in-use': 'Email already registered — try signing in.',
-  'auth/weak-password':        'Password must be at least 6 characters.',
-  'auth/user-not-found':       'No account found with this email.',
-  'auth/wrong-password':       'Incorrect password. Try again.',
-  'auth/too-many-requests':    'Too many attempts — wait a few minutes and try again.',
-  'auth/popup-closed-by-user': '',
-  'auth/popup-blocked':        'Popup was blocked. Please allow popups for this site and try again.',
-  'auth/cancelled-popup-request': '',
-  'auth/network-request-failed':'Network error — check your internet connection.',
-  'auth/operation-not-allowed':'Google sign-in is not enabled yet. Enable it in Firebase Console → Authentication → Sign-in method → Google.',
-  'auth/unauthorized-domain':  'This domain is not authorised. Add it in Firebase Console → Authentication → Settings → Authorised domains.',
-  'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
-}[code] || `Something went wrong (${code || 'unknown'}). Please try again.`);
-
-// ── Hooks ───────────────────────────────────────────────
+/* ── Hooks ──────────────────────────────────────────── */
 function useCount(to){
-  const [v,setV]=React.useState(0);
+  const[v,set]=React.useState(0);
   React.useEffect(()=>{
-    let s;const run=ts=>{
-      if(!s)s=ts;
-      const p=Math.min((ts-s)/1500,1),e=1-(1-p)**3;
-      setV(Math.round(e*to));
-      if(p<1)requestAnimationFrame(run);
-    };requestAnimationFrame(run);
-  },[to]);
-  return v;
+    let s;const r=ts=>{if(!s)s=ts;const p=Math.min((ts-s)/1600,1),e=1-(1-p)**4;set(Math.round(e*to));if(p<1)requestAnimationFrame(r);};
+    requestAnimationFrame(r);
+  },[to]);return v;
 }
-
 function useInterval(fn,ms){
   const cb=React.useRef(fn);
   React.useEffect(()=>{cb.current=fn;},[fn]);
   React.useEffect(()=>{const t=setInterval(()=>cb.current(),ms);return()=>clearInterval(t);},[ms]);
 }
 
-// ── Icons ───────────────────────────────────────────────
-const I={
-  compass:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
+/* ── Mini Icons ─────────────────────────────────────── */
+const Ico={
+  logo:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
   home:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
   map:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>,
   pkg:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="m16.5 9.4-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>,
   user:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-  plus:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  plus:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
   bell:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
   search:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-  check:<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  check:<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
   alert:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-  zap:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  zap:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
   award:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>,
   arrow:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
-  chevron:<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+  chevR:<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
   x:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-  upload:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+  upload:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
   pin:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
   clock:<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
   logout:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
@@ -258,1126 +542,745 @@ const I={
   list:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
   trend:<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   sparkle:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a1 1 0 0 1 1 1 7 7 0 0 0 7 7 1 1 0 0 1 0 2 7 7 0 0 0-7 7 1 1 0 0 1-2 0 7 7 0 0 0-7-7 1 1 0 0 1 0-2 7 7 0 0 0 7-7 1 1 0 0 1 1-1Z"/></svg>,
+  arrowDiag:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>,
   google:<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>,
 };
 
-// ══════════════════════════════════════════════════════
-//  MODAL
-// ══════════════════════════════════════════════════════
+/* ── Modal ──────────────────────────────────────────── */
 function Modal({children,onClose}){
-  React.useEffect(()=>{
-    const fn=e=>{if(e.key==='Escape')onClose();};
-    document.addEventListener('keydown',fn);
-    return()=>document.removeEventListener('keydown',fn);
-  },[onClose]);
-  return(
-    <div onClick={e=>{if(e.target===e.currentTarget)onClose();}} style={{
-      position:'fixed',inset:0,zIndex:80,
-      display:'flex',alignItems:'center',justifyContent:'center',padding:16,
-      background:'rgba(0,0,0,.62)',backdropFilter:'blur(10px)',animation:'fadeIn .2s ease',
-    }}>
-      <div className="slide-up" style={{width:'100%',maxWidth:480,position:'relative'}}>
-        {children}
-      </div>
-    </div>
-  );
+  React.useEffect(()=>{const f=e=>{if(e.key==='Escape')onClose();};document.addEventListener('keydown',f);return()=>document.removeEventListener('keydown',f);},[onClose]);
+  return <div onClick={e=>{if(e.target===e.currentTarget)onClose();}} style={{position:'fixed',inset:0,zIndex:80,display:'flex',alignItems:'center',justifyContent:'center',padding:16,background:'rgba(0,0,0,.7)',backdropFilter:'blur(12px)',animation:'fadeIn .2s ease'}}><div style={{width:'100%',maxWidth:480,animation:'slideUp .32s cubic-bezier(.22,1,.36,1)'}}>{children}</div></div>;
 }
 
-// ══════════════════════════════════════════════════════
-//  TOAST
-// ══════════════════════════════════════════════════════
+/* ── Toast ──────────────────────────────────────────── */
 function Toast({msg,onDone}){
-  React.useEffect(()=>{const t=setTimeout(onDone,3600);return()=>clearTimeout(t);},[]);
-  return(
-    <div className="toast-el" style={{
-      position:'fixed',bottom:24,right:24,zIndex:200,
-      display:'flex',alignItems:'center',gap:10,
-      padding:'12px 18px',borderRadius:12,
-      background:'rgba(16,185,129,.11)',border:'1px solid rgba(16,185,129,.32)',
-      backdropFilter:'blur(20px)',boxShadow:'0 12px 40px rgba(0,0,0,.5)',
-      fontSize:13,fontWeight:600,color:C.txt,
-    }}>
-      <span style={{color:C.green}}>{I.check}</span>{msg}
-    </div>
-  );
+  React.useEffect(()=>{const t=setTimeout(onDone,3800);return()=>clearTimeout(t);},[]);
+  return <div className="toast-el" style={{position:'fixed',bottom:24,right:16,zIndex:200,maxWidth:'calc(100vw - 32px)',display:'flex',alignItems:'center',gap:10,padding:'12px 18px',borderRadius:12,background:'rgba(52,211,153,.1)',border:'1px solid rgba(52,211,153,.3)',backdropFilter:'blur(20px)',boxShadow:'0 12px 40px rgba(0,0,0,.5)',fontSize:13,fontWeight:600,color:'#F0F4FF'}}><span style={{color:'#34D399'}}>{Ico.check}</span>{msg}</div>;
 }
 
-// ══════════════════════════════════════════════════════
-//  FIELD
-// ══════════════════════════════════════════════════════
-function Field({label,type='text',placeholder,value,onChange,icon,suffix,onKeyDown,autoComplete,maxLength=200}){
-  return(
-    <div>
-      {label&&<label style={{display:'block',fontSize:12,fontWeight:500,color:C.muted,marginBottom:6,letterSpacing:'.04em'}}>{label}</label>}
-      <div className="field-box" style={{display:'flex',alignItems:'center',borderRadius:10,background:C.sf,boxShadow:`0 0 0 1px ${C.bd}`,overflow:'hidden'}}>
-        {icon&&<span style={{paddingLeft:13,color:C.muted,display:'flex',flexShrink:0}}>{icon}</span>}
-        <input
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          onChange={e=>onChange(e.target.value)}
-          onKeyDown={onKeyDown}
-          autoComplete={autoComplete}
-          maxLength={maxLength}
-          style={{flex:1,padding:'11px 13px',fontSize:14,color:C.txt,outline:'none',background:'transparent'}}
-        />
-        {suffix&&<span style={{paddingRight:12}}>{suffix}</span>}
-      </div>
-    </div>
-  );
+/* ── AuthField ──────────────────────────────────────── */
+function AuthField({label,type='text',placeholder,value,onChange,icon,suffix,onKeyDown,autoComplete,maxLength=200}){
+  return <div><label style={{display:'block',fontSize:11,fontWeight:700,color:'rgba(180,190,240,.38)',marginBottom:6,letterSpacing:'.07em',textTransform:'uppercase'}}>{label}</label>
+    <div className="auth-field-wrap">
+      {icon&&<span style={{paddingLeft:13,color:'rgba(180,190,240,.32)',display:'flex',flexShrink:0}}>{icon}</span>}
+      <input type={type} placeholder={placeholder} value={value} onChange={e=>onChange(e.target.value)} onKeyDown={onKeyDown} autoComplete={autoComplete} maxLength={maxLength} style={{flex:1,padding:'12px 13px',fontSize:14,color:'#F0F4FF',outline:'none',background:'transparent'}}/>
+      {suffix&&<span style={{paddingRight:12}}>{suffix}</span>}
+    </div></div>;
 }
 
-// ══════════════════════════════════════════════════════
-//  AUTH PAGE — FIXED GOOGLE + EMAIL SIGN-IN
-// ══════════════════════════════════════════════════════
-function AuthPage(){
-  const [mode,setMode]=React.useState('signin');
-  const [form,setForm]=React.useState({name:'',email:'',password:''});
-  const [showPass,setShowPass]=React.useState(false);
-  const [loading,setLoading]=React.useState(false);
-  const [gLoad,setGLoad]=React.useState(false);
-  const [err,setErr]=React.useState('');
-  const [tIdx,setTIdx]=React.useState(0);
-
-  const n1=useCount(1247),n2=useCount(98),n3=useCount(4800);
-
-  const quotes=[
-    {q:'Got my MacBook back in 3 hours. Completely unreal.',name:'Chidi Amara',role:'Computer Science \'25'},
-    {q:'Found my student ID the same day. WhatsApp link is genius.',name:'Amaka Obi',role:'Medicine \'26'},
-    {q:'Returned 4 items this semester. Karma system is addictive.',name:'Tunde Bello',role:'Engineering \'25'},
-  ];
-
-  useInterval(()=>setTIdx(i=>(i+1)%quotes.length),4800);
-
+/* ══════════════════════════════════════════════════════
+   AUTH OVERLAY
+══════════════════════════════════════════════════════ */
+function AuthOverlay({onClose}){
+  const[mode,setMode]=React.useState('signin');
+  const[form,setForm]=React.useState({name:'',email:'',password:''});
+  const[showP,setShowP]=React.useState(false);
+  const[loading,setLoading]=React.useState(false);
+  const[gLoad,setGLoad]=React.useState(false);
+  const[err,setErr]=React.useState('');
   const upd=(k,v)=>setForm(f=>({...f,[k]:v}));
 
-  // ── GOOGLE SIGN-IN (FIXED) ─────────────────────────────
-  // Uses popup first, falls back to redirect if popup blocked
-  const handleGoogle=async()=>{
+  const gSign=async()=>{
     setGLoad(true);setErr('');
-    try{
-      await auth.signInWithPopup(gProvider);
-      // On success Firebase auth state listener will fire automatically
-    }catch(e){
-      if(e.code==='auth/popup-blocked'){
-        // Popup was blocked — fall back to redirect flow
-        try{
-          await auth.signInWithRedirect(gProvider);
-        }catch(re){
-          const m=fbErr(re.code);
-          if(m)setErr(m);
-          setGLoad(false);
-        }
-      } else {
-        const m=fbErr(e.code);
-        if(m)setErr(m);
-        setGLoad(false);
-      }
-    }
+    try{await auth.signInWithPopup(gp);}
+    catch(e){if(e.code==='auth/popup-blocked'){try{await auth.signInWithRedirect(gp);}catch(r){const m=fbErr(r.code);if(m)setErr(m);setGLoad(false);}}else{const m=fbErr(e.code);if(m)setErr(m);setGLoad(false);}}
   };
 
-  // ── EMAIL SIGN-IN / SIGN-UP (FIXED) ───────────────────
-  const handleSubmit=async()=>{
+  const submit=async()=>{
     setErr('');
-
-    // Client-side validation — prevents empty/invalid data hitting Firebase
-    if(!form.email||!form.password){setErr('Please fill in all fields.');return;}
-    if(!validateEmail(form.email)){setErr('Please enter a valid email address.');return;}
-    if(form.password.length<6){setErr('Password must be at least 6 characters.');return;}
-    if(mode==='signup'&&!form.name.trim()){setErr('Please enter your full name.');return;}
-    if(mode==='signup'&&form.name.trim().length<2){setErr('Name must be at least 2 characters.');return;}
-
-    // Sanitize inputs before sending to Firebase
-    const cleanEmail = form.email.trim().toLowerCase();
-    const cleanName  = cleanInput(form.name, 80);
-
+    if(!form.email||!form.password){setErr('Fill in all fields.');return;}
+    if(!validEmail(form.email)){setErr('Enter a valid email.');return;}
+    if(form.password.length<6){setErr('Password needs at least 6 characters.');return;}
+    if(mode==='signup'&&!form.name.trim()){setErr('Enter your full name.');return;}
     setLoading(true);
     try{
-      if(mode==='signup'){
-        const r=await auth.createUserWithEmailAndPassword(cleanEmail, form.password);
-        await r.user.updateProfile({displayName: cleanName});
-        // Email verified badge will update once user verifies
-      }else{
-        await auth.signInWithEmailAndPassword(cleanEmail, form.password);
-      }
-    }catch(e){
-      setErr(fbErr(e.code));
-    }
+      if(mode==='signup'){const r=await auth.createUserWithEmailAndPassword(form.email.trim().toLowerCase(),form.password);await r.user.updateProfile({displayName:clean(form.name,80)});}
+      else{await auth.signInWithEmailAndPassword(form.email.trim().toLowerCase(),form.password);}
+    }catch(e){setErr(fbErr(e.code));}
     setLoading(false);
   };
 
-  const onKey=e=>{if(e.key==='Enter')handleSubmit();};
   const sw=()=>{setMode(m=>m==='signin'?'signup':'signin');setErr('');setForm({name:'',email:'',password:''});};
-
-  const cards=[
-    {label:'🔴 Lost',title:'MacBook Pro',sub:'Library · 2h ago',delay:'0s',top:'20%'},
-    {label:'🟢 Found',title:'Student ID',sub:'Science · 4h ago',delay:'1.8s',top:'47%'},
-    {label:'🔴 Lost',title:'AirPods Pro',sub:'Cafeteria · 1d ago',delay:'3.2s',top:'72%'},
-  ];
+  const onK=e=>{if(e.key==='Enter')submit();};
+  const busy=loading||gLoad;
 
   return(
-    <div style={{minHeight:'100vh',display:'flex',background:C.bg}}>
+    <div className="auth-overlay">
+      <div className="auth-scrim" onClick={onClose}/>
+      <div className="auth-sheet">
+        <div className="auth-topline"/>
+        <button onClick={onClose} style={{position:'absolute',top:16,right:16,width:30,height:30,borderRadius:8,background:'rgba(255,255,255,.05)',border:'1px solid rgba(99,102,241,.14)',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(180,190,240,.4)'}}>{Ico.x}</button>
 
-      {/* LEFT PANEL */}
-      <div className="auth-left-panel auth-grid-bg" style={{
-        width:'52%',minHeight:'100vh',position:'relative',
-        display:'flex',flexDirection:'column',justifyContent:'space-between',
-        padding:'48px 56px',borderRight:`1px solid ${C.bd}`,overflow:'hidden',
-      }}>
-        <div style={{position:'absolute',width:580,height:580,top:'0%',left:'25%',borderRadius:'50%',background:'radial-gradient(circle,rgba(29,78,216,.1) 0%,transparent 65%)',pointerEvents:'none',animation:'float 12s ease-in-out infinite'}}/>
-        <div style={{position:'absolute',width:360,height:360,bottom:'10%',left:'-8%',borderRadius:'50%',background:'radial-gradient(circle,rgba(99,102,241,.08) 0%,transparent 65%)',pointerEvents:'none',animation:'float 9s ease-in-out infinite reverse'}}/>
-        <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',opacity:.07,pointerEvents:'none'}}>
-          <defs><linearGradient id="dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3B82F6" stopOpacity="0"/><stop offset="50%" stopColor="#3B82F6" stopOpacity="1"/><stop offset="100%" stopColor="#3B82F6" stopOpacity="0"/></linearGradient></defs>
-          <line x1="5%" y1="0" x2="50%" y2="100%" stroke="url(#dg)" strokeWidth="1"/>
-          <line x1="95%" y1="0" x2="50%" y2="100%" stroke="url(#dg)" strokeWidth="1"/>
-        </svg>
-        {cards.map((c,i)=>(
-          <div key={i} className="preview-card" style={{
-            position:'absolute',left:'4%',top:c.top,
-            background:'rgba(255,255,255,.042)',border:`1px solid ${C.bd}`,
-            borderRadius:12,padding:'10px 14px',backdropFilter:'blur(12px)',
-            minWidth:192,zIndex:2,animationDelay:c.delay,
-          }}>
-            <div style={{fontSize:10,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:4}}>{c.label}</div>
-            <div style={{fontSize:13,fontWeight:600,color:C.txt,marginBottom:2}}>{c.title}</div>
-            <div style={{fontSize:11,color:C.muted}}>{c.sub}</div>
-          </div>
-        ))}
-        <div className="fade-up" style={{display:'flex',alignItems:'center',gap:10,position:'relative',zIndex:3}}>
-          <div style={{width:34,height:34,borderRadius:9,background:'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 0 22px rgba(59,130,246,.32)',color:'#fff',flexShrink:0}}>
-            {I.compass}
-          </div>
-          <span style={{fontSize:18,fontWeight:800,color:C.txt,letterSpacing:'-.045em'}}>UniFind</span>
+        {/* Brand */}
+        <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:28}}>
+          <div style={{width:30,height:30,borderRadius:9,background:'linear-gradient(135deg,#4338CA,#6366F1)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',boxShadow:'0 0 18px rgba(99,102,241,.35)'}}>{Ico.logo}</div>
+          <span style={{fontFamily:'Syne,sans-serif',fontSize:16,fontWeight:800,color:'#F0F4FF',letterSpacing:'-.04em'}}>UniFind</span>
         </div>
-        <div style={{position:'relative',zIndex:3}}>
-          <div className="fade-up" style={{display:'inline-flex',alignItems:'center',gap:7,background:'rgba(59,130,246,.1)',border:'1px solid rgba(59,130,246,.22)',borderRadius:99,padding:'5px 13px',marginBottom:24,animationDelay:'.1s'}}>
-            <span style={{width:6,height:6,borderRadius:'50%',background:C.green,display:'block'}}/>
-            <span style={{fontSize:12,color:'rgba(147,197,253,.95)',fontWeight:500}}>University of Port Harcourt</span>
+
+        <h2 style={{fontFamily:'Syne,sans-serif',fontSize:23,fontWeight:800,color:'#F0F4FF',letterSpacing:'-.04em',marginBottom:5}}>{mode==='signin'?'Welcome back':'Join UniFind'}</h2>
+        <p style={{fontSize:13.5,color:'rgba(200,210,255,.5)',marginBottom:26,lineHeight:1.5}}>{mode==='signin'?'Sign in to track lost & found items':'Help your campus community find what matters'}</p>
+
+        {/* Google */}
+        <button onClick={gSign} disabled={busy} style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:10,padding:'12px',borderRadius:11,background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.09)',fontSize:14,fontWeight:500,color:'rgba(200,215,255,.75)',marginBottom:20,transition:'background .15s,border-color .15s',opacity:busy?.6:1,cursor:busy?'not-allowed':'pointer'}}
+          onMouseEnter={e=>{if(!busy){e.currentTarget.style.background='rgba(255,255,255,.09)';e.currentTarget.style.borderColor='rgba(255,255,255,.16)'}}}
+          onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,.05)';e.currentTarget.style.borderColor='rgba(255,255,255,.09)'}}>
+          {gLoad?<div className="spin-el" style={{width:15,height:15,borderRadius:'50%',border:'2px solid rgba(255,255,255,.2)',borderTopColor:'#fff'}}/>:Ico.google}
+          Continue with Google
+        </button>
+
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+          <div style={{flex:1,height:1,background:'rgba(99,102,241,.12)'}}/><span style={{fontSize:12,color:'rgba(180,190,240,.32)',flexShrink:0}}>or</span><div style={{flex:1,height:1,background:'rgba(99,102,241,.12)'}}/>
+        </div>
+
+        <div style={{display:'flex',flexDirection:'column',gap:13}}>
+          {mode==='signup'&&<AuthField label="Full Name" placeholder="Your full name" value={form.name} onChange={v=>upd('name',v)} icon={Ico.user} onKeyDown={onK} autoComplete="name" maxLength={80}/>}
+          <AuthField label="Email" type="email" placeholder="you@university.edu" value={form.email} onChange={v=>upd('email',v)} icon={Ico.mail} onKeyDown={onK} autoComplete="email" maxLength={254}/>
+          <AuthField label="Password" type={showP?'text':'password'} placeholder="Min. 6 characters" value={form.password} onChange={v=>upd('password',v)} icon={Ico.lock} onKeyDown={onK} autoComplete={mode==='signup'?'new-password':'current-password'} maxLength={128}
+            suffix={<button onClick={()=>setShowP(s=>!s)} style={{background:'none',border:'none',color:'rgba(180,190,240,.32)',display:'flex',padding:0}}>{Ico.eye}</button>}/>
+        </div>
+
+        {err&&<div style={{marginTop:12,padding:'10px 14px',borderRadius:9,background:'rgba(251,113,133,.09)',border:'1px solid rgba(251,113,133,.22)',display:'flex',alignItems:'center',gap:8}}><span style={{color:'#FB7185',flexShrink:0}}>{Ico.alert}</span><span style={{fontSize:13,color:'#FDA4B2'}}>{err}</span></div>}
+
+        <button onClick={submit} disabled={busy} style={{width:'100%',marginTop:16,padding:'13px',borderRadius:11,background:'linear-gradient(135deg,#4338CA 0%,#6366F1 50%,#818CF8 100%)',border:'none',fontSize:14,fontWeight:700,color:'#fff',cursor:busy?'not-allowed':'pointer',opacity:busy?.7:1,boxShadow:'0 6px 28px rgba(99,102,241,.4)',transition:'transform .15s,box-shadow .18s,opacity .15s'}}
+          onMouseEnter={e=>{if(!busy){e.currentTarget.style.transform='translateY(-1px)';e.currentTarget.style.boxShadow='0 12px 40px rgba(99,102,241,.55)'}}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 6px 28px rgba(99,102,241,.4)'}}>
+          {loading?<div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><div className="spin-el" style={{width:13,height:13,borderRadius:'50%',border:'2px solid rgba(255,255,255,.25)',borderTopColor:'#fff'}}/><span style={{opacity:.75}}>{mode==='signin'?'Signing in…':'Creating account…'}</span></div>:<span>{mode==='signin'?'Sign in':'Create account'}</span>}
+        </button>
+
+        <p style={{textAlign:'center',marginTop:18,fontSize:13,color:'rgba(180,190,240,.4)'}}>
+          {mode==='signin'?'New here? ':'Already have an account? '}
+          <button onClick={sw} style={{background:'none',border:'none',color:'#818CF8',fontWeight:700,fontSize:13}}>{mode==='signin'?'Create an account':'Sign in'}</button>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════════════════ */
+function Landing(){
+  const[auth2,setAuth2]=React.useState(false);
+  const[tIdx,setTIdx]=React.useState(0);
+  const n1=useCount(1247),n2=useCount(98),n3=useCount(4800),n4=useCount(320);
+  useInterval(()=>setTIdx(i=>(i+1)%3),4400);
+
+  const testimonials=[
+    {q:'Got my MacBook back in 3 hours flat. This actually works.',author:'Chidi Amara',role:'Computer Science',init:'C'},
+    {q:'Found my student ID the same day. The WhatsApp link is a genius touch.',author:'Amaka Obi',role:'Medicine',init:'A'},
+    {q:"Returned 4 items this semester. The karma system keeps me coming back.",author:'Tunde Bello',role:'Engineering',init:'T'},
+  ];
+
+  const features=[
+    {icon:'📍',color:'rgba(99,102,241,.15)',accent:'#6366F1',title:'Live Campus Map',desc:'Every reported item pinned in real-time. See exactly where things were lost or found across every faculty.'},
+    {icon:'⚡',color:'rgba(34,211,238,.12)',accent:'#22D3EE',title:'Instant WhatsApp',desc:'One tap connects finder and owner directly on WhatsApp. No app required, no delays, no middleman.'},
+    {icon:'🏆',color:'rgba(167,139,250,.12)',accent:'#A78BFA',title:'Karma Rewards',desc:'Earn points for every item you return. Climb from Silver to Platinum and unlock exclusive campus perks.'},
+    {icon:'🔔',color:'rgba(52,211,153,.12)',accent:'#34D399',title:'Smart Alerts',desc:'Get notified the moment something matching your lost item appears — before someone else claims it.'},
+    {icon:'🛡️',color:'rgba(251,191,36,.12)',accent:'#FBBF24',title:'Verified Reports',desc:'Blue checkmarks on verified items. Community trust scores keep the platform honest and fraud-free.'},
+    {icon:'📊',color:'rgba(251,113,133,.12)',accent:'#FB7185',title:'Item Analytics',desc:'See how many times your report has been viewed. Know your chances of recovery in real time.'},
+  ];
+
+  const tickerItems=['1,247 items recovered','98% return rate','4,800 students','Instant WhatsApp alerts','Live campus map','Karma rewards','Zero cost to use','Verified reporters'];
+
+  return(
+    <div style={{background:'var(--bg)',color:'var(--txt)',minHeight:'100vh',position:'relative',overflowX:'hidden'}}>
+
+      {/* ── Animated background ── */}
+      <div className="bg-scene">
+        <div className="blob blob-1"/>
+        <div className="blob blob-2"/>
+        <div className="blob blob-3"/>
+      </div>
+      <div className="bg-grid"/>
+      <div className="bg-noise"/>
+      <div className="bg-vignette"/>
+
+      {/* ── Canvas dot layer ── */}
+      <canvas id="dot-canvas" style={{position:'fixed',inset:0,zIndex:3,pointerEvents:'none',opacity:.45}}/>
+
+      {/* ── Nav ── */}
+      <nav className="nav-wrap">
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:32,height:32,borderRadius:9,background:'linear-gradient(135deg,#4338CA,#818CF8)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',boxShadow:'0 0 22px rgba(99,102,241,.35)',flexShrink:0}}>{Ico.logo}</div>
+          <span style={{fontFamily:'Syne,sans-serif',fontSize:17,fontWeight:800,color:'#F0F4FF',letterSpacing:'-.04em'}}>UniFind</span>
+        </div>
+        <div className="nav-pill">
+          <span style={{fontSize:13,color:'rgba(200,210,255,.5)',fontWeight:500}}>Campus Network</span>
+          <button onClick={()=>setAuth2(true)} style={{padding:'8px 18px',borderRadius:99,background:'linear-gradient(135deg,#4338CA,#6366F1)',border:'none',fontSize:13,fontWeight:700,color:'#fff',boxShadow:'0 4px 16px rgba(99,102,241,.35)',transition:'transform .14s,box-shadow .14s',cursor:'pointer'}}
+            onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.04)';e.currentTarget.style.boxShadow='0 8px 24px rgba(99,102,241,.5)'}}
+            onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.boxShadow='0 4px 16px rgba(99,102,241,.35)'}}>
+            Sign in
+          </button>
+        </div>
+      </nav>
+
+      {/* ═══════ HERO ═══════ */}
+      <section className="hero-section">
+        <div style={{position:'relative',zIndex:10,maxWidth:680}}>
+
+          {/* Eyebrow */}
+          <div className="hero-eyebrow">
+            <div className="hero-eyebrow-dot"/>
+            <span>Campus Lost &amp; Found</span>
+            <span style={{width:1,height:10,background:'rgba(99,102,241,.3)'}}/>
+            <span style={{color:'rgba(99,102,241,.7)'}}>Free to use</span>
           </div>
-          <div className="fade-up" style={{animationDelay:'.15s'}}>
-            <h1 style={{fontSize:'clamp(2.1rem,3.3vw,3.7rem)',fontWeight:800,lineHeight:1.04,letterSpacing:'-.045em',color:C.txt,marginBottom:18}}>
-              Lost things{' '}
-              <span style={{fontFamily:"'Instrument Serif',Georgia,serif",fontStyle:'italic',background:'linear-gradient(90deg,#60A5FA 0%,#818CF8 55%,#34D399 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
-                find their way
-              </span>{' '}
-              back.
-            </h1>
-            <p style={{fontSize:15,color:C.sub,lineHeight:1.7,maxWidth:400,fontWeight:400}}>
-              Real-time campus lost &amp; found. Report items, browse live map pins, and connect via WhatsApp.
-            </p>
-          </div>
-          <div className="fade-up" style={{display:'flex',gap:36,marginTop:36,animationDelay:'.25s'}}>
-            {[{n:n1,s:'+',l:'Items recovered'},{n:n2,s:'%',l:'Return rate'},{n:n3,s:'+',l:'Active students'}].map(s=>(
-              <div key={s.l}>
-                <div style={{fontSize:26,fontWeight:800,color:C.txt,letterSpacing:'-.04em',lineHeight:1}}>{s.n.toLocaleString()}{s.s}</div>
-                <div style={{fontSize:12,color:C.muted,marginTop:4}}>{s.l}</div>
-              </div>
+
+          {/* Headline */}
+          <h1 className="hero-headline" style={{marginTop:20}}>
+            <span className="word-reveal w1" style={{display:'block'}}>Lost things</span>
+            <span className="word-reveal w2" style={{display:'block'}}>
+              <span className="gradient-word">find their</span>
+            </span>
+            <span className="word-reveal w3" style={{display:'block'}}>way back.</span>
+          </h1>
+
+          <p className="hero-sub">Report lost or found items across your campus. Connect instantly via WhatsApp. Zero friction, zero cost — just your community working together.</p>
+
+          {/* Pill features */}
+          <div className="pill-track">
+            {[['📍','Live Map'],['💬','WhatsApp'],['⚡','Instant'],['🏆','Karma'],['🛡️','Verified']].map(([e,l])=>(
+              <span key={l} className="pill"><span className="pill-icon">{e}</span>{l}</span>
             ))}
           </div>
+
+          {/* CTAs */}
+          <div style={{display:'flex',alignItems:'center',gap:12,marginTop:32,flexWrap:'wrap',animation:'slideUp .7s cubic-bezier(.22,1,.36,1) 1.4s both'}}>
+            <button className="btn-cta" onClick={()=>setAuth2(true)}>
+              <span>Get Started Free</span>
+              <span style={{display:'flex'}}>{Ico.arrowDiag}</span>
+            </button>
+            <button className="btn-ghost" onClick={()=>setAuth2(true)}>
+              Sign in
+            </button>
+          </div>
+
+          {/* Social proof mini */}
+          <div style={{display:'flex',alignItems:'center',gap:12,marginTop:28,animation:'slideUp .7s cubic-bezier(.22,1,.36,1) 1.55s both'}}>
+            <div style={{display:'flex'}}>
+              {['C','A','T','N','B'].map((l,i)=>(
+                <div key={i} style={{width:26,height:26,borderRadius:'50%',background:`hsl(${220+i*30},70%,55%)`,border:'2px solid rgba(4,6,15,.95)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'#fff',marginLeft:i===0?0:-8}}>{l}</div>
+              ))}
+            </div>
+            <span style={{fontSize:13,color:'rgba(200,210,255,.5)'}}>
+              <strong style={{color:'#F0F4FF',fontWeight:700}}>{n3.toLocaleString()}+</strong> students trust UniFind
+            </span>
+          </div>
         </div>
-        <div style={{position:'relative',zIndex:3}} className="fade-up">
-          <div style={{overflow:'hidden',marginBottom:18,paddingBottom:18,borderBottom:`1px solid ${C.bd}`,maskImage:'linear-gradient(90deg,transparent,black 8%,black 92%,transparent)'}}>
-            <div className="ticker-track">
-              {['1,200+ items recovered','98% return rate','4,800 students','Instant WhatsApp alerts','Live campus map','Karma rewards system',
-                '1,200+ items recovered','98% return rate','4,800 students','Instant WhatsApp alerts','Live campus map','Karma rewards system'].map((item,i)=>(
-                <span key={i} style={{display:'flex',alignItems:'center',gap:7,fontSize:12,color:C.muted,fontWeight:500,whiteSpace:'nowrap'}}>
-                  <span style={{width:5,height:5,borderRadius:'50%',background:C.blue,display:'inline-block',flexShrink:0}}/>
-                  {item}
-                </span>
+
+        {/* ── Floating preview cards (desktop) ── */}
+        <div className="preview-area">
+          {/* Card 1 — Lost report */}
+          <div className="pcard pcard-1 glass" style={{marginLeft:'auto',width:'90%'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+              <span className="status-chip" style={{background:'rgba(251,113,133,.15)',color:'#FB7185'}}>🔴 Lost</span>
+              <span style={{fontSize:11,color:'rgba(180,190,240,.35)'}}>2h ago</span>
+            </div>
+            <div style={{fontSize:14,fontWeight:700,color:'#F0F4FF',marginBottom:2}}>MacBook Pro 16"</div>
+            <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:10}}>
+              <span style={{color:'rgba(180,190,240,.3)',display:'flex'}}>{Ico.pin}</span>
+              <span style={{fontSize:12,color:'rgba(180,190,240,.45)'}}>Library Block B, Study Pod 3</span>
+            </div>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                <div style={{width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#4338CA,#818CF8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'#fff'}}>C</div>
+                <span style={{fontSize:12,color:'rgba(200,210,255,.5)'}}>Chidi A.</span>
+              </div>
+              <div style={{display:'flex',gap:5,alignItems:'center',padding:'5px 11px',borderRadius:99,background:'rgba(37,211,102,.12)',border:'1px solid rgba(37,211,102,.25)',fontSize:11,fontWeight:700,color:'#25D366'}}>
+                {Ico.msg}<span>WhatsApp</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2 — Found report */}
+          <div className="pcard pcard-2 glass" style={{width:'82%'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+              <span className="status-chip" style={{background:'rgba(52,211,153,.15)',color:'#34D399'}}>🟢 Found</span>
+              <span style={{fontSize:11,color:'rgba(180,190,240,.35)'}}>4h ago</span>
+            </div>
+            <div style={{fontSize:14,fontWeight:700,color:'#F0F4FF',marginBottom:2}}>Student ID Card</div>
+            <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:8}}>
+              <span style={{color:'rgba(180,190,240,.3)',display:'flex'}}>{Ico.pin}</span>
+              <span style={{fontSize:12,color:'rgba(180,190,240,.45)'}}>Science Faculty</span>
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:5,padding:'6px 10px',borderRadius:8,background:'rgba(99,102,241,.1)',border:'1px solid rgba(99,102,241,.18)'}}>
+              <span style={{color:'#818CF8'}}>{Ico.zap}</span>
+              <span style={{fontSize:11,color:'rgba(180,190,240,.6)',fontWeight:600}}>+20 Karma Points earned</span>
+            </div>
+          </div>
+
+          {/* Card 3 — Stats mini */}
+          <div className="pcard pcard-3 glass" style={{marginLeft:'auto',width:'88%'}}>
+            <div style={{fontSize:11,fontWeight:700,color:'rgba(180,190,240,.35)',letterSpacing:'.07em',textTransform:'uppercase',marginBottom:14}}>Recovery Stats</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+              {[['Items Recovered','1,247+','#6366F1'],['Return Rate','98%','#34D399'],['Active Reports','32','#A78BFA'],['Avg. Recovery','3.2h','#22D3EE']].map(([l,v,c])=>(
+                <div key={l} style={{padding:'10px',borderRadius:10,background:'rgba(255,255,255,.03)',border:`1px solid rgba(255,255,255,.06)`}}>
+                  <div style={{fontFamily:'Syne,sans-serif',fontSize:16,fontWeight:800,color:c,letterSpacing:'-.04em'}}>{v}</div>
+                  <div style={{fontSize:10,color:'rgba(180,190,240,.35)',marginTop:2}}>{l}</div>
+                </div>
               ))}
             </div>
           </div>
-          <div style={{background:'rgba(255,255,255,.042)',border:`1px solid ${C.bd}`,borderRadius:14,padding:'20px 22px',position:'relative',overflow:'hidden'}}>
-            <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(59,130,246,.07),transparent 55%)',pointerEvents:'none'}}/>
-            <div style={{position:'relative',zIndex:1}}>
-              <p key={tIdx} className="fade-up" style={{fontSize:14,fontStyle:'italic',fontFamily:"'Instrument Serif',serif",color:C.txt,lineHeight:1.65,marginBottom:14}}>
-                "{quotes[tIdx].q}"
-              </p>
+
+          {/* Card 4 — Karma pill */}
+          <div className="pcard pcard-4 glass" style={{width:'70%',marginLeft:'auto'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div style={{width:36,height:36,borderRadius:10,background:'rgba(251,191,36,.15)',border:'1px solid rgba(251,191,36,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>⚡</div>
+              <div>
+                <div style={{fontSize:12,fontWeight:700,color:'#F0F4FF'}}>Karma Level: Gold</div>
+                <div style={{fontSize:11,color:'rgba(180,190,240,.4)'}}>120 pts · 30 to Platinum</div>
+              </div>
+            </div>
+            <div style={{height:3,borderRadius:99,background:'rgba(255,255,255,.07)',marginTop:12}}>
+              <div style={{height:'100%',borderRadius:99,width:'80%',background:'linear-gradient(90deg,#FBBF24,#FDE68A)',boxShadow:'0 0 8px rgba(251,191,36,.4)'}}/>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats ── */}
+      <div className="stats-row" style={{position:'relative',zIndex:10,background:'rgba(4,6,15,.6)',backdropFilter:'blur(20px)'}}>
+        {[{n:n1,s:'+',l:'Items recovered',c:'#6366F1'},{n:n2,s:'%',l:'Return rate',c:'#34D399'},{n:n3,s:'+',l:'Active students',c:'#A78BFA'},{n:n4,s:'+',l:'Verified reporters',c:'#22D3EE'}].map(s=>(
+          <div key={s.l} className="stat-cell">
+            <div className="stat-num" style={{color:s.c}}>{s.n.toLocaleString()}{s.s}</div>
+            <div className="stat-label">{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Ticker ── */}
+      <div className="ticker-section" style={{position:'relative',zIndex:10,borderBottom:'1px solid rgba(99,102,241,.08)'}}>
+        <div className="ticker-inner">
+          {[...tickerItems,...tickerItems,...tickerItems].map((t,i)=>(
+            <div key={i} className="ticker-item">
+              <span className="ticker-sep"/>
+              <span>{t}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Features ── */}
+      <section className="features-section" style={{position:'relative',zIndex:10}}>
+        <p className="section-label">Why UniFind</p>
+        <h2 className="section-title">Everything you need.<br/>Nothing you don't.</h2>
+        <div className="feat-grid">
+          {features.map((f,i)=>(
+            <div key={i} className="feat-card" style={{animationDelay:`${i*.08}s`}}>
+              <div className="feat-icon" style={{background:f.color,border:`1px solid ${f.accent}22`}}>
+                <span style={{fontSize:22}}>{f.icon}</span>
+              </div>
+              <div className="feat-title">{f.title}</div>
+              <div className="feat-desc">{f.desc}</div>
+              <div style={{position:'absolute',bottom:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${f.accent}22,transparent)`}}/>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Testimonials ── */}
+      <section className="testimonials-section" style={{position:'relative',zIndex:10}}>
+        <p className="section-label">Testimonials</p>
+        <h2 className="section-title">Real students.<br/>Real recoveries.</h2>
+        <div className="testi-grid">
+          {testimonials.map((t,i)=>(
+            <div key={i} className="testi-card" style={{animationDelay:`${i*.1}s`}}>
+              <div style={{display:'flex',gap:1,marginBottom:14}}>
+                {[1,2,3,4,5].map(s=><span key={s} style={{fontSize:13,color:'#FBBF24'}}>★</span>)}
+              </div>
+              <p style={{fontSize:14,color:'rgba(210,220,255,.65)',lineHeight:1.75,marginBottom:18,fontStyle:'italic',fontWeight:300}}>"{t.q}"</p>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
-                <div style={{width:28,height:28,borderRadius:'50%',background:'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff',flexShrink:0}}>
-                  {quotes[tIdx].name[0]}
-                </div>
+                <div style={{width:34,height:34,borderRadius:'50%',background:'linear-gradient(135deg,#4338CA,#818CF8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#fff',flexShrink:0}}>{t.init}</div>
                 <div>
-                  <div style={{fontSize:13,fontWeight:600,color:C.txt}}>{quotes[tIdx].name}</div>
-                  <div style={{fontSize:11,color:C.muted}}>{quotes[tIdx].role}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:'#F0F4FF'}}>{t.author}</div>
+                  <div style={{fontSize:11,color:'rgba(180,190,240,.38)'}}>{t.role}</div>
                 </div>
               </div>
-              <div style={{display:'flex',gap:6,marginTop:12}}>
-                {quotes.map((_,i)=>(
-                  <button key={i} onClick={()=>setTIdx(i)} style={{height:4,borderRadius:99,border:'none',background:i===tIdx?C.blue:'rgba(255,255,255,.15)',width:i===tIdx?20:6,padding:0,transition:'all .25s',cursor:'pointer'}}/>
-                ))}
-              </div>
             </div>
-          </div>
+          ))}
         </div>
-      </div>
+      </section>
 
-      {/* RIGHT FORM PANEL */}
-      <div className="auth-right-panel" style={{
-        flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
-        padding:'60px 48px',position:'relative',minHeight:'100vh',
-      }}>
-        <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 60% 50% at 70% 50%,rgba(29,78,216,.05),transparent)',pointerEvents:'none'}}/>
-        <div style={{width:'100%',maxWidth:400,position:'relative',zIndex:1}}>
-          <div className="mobile-logo" style={{display:'flex',alignItems:'center',gap:10,marginBottom:36}}>
-            <div style={{width:30,height:30,borderRadius:8,background:'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}>{I.compass}</div>
-            <span style={{fontSize:16,fontWeight:800,color:C.txt,letterSpacing:'-.04em'}}>UniFind</span>
+      {/* ── CTA Section ── */}
+      <section className="cta-section" style={{position:'relative',zIndex:10}}>
+        <div className="cta-glow"/>
+        <div className="cta-card">
+          <div style={{display:'inline-flex',alignItems:'center',gap:7,background:'rgba(99,102,241,.1)',border:'1px solid rgba(99,102,241,.22)',borderRadius:99,padding:'5px 14px',marginBottom:24}}>
+            <span style={{width:6,height:6,borderRadius:'50%',background:'#34D399',display:'block'}}/>
+            <span style={{fontSize:12,fontWeight:600,color:'rgba(167,139,250,.9)'}}>Free for all students</span>
           </div>
-
-          <div className="fade-up" style={{marginBottom:26}}>
-            <h2 style={{fontSize:26,fontWeight:800,color:C.txt,letterSpacing:'-.04em',lineHeight:1.1,marginBottom:8}}>
-              {mode==='signin'?'Welcome back':'Create account'}
-            </h2>
-            <p style={{fontSize:14,color:C.sub}}>
-              {mode==='signin'?'Sign in to continue to UniFind':'Join UniFind and help your campus community'}
-            </p>
-          </div>
-
-          {/* GOOGLE BUTTON */}
-          <button onClick={handleGoogle} disabled={loading||gLoad} style={{
-            width:'100%',display:'flex',alignItems:'center',
-            justifyContent:'center',gap:10,padding:'11px 0',borderRadius:10,
-            background:C.sf,border:`1px solid ${C.bd}`,
-            fontSize:14,fontWeight:500,color:C.sub,marginBottom:20,
-            transition:'background .15s,border-color .15s',
-            opacity:(loading||gLoad)?0.6:1,cursor:(loading||gLoad)?'not-allowed':'pointer',
-          }}
-            onMouseEnter={e=>{if(!loading&&!gLoad){e.currentTarget.style.background=C.sfh;e.currentTarget.style.borderColor=C.bdh;}}}
-            onMouseLeave={e=>{e.currentTarget.style.background=C.sf;e.currentTarget.style.borderColor=C.bd;}}>
-            {gLoad
-              ?<div className="spin-el" style={{width:16,height:16,borderRadius:'50%',border:'2px solid rgba(255,255,255,.2)',borderTopColor:'#fff'}}/>
-              :I.google}
-            Continue with Google
-          </button>
-
-          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
-            <div style={{flex:1,height:1,background:C.bd}}/><span style={{fontSize:12,color:C.muted}}>or</span><div style={{flex:1,height:1,background:C.bd}}/>
-          </div>
-
-          <div className="fade-up" style={{display:'flex',flexDirection:'column',gap:12,animationDelay:'.08s'}}>
-            {mode==='signup'&&(
-              <Field label="Full Name" placeholder="Your full name" value={form.name} onChange={v=>upd('name',v)} icon={I.user} onKeyDown={onKey} autoComplete="name" maxLength={80}/>
-            )}
-            <Field label="Email address" type="email" placeholder="you@university.edu" value={form.email} onChange={v=>upd('email',v)} icon={I.mail} onKeyDown={onKey} autoComplete="email" maxLength={254}/>
-            <Field label="Password" type={showPass?'text':'password'} placeholder="Your password (min 6 characters)" value={form.password} onChange={v=>upd('password',v)} icon={I.lock} onKeyDown={onKey}
-              autoComplete={mode==='signup'?'new-password':'current-password'} maxLength={128}
-              suffix={<button onClick={()=>setShowPass(s=>!s)} style={{color:C.muted,display:'flex',background:'none',border:'none',transition:'color .15s'}}
-                onMouseEnter={e=>e.currentTarget.style.color=C.sub}
-                onMouseLeave={e=>e.currentTarget.style.color=C.muted}>{I.eye}</button>}/>
-          </div>
-
-          {err&&(
-            <div className="fade-up" style={{marginTop:12,padding:'10px 14px',borderRadius:9,background:'rgba(239,68,68,.09)',border:'1px solid rgba(239,68,68,.22)',display:'flex',alignItems:'center',gap:8}}>
-              <span style={{color:C.red,flexShrink:0}}>{I.alert}</span>
-              <span style={{fontSize:13,color:'#FCA5A5'}}>{err}</span>
-            </div>
-          )}
-
-          <button className="btn-shimmer fade-up" onClick={handleSubmit} disabled={loading||gLoad} style={{
-            width:'100%',marginTop:16,padding:'12px 0',
-            borderRadius:10,background:'linear-gradient(135deg,#1D4ED8 0%,#4338CA 100%)',
-            border:'none',fontSize:14,fontWeight:600,color:'#fff',
-            boxShadow:'0 0 0 1px rgba(59,130,246,.25),0 4px 24px rgba(29,78,216,.28)',
-            transition:'transform .15s,box-shadow .18s',
-            opacity:(loading||gLoad)?0.7:1,cursor:(loading||gLoad)?'not-allowed':'pointer',
-          }}
-            onMouseEnter={e=>{if(!loading&&!gLoad){e.currentTarget.style.transform='scale(1.012)';e.currentTarget.style.boxShadow='0 0 0 1px rgba(59,130,246,.5),0 8px 32px rgba(29,78,216,.42)';}}}
-            onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.boxShadow='0 0 0 1px rgba(59,130,246,.25),0 4px 24px rgba(29,78,216,.28)';}}>
-            {loading
-              ?<div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
-                  <div className="spin-el" style={{width:14,height:14,borderRadius:'50%',border:'2px solid rgba(255,255,255,.2)',borderTopColor:'#fff'}}/>
-                  <span style={{color:'rgba(255,255,255,.75)'}}>{mode==='signin'?'Signing in…':'Creating account…'}</span>
-                </div>
-              :<span style={{position:'relative',zIndex:1}}>{mode==='signin'?'Sign in':'Create account'}</span>}
-          </button>
-
-          <p className="fade-up" style={{textAlign:'center',marginTop:20,fontSize:13,color:C.muted}}>
-            {mode==='signin'?'No account yet? ':'Already have one? '}
-            <button onClick={sw} style={{background:'none',border:'none',color:'#60A5FA',fontWeight:600,fontSize:13}}>
-              {mode==='signin'?'Sign up free':'Sign in'}
+          <h2 style={{fontFamily:'Syne,sans-serif',fontSize:'clamp(1.8rem,4vw,2.8rem)',fontWeight:800,letterSpacing:'-.05em',color:'#F0F4FF',lineHeight:1.08,marginBottom:16}}>
+            Start finding.<br/>
+            <span style={{background:'linear-gradient(135deg,#6366F1,#A78BFA,#22D3EE)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Start returning.</span>
+          </h2>
+          <p style={{fontSize:15,color:'rgba(200,210,255,.5)',lineHeight:1.75,maxWidth:400,margin:'0 auto 32px',fontWeight:400}}>Join thousands of students who've recovered their belongings through UniFind.</p>
+          <div style={{display:'flex',justifyContent:'center',gap:12,flexWrap:'wrap'}}>
+            <button className="btn-cta" onClick={()=>setAuth2(true)} style={{padding:'15px 36px',fontSize:15}}>
+              Get Started — It's Free {Ico.arrowDiag}
             </button>
-          </p>
-          <p style={{textAlign:'center',marginTop:22,fontSize:11,color:'rgba(255,255,255,.1)',lineHeight:1.6}}>
-            By continuing you agree to UniFind's Terms of Service.
-          </p>
+          </div>
+          <p style={{fontSize:12,color:'rgba(180,190,240,.25)',marginTop:18}}>No credit card. No sign-up fee. Just your campus email.</p>
         </div>
-      </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer style={{position:'relative',zIndex:10,padding:'28px 64px',borderTop:'1px solid rgba(99,102,241,.08)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:9}}>
+          <div style={{width:24,height:24,borderRadius:7,background:'linear-gradient(135deg,#4338CA,#818CF8)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:11}}>{Ico.logo}</div>
+          <span style={{fontFamily:'Syne,sans-serif',fontSize:14,fontWeight:800,color:'#F0F4FF',letterSpacing:'-.04em'}}>UniFind</span>
+        </div>
+        <p style={{fontSize:12,color:'rgba(180,190,240,.25)'}}>© 2025 UniFind · Campus Lost & Found Network</p>
+        <div style={{display:'flex',gap:16}}>
+          {['Privacy','Terms','Contact'].map(l=><button key={l} style={{background:'none',border:'none',fontSize:12,color:'rgba(180,190,240,.35)',transition:'color .14s',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.color='rgba(180,190,240,.8)'} onMouseLeave={e=>e.currentTarget.style.color='rgba(180,190,240,.35)'}>{l}</button>)}
+        </div>
+      </footer>
+
+      {auth2&&<AuthOverlay onClose={()=>setAuth2(false)}/>}
     </div>
   );
 }
 
-// ══════════════════════════════════════════════════════
-//  ITEM ROW
-// ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
+   DASHBOARD COMPONENTS (unchanged, clean)
+══════════════════════════════════════════════════════ */
 function ItemRow({item,onClick}){
-  const c=item.status==='found'?C.green:C.red;
-  return(
-    <button className="row-hover" onClick={onClick} style={{
-      width:'100%',display:'flex',alignItems:'center',gap:12,
-      padding:'10px 14px',borderRadius:10,background:C.sf,
-      border:`1px solid ${C.bd}`,textAlign:'left',
-    }}>
-      <div style={{width:32,height:32,borderRadius:8,background:c+'18',border:`1px solid ${c}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:c}}>{I.pkg}</div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{display:'flex',alignItems:'center',gap:6}}>
-          <span style={{fontSize:13,fontWeight:600,color:C.txt,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.title}</span>
-          {item.verified&&<span style={{color:C.blue,flexShrink:0}}>{I.check}</span>}
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:4,marginTop:3}}>
-          <span style={{color:C.muted}}>{I.pin}</span>
-          <span style={{fontSize:11,color:C.muted,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.loc}</span>
-          <span style={{color:'rgba(255,255,255,.14)',fontSize:11}}>·</span>
-          <span style={{fontSize:11,color:C.muted,flexShrink:0}}>{item.time}</span>
-        </div>
+  const c=item.status==='found'?'#34D399':'#FB7185';
+  return <button className="row-hover" onClick={onClick} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'10px 14px',borderRadius:10,background:'rgba(255,255,255,.032)',border:'1px solid rgba(99,102,241,.1)',textAlign:'left'}}>
+    <div style={{width:32,height:32,borderRadius:8,background:c+'18',border:`1px solid ${c}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:c}}>{Ico.pkg}</div>
+    <div style={{flex:1,minWidth:0}}>
+      <div style={{display:'flex',alignItems:'center',gap:6}}>
+        <span style={{fontSize:13,fontWeight:600,color:'#F0F4FF',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.title}</span>
+        {item.verified&&<span style={{color:'#6366F1',flexShrink:0}}>{Ico.check}</span>}
       </div>
-      <div style={{display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
-        <span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:99,background:c+'18',color:c,textTransform:'capitalize'}}>{item.status}</span>
-        <span style={{color:'rgba(255,255,255,.18)'}}>{I.arrow}</span>
-      </div>
-    </button>
-  );
-}
-
-// ══════════════════════════════════════════════════════
-//  DASHBOARD
-// ══════════════════════════════════════════════════════
-function Dashboard({user,items,setSection,setSelectedItem,setShowReport,sq}){
-  const lost=items.filter(i=>i.status==='lost').length;
-  const found=items.filter(i=>i.status==='found').length;
-  const h=new Date().getHours();
-  const greet=h<12?'morning':h<17?'afternoon':'evening';
-
-  const stats=[
-    {label:'Lost Items',val:lost,icon:I.alert,color:C.red,bg:'rgba(239,68,68,.07)',bd:'rgba(239,68,68,.16)'},
-    {label:'Found Items',val:found,icon:I.check,color:C.green,bg:'rgba(16,185,129,.07)',bd:'rgba(16,185,129,.16)'},
-    {label:'Total Recovered',val:47,icon:I.award,color:C.blue,bg:'rgba(59,130,246,.07)',bd:'rgba(59,130,246,.16)'},
-    {label:'Your Karma',val:user.karma,icon:I.zap,color:C.amber,bg:'rgba(245,158,11,.07)',bd:'rgba(245,158,11,.16)'},
-  ];
-
-  const filtered=items.filter(i=>!sq||i.title.toLowerCase().includes(sq.toLowerCase())||i.loc.toLowerCase().includes(sq.toLowerCase()));
-
-  return(
-    <div style={{height:'100%',overflowY:'auto',padding:'28px 28px 48px'}}>
-      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:26,flexWrap:'wrap',gap:12}}>
-        <div>
-          <div style={{fontSize:11,color:C.muted,fontWeight:600,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:4}}>Dashboard</div>
-          <h1 style={{fontSize:22,fontWeight:800,color:C.txt,letterSpacing:'-.04em'}}>Good {greet}, {user.name.split(' ')[0]}</h1>
-        </div>
-        <div style={{display:'flex',gap:8}}>
-          {[{label:'Report Lost',type:'lost',color:C.red},{label:'Report Found',type:'found',color:C.green}].map(a=>(
-            <button key={a.type} onClick={()=>setShowReport({type:a.type})} style={{
-              display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,
-              background:a.color+'14',border:`1px solid ${a.color}28`,
-              fontSize:13,fontWeight:500,color:C.sub,transition:'all .15s',
-            }}
-              onMouseEnter={e=>{e.currentTarget.style.background=a.color+'25';e.currentTarget.style.borderColor=a.color+'55';}}
-              onMouseLeave={e=>{e.currentTarget.style.background=a.color+'14';e.currentTarget.style.borderColor=a.color+'28';}}>
-              <span style={{color:a.color}}>{I.plus}</span>{a.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="stat-grid" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:26}}>
-        {stats.map(s=>(
-          <div key={s.label} className="card-hover" style={{borderRadius:12,padding:'18px',background:s.bg,border:`1px solid ${s.bd}`}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-              <div style={{width:30,height:30,borderRadius:8,background:s.color+'1c',display:'flex',alignItems:'center',justifyContent:'center',color:s.color}}>{s.icon}</div>
-              <span style={{color:s.color+'80'}}>{I.trend}</span>
-            </div>
-            <div style={{fontSize:26,fontWeight:800,color:C.txt,letterSpacing:'-.04em',lineHeight:1}}>{s.val}</div>
-            <div style={{fontSize:12,color:C.muted,marginTop:4}}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-      <div className="dash-main-grid" style={{display:'grid',gridTemplateColumns:'1fr 292px',gap:20}}>
-        <div>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-            <span style={{fontSize:14,fontWeight:600,color:C.txt}}>Recent Activity</span>
-            <button onClick={()=>setSection('items')} style={{display:'flex',alignItems:'center',gap:4,background:'none',border:'none',color:'#60A5FA',fontWeight:500,fontSize:12}}>
-              View all {I.arrow}
-            </button>
-          </div>
-          <div style={{display:'flex',flexDirection:'column',gap:6}}>
-            {filtered.slice(0,7).map(item=><ItemRow key={item.id} item={item} onClick={()=>setSelectedItem(item)}/>)}
-          </div>
-        </div>
-        <div style={{display:'flex',flexDirection:'column',gap:14}}>
-          <div style={{borderRadius:12,overflow:'hidden',border:`1px solid ${C.bd}`,height:180}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 14px',borderBottom:`1px solid ${C.bd}`}}>
-              <span style={{fontSize:11,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em'}}>Live Map</span>
-              <button onClick={()=>setSection('map')} style={{fontSize:11,color:'#60A5FA',background:'none',border:'none'}}>Expand →</button>
-            </div>
-            <div onClick={()=>setSection('map')} style={{height:'calc(100% - 36px)',background:'linear-gradient(135deg,#040a1a,#060d1d)',cursor:'pointer',position:'relative',overflow:'hidden'}}>
-              <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(59,130,246,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.05) 1px,transparent 1px)',backgroundSize:'18px 18px'}}/>
-              {items.map(it=>{
-                const c=it.status==='found'?C.green:C.blue;
-                return <div key={it.id} style={{position:'absolute',left:`${it.mx}%`,top:`${it.my}%`,width:8,height:8,borderRadius:'50%',background:c,boxShadow:`0 0 7px ${c}`,transform:'translate(-50%,-50%)'}}/>;
-              })}
-            </div>
-          </div>
-          <div style={{borderRadius:12,padding:'16px',background:'rgba(245,158,11,.07)',border:'1px solid rgba(245,158,11,.16)'}}>
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-              <div style={{width:32,height:32,borderRadius:8,background:'rgba(245,158,11,.18)',display:'flex',alignItems:'center',justifyContent:'center',color:C.amber}}>{I.zap}</div>
-              <div>
-                <div style={{fontSize:10,color:C.muted,fontWeight:600,textTransform:'uppercase',letterSpacing:'.08em'}}>Karma Score</div>
-                <div style={{fontSize:20,fontWeight:800,color:C.txt,letterSpacing:'-.04em'}}>{user.karma}</div>
-              </div>
-              <div style={{marginLeft:'auto',padding:'3px 10px',borderRadius:99,background:'rgba(245,158,11,.2)',fontSize:11,fontWeight:600,color:C.amber}}>Gold</div>
-            </div>
-            <div style={{height:4,borderRadius:99,background:'rgba(255,255,255,.07)'}}>
-              <div style={{height:'100%',borderRadius:99,background:'linear-gradient(90deg,#F59E0B,#FBBF24)',width:`${(user.karma/150)*100}%`,transition:'width 1.2s ease'}}/>
-            </div>
-            <div style={{fontSize:11,color:C.muted,marginTop:8}}>{150-user.karma} pts to Platinum</div>
-          </div>
-          <div style={{borderRadius:12,padding:'16px',background:C.sf,border:`1px solid ${C.bd}`}}>
-            <div style={{fontSize:11,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:14}}>By Category</div>
-            {[['Electronics',3,C.blue],['Documents',2,C.green],['Bags & Keys',2,C.amber],['Jewelry',1,C.red]].map(([n,count,color])=>(
-              <div key={n} style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-                <div style={{width:6,height:6,borderRadius:'50%',background:color,flexShrink:0}}/>
-                <span style={{fontSize:12,color:C.sub,flex:1}}>{n}</span>
-                <span style={{fontSize:12,fontWeight:700,color:C.txt}}>{count}</span>
-                <div style={{width:48,height:3,borderRadius:99,background:'rgba(255,255,255,.07)',overflow:'hidden'}}>
-                  <div style={{height:'100%',width:`${(count/3)*100}%`,background:color,borderRadius:99}}/>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div style={{display:'flex',alignItems:'center',gap:4,marginTop:3}}>
+        <span style={{color:'rgba(180,190,240,.32)',display:'flex'}}>{Ico.pin}</span>
+        <span style={{fontSize:11,color:'rgba(180,190,240,.45)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.loc}</span>
+        <span style={{color:'rgba(255,255,255,.12)',fontSize:11}}>·</span>
+        <span style={{fontSize:11,color:'rgba(180,190,240,.35)',flexShrink:0}}>{item.time}</span>
       </div>
     </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════
-//  MAP VIEW
-// ══════════════════════════════════════════════════════
-function MapView({items,setSelectedItem}){
-  const [filter,setFilter]=React.useState('all');
-  const [hovered,setHovered]=React.useState(null);
-  const filtered=items.filter(i=>filter==='all'||i.status===filter);
-  return(
-    <div style={{height:'100%',display:'flex',overflow:'hidden'}}>
-      <div style={{flex:1,position:'relative',overflow:'hidden',background:'linear-gradient(145deg,#040a1a,#060d1e)'}}>
-        <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(59,130,246,.032) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.032) 1px,transparent 1px)',backgroundSize:'56px 56px'}}/>
-        <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',opacity:.28}}>
-          <line x1="0" y1="37%" x2="100%" y2="37%" stroke="rgba(59,130,246,.22)" strokeWidth="10"/>
-          <line x1="0" y1="63%" x2="100%" y2="63%" stroke="rgba(59,130,246,.16)" strokeWidth="7"/>
-          <line x1="27%" y1="0" x2="27%" y2="100%" stroke="rgba(59,130,246,.18)" strokeWidth="8"/>
-          <line x1="63%" y1="0" x2="63%" y2="100%" stroke="rgba(59,130,246,.22)" strokeWidth="10"/>
-          {[[7,7,20,26],[33,7,24,26],[67,7,24,26],[7,44,18,15],[33,44,26,15],[65,44,22,15],[7,67,20,24],[33,67,24,22],[65,67,22,22]].map(([x,y,w,h],i)=>(
-            <rect key={i} x={`${x}%`} y={`${y}%`} width={`${w/2.5}%`} height={`${h/2.5}%`} fill="rgba(59,130,246,.05)" stroke="rgba(59,130,246,.18)" strokeWidth=".8" rx="3"/>
-          ))}
-        </svg>
-        {[['Library','8%','8%'],['Science','34%','8%'],['Engineering','68%','8%'],['Admin','8%','45%'],['Cafeteria','34%','45%'],['Sports','66%','45%']].map(([n,l,t])=>(
-          <div key={n} style={{position:'absolute',left:l,top:t,fontSize:9,color:'rgba(147,197,253,.24)',fontWeight:500,pointerEvents:'none'}}>{n}</div>
-        ))}
-        {filtered.map(item=>{
-          const c=item.status==='found'?C.green:C.blue;
-          const isH=hovered===item.id;
-          return(
-            <div key={item.id} style={{position:'absolute',left:`${item.mx}%`,top:`${item.my}%`}}>
-              <div style={{position:'absolute',width:28,height:28,borderRadius:'50%',border:`1px solid ${c}50`,left:'50%',top:'50%',animation:'pinRing 2.2s ease-out infinite'}}/>
-              <div style={{position:'absolute',width:28,height:28,borderRadius:'50%',border:`1px solid ${c}35`,left:'50%',top:'50%',animation:'pinRing 2.2s ease-out infinite',animationDelay:'.9s'}}/>
-              <button
-                onMouseEnter={()=>setHovered(item.id)} onMouseLeave={()=>setHovered(null)}
-                onClick={()=>setSelectedItem(item)}
-                style={{position:'absolute',left:'50%',top:'50%',transform:`translate(-50%,-50%) scale(${isH?1.22:1})`,width:32,height:32,borderRadius:9,background:c+'18',border:`1.5px solid ${c}`,display:'flex',alignItems:'center',justifyContent:'center',color:c,boxShadow:`0 0 ${isH?24:10}px ${c}60`,transition:'all .2s'}}>
-                {I.pin}
-              </button>
-              {isH&&(
-                <div style={{position:'absolute',bottom:'calc(100% + 8px)',left:'50%',transform:'translateX(-50%)',whiteSpace:'nowrap',zIndex:10,padding:'6px 12px',borderRadius:8,background:'rgba(4,7,20,.96)',border:`1px solid ${c}45`,boxShadow:'0 8px 24px rgba(0,0,0,.5)',fontSize:12,fontWeight:600,color:C.txt}}>
-                  {item.title} <span style={{opacity:.42}}>· {item.status}</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-        <div style={{position:'absolute',top:16,left:16,display:'flex',alignItems:'center',gap:8,padding:'7px 14px',borderRadius:9,background:'rgba(3,5,8,.88)',border:`1px solid ${C.bd}`,backdropFilter:'blur(12px)'}}>
-          <div style={{width:6,height:6,borderRadius:'50%',background:C.green,animation:'pulseDot 2s ease-in-out infinite'}}/>
-          <span style={{fontSize:12,fontWeight:500,color:C.sub}}>Live · {filtered.length} pins active</span>
-        </div>
-        <div style={{position:'absolute',bottom:20,left:'50%',transform:'translateX(-50%)',display:'flex',gap:8}}>
-          {[{id:'all',l:'All',n:items.length},{id:'lost',l:'Lost',n:items.filter(i=>i.status==='lost').length,c:C.red},{id:'found',l:'Found',n:items.filter(i=>i.status==='found').length,c:C.green}].map(f=>(
-            <button key={f.id} onClick={()=>setFilter(f.id)} style={{
-              padding:'7px 16px',borderRadius:9,
-              border:`1px solid ${filter===f.id?(f.c||C.blue)+'55':C.bd}`,
-              background:filter===f.id?'rgba(3,5,12,.94)':'rgba(3,5,8,.72)',
-              backdropFilter:'blur(12px)',fontSize:12,fontWeight:600,
-              color:filter===f.id?C.txt:C.muted,
-              display:'flex',alignItems:'center',gap:6,transition:'all .15s',
-            }}>
-              {f.l} <span style={{color:f.c||'#60A5FA',opacity:.7}}>{f.n}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-      <div style={{width:234,flexShrink:0,borderLeft:`1px solid ${C.bd}`,background:'rgba(3,5,8,.98)',overflowY:'auto'}}>
-        <div style={{padding:'10px 14px',borderBottom:`1px solid ${C.bd}`}}>
-          <span style={{fontSize:11,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em'}}>Items</span>
-        </div>
-        <div style={{padding:8,display:'flex',flexDirection:'column',gap:5}}>
-          {items.map(item=>{
-            const c=item.status==='found'?C.green:C.red;
-            return(
-              <button key={item.id} onClick={()=>setSelectedItem(item)} style={{width:'100%',textAlign:'left',padding:'10px 12px',borderRadius:8,background:C.sf,border:`1px solid ${C.bd}`,transition:'background .14s'}}
-                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.075)'}
-                onMouseLeave={e=>e.currentTarget.style.background=C.sf}>
-                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}>
-                  <div style={{width:6,height:6,borderRadius:'50%',background:c,flexShrink:0}}/>
-                  <span style={{fontSize:12,fontWeight:600,color:C.txt,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.title}</span>
-                </div>
-                <div style={{fontSize:10,color:C.muted,paddingLeft:12}}>{item.loc}</div>
-                <div style={{fontSize:10,color:C.muted,paddingLeft:12}}>{item.time}</div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+    <div style={{display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
+      <span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:99,background:c+'18',color:c,textTransform:'capitalize'}}>{item.status}</span>
+      <span style={{color:'rgba(255,255,255,.15)'}}>{Ico.arrow}</span>
     </div>
-  );
+  </button>;
 }
 
-// ══════════════════════════════════════════════════════
-//  ITEMS VIEW
-// ══════════════════════════════════════════════════════
-function ItemsView({items,setSelectedItem,sq}){
-  const [filter,setFilter]=React.useState('all');
-  const [cat,setCat]=React.useState('All');
-  const [view,setView]=React.useState('list');
-  const filtered=items.filter(i=>
-    (filter==='all'||i.status===filter)&&
-    (cat==='All'||i.cat===cat)&&
-    (!sq||i.title.toLowerCase().includes(sq.toLowerCase())||i.loc.toLowerCase().includes(sq.toLowerCase()))
-  );
-  return(
-    <div style={{height:'100%',overflowY:'auto',padding:'24px 24px 48px'}}>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:12}}>
-        <div>
-          <h1 style={{fontSize:20,fontWeight:800,color:C.txt,letterSpacing:'-.04em'}}>All Items</h1>
-          <p style={{fontSize:12,color:C.muted,marginTop:2}}>{filtered.length} of {items.length} items</p>
-        </div>
-        <div style={{display:'flex',borderRadius:8,overflow:'hidden',border:`1px solid ${C.bd}`}}>
-          {[{id:'list',icon:I.list},{id:'grid',icon:I.grid}].map(v=>(
-            <button key={v.id} onClick={()=>setView(v.id)} style={{padding:'7px 10px',background:view===v.id?'rgba(59,130,246,.16)':C.sf,border:'none',display:'flex',alignItems:'center',color:view===v.id?'#60A5FA':C.muted,transition:'background .14s'}}>
-              {v.icon}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:20}}>
-        {['all','lost','found'].map(f=>{
-          const c=f==='found'?C.green:f==='lost'?C.red:C.blue;
-          return(
-            <button key={f} onClick={()=>setFilter(f)} style={{padding:'6px 14px',borderRadius:8,background:filter===f?c+'14':C.sf,border:`1px solid ${filter===f?c+'40':C.bd}`,fontSize:12,fontWeight:500,color:filter===f?C.txt:C.sub,textTransform:'capitalize',transition:'all .14s'}}>
-              {f==='all'?'All Items':f}
-            </button>
-          );
-        })}
-        <div style={{width:1,background:C.bd,margin:'0 4px'}}/>
-        {CATS.map(c=>(
-          <button key={c} onClick={()=>setCat(c)} style={{padding:'6px 12px',borderRadius:8,background:cat===c?'rgba(99,102,241,.15)':C.sf,border:`1px solid ${cat===c?'rgba(99,102,241,.4)':C.bd}`,fontSize:12,fontWeight:500,color:cat===c?'#A5B4FC':C.sub,whiteSpace:'nowrap',transition:'all .14s'}}>
-            {c}
-          </button>
-        ))}
-      </div>
-      {view==='list'?(
-        <div style={{display:'flex',flexDirection:'column',gap:6}}>
-          {filtered.map(item=><ItemRow key={item.id} item={item} onClick={()=>setSelectedItem(item)}/>)}
-        </div>
-      ):(
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(210px,1fr))',gap:12}}>
-          {filtered.map(item=>{
-            const c=item.status==='found'?C.green:C.red;
-            return(
-              <button key={item.id} className="card-hover" onClick={()=>setSelectedItem(item)} style={{borderRadius:12,padding:'18px',textAlign:'left',background:C.sf,border:`1px solid ${C.bd}`,transition:'all .18s'}}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor=c+'35';e.currentTarget.style.transform='translateY(-2px)';}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor=C.bd;e.currentTarget.style.transform='translateY(0)';}}>
-                <div style={{width:36,height:36,borderRadius:9,background:c+'14',border:`1px solid ${c}22`,display:'flex',alignItems:'center',justifyContent:'center',color:c,marginBottom:14}}>{I.pkg}</div>
-                <div style={{fontSize:14,fontWeight:700,color:C.txt,marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.title}</div>
-                <div style={{fontSize:12,color:C.muted,marginBottom:12,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.loc}</div>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                  <span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:99,background:c+'14',color:c,textTransform:'capitalize'}}>{item.status}</span>
-                  <span style={{fontSize:11,color:C.muted}}>{item.time}</span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-      {filtered.length===0&&(
-        <div style={{textAlign:'center',paddingTop:80}}>
-          <div style={{fontSize:40,marginBottom:12}}>📦</div>
-          <p style={{fontSize:13,color:C.muted}}>No items match your filters</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════
-//  PROFILE VIEW
-// ══════════════════════════════════════════════════════
-function ProfileView({user}){
-  const kC=user.karma>=100?C.amber:'#94A3B8';
-  const kL=user.karma>=100?'Gold':'Silver';
-  return(
-    <div style={{height:'100%',overflowY:'auto',padding:'24px 24px 48px'}}>
-      <div style={{maxWidth:680}}>
-        <div style={{borderRadius:14,padding:'24px',background:C.sf,border:`1px solid ${C.bd}`,marginBottom:16,position:'relative',overflow:'hidden'}}>
-          <div style={{position:'absolute',top:0,right:0,width:200,height:200,borderRadius:'50%',background:'radial-gradient(circle,rgba(29,78,216,.09),transparent)',pointerEvents:'none',transform:'translate(30%,-30%)'}}/>
-          <div style={{display:'flex',alignItems:'center',gap:18,position:'relative',zIndex:1}}>
-            <div style={{width:54,height:54,borderRadius:14,overflow:'hidden',background:user.photo?'none':'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,color:'#fff',flexShrink:0}}>
-              {user.photo?<img src={user.photo} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>:user.name[0].toUpperCase()}
-            </div>
-            <div style={{flex:1}}>
-              <div style={{display:'flex',alignItems:'center',gap:8}}>
-                <h2 style={{fontSize:20,fontWeight:800,color:C.txt,letterSpacing:'-.04em'}}>{user.name}</h2>
-                {user.verified&&<span style={{color:C.blue}}>{I.check}</span>}
-              </div>
-              <p style={{fontSize:13,color:C.muted}}>{user.email}</p>
-            </div>
-            <button onClick={()=>auth.signOut()} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,background:'rgba(239,68,68,.09)',border:'1px solid rgba(239,68,68,.2)',fontSize:12,fontWeight:500,color:'#F87171',transition:'background .15s'}}
-              onMouseEnter={e=>e.currentTarget.style.background='rgba(239,68,68,.18)'}
-              onMouseLeave={e=>e.currentTarget.style.background='rgba(239,68,68,.09)'}>
-              {I.logout} Sign out
-            </button>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:0,marginTop:20,paddingTop:20,borderTop:`1px solid ${C.bd}`}}>
-            {[['Reported',5],['Returned',user.returned],['Helped',12]].map(([l,v])=>(
-              <div key={l} style={{textAlign:'center'}}>
-                <div style={{fontSize:22,fontWeight:800,color:C.txt,letterSpacing:'-.04em'}}>{v}</div>
-                <div style={{fontSize:12,color:C.muted,marginTop:3}}>{l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-          <div style={{borderRadius:12,padding:'18px',background:kC+'09',border:`1px solid ${kC}20`}}>
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
-              <div style={{width:32,height:32,borderRadius:8,background:kC+'1c',display:'flex',alignItems:'center',justifyContent:'center',color:kC}}>{I.zap}</div>
-              <div>
-                <div style={{fontSize:10,color:C.muted,fontWeight:600,textTransform:'uppercase',letterSpacing:'.08em'}}>Karma</div>
-                <div style={{fontSize:22,fontWeight:800,color:C.txt,letterSpacing:'-.04em'}}>{user.karma}</div>
-              </div>
-              <div style={{marginLeft:'auto',padding:'4px 12px',borderRadius:99,background:kC+'22',fontSize:12,fontWeight:600,color:kC}}>{kL}</div>
-            </div>
-            <div style={{height:4,borderRadius:99,background:'rgba(255,255,255,.07)'}}>
-              <div style={{height:'100%',borderRadius:99,background:`linear-gradient(90deg,${kC},${kC}cc)`,width:`${(user.karma/150)*100}%`,transition:'width 1.3s ease'}}/>
-            </div>
-            <div style={{fontSize:11,color:C.muted,marginTop:8}}>{150-user.karma} pts to Platinum</div>
-          </div>
-          <div style={{borderRadius:12,padding:'18px',background:C.sf,border:`1px solid ${C.bd}`}}>
-            <div style={{fontSize:10,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:14}}>Verification</div>
-            {[['Email address',true],['Google account',!!user.photo],['Student ID',user.verified],['Phone number',false]].map(([l,done])=>(
-              <div key={l} style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-                <div style={{width:18,height:18,borderRadius:'50%',background:done?'rgba(16,185,129,.18)':'rgba(255,255,255,.05)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:done?C.green:C.muted}}>
-                  {done?I.check:I.clock}
-                </div>
-                <span style={{fontSize:12,flex:1,color:done?C.sub:C.muted}}>{l}</span>
-                {!done&&<button style={{fontSize:11,color:'#60A5FA',background:'none',border:'none'}}>Setup →</button>}
-              </div>
-            ))}
-          </div>
-          <div className="achieve-grid" style={{gridColumn:'1/-1',borderRadius:12,padding:'18px',background:C.sf,border:`1px solid ${C.bd}`}}>
-            <div style={{fontSize:10,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:16}}>Achievements</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:10}}>
-              {[['🏆','First Return',true],['⭐','5 Found',true],['🛡️','Verified',user.verified],['🔥','10 Found',false],['💎','Diamond',false],['🌟','Campus Hero',false]].map(([icon,l,e])=>(
-                <div key={l} style={{padding:'14px 8px',borderRadius:10,textAlign:'center',background:e?'rgba(255,255,255,.06)':'rgba(255,255,255,.02)',border:`1px solid ${e?'rgba(255,255,255,.1)':'rgba(255,255,255,.04)'}`,opacity:e?1:.35}}>
-                  <div style={{fontSize:22,marginBottom:6}}>{icon}</div>
-                  <div style={{fontSize:10,color:C.muted}}>{l}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════
-//  ITEM DETAIL MODAL
-// ══════════════════════════════════════════════════════
 function ItemModal({item,onClose}){
-  const c=item.status==='found'?C.green:C.red;
-  // Sanitize phone before building WhatsApp URL
+  const c=item.status==='found'?'#34D399':'#FB7185';
   const ph=item.phone.replace(/\D/g,'');
-  const safeTitle=sanitize(item.title);
-  const safeLoc=sanitize(item.loc);
-  const wa=`https://wa.me/${ph}?text=${encodeURIComponent(`Hi! Saw your UniFind report for "${safeTitle}" near ${safeLoc}. ${item.status==='lost'?'I think I found it!':'Is this yours?'}`)}`;
-  return(
-    <Modal onClose={onClose}>
-      <div style={{background:'#09101f',border:`1px solid ${C.bd}`,borderRadius:16,overflow:'hidden',boxShadow:'0 40px 100px rgba(0,0,0,.75)'}}>
-        <div style={{height:2,background:`linear-gradient(90deg,${c},${c}70)`}}/>
-        <div style={{padding:24}}>
-          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:20}}>
-            <div style={{display:'flex',alignItems:'center',gap:12}}>
-              <div style={{width:44,height:44,borderRadius:11,background:c+'14',border:`1px solid ${c}22`,display:'flex',alignItems:'center',justifyContent:'center',color:c}}>{I.pkg}</div>
-              <div>
-                <h2 style={{fontSize:18,fontWeight:800,color:C.txt,letterSpacing:'-.03em'}}>{item.title}</h2>
-                <span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:99,background:c+'14',color:c,textTransform:'capitalize'}}>
-                  {item.status==='found'?'✅ Found':'🔴 Lost'} · {item.cat}
-                </span>
-              </div>
-            </div>
-            <button onClick={onClose} style={{width:28,height:28,borderRadius:7,background:C.sf,border:`1px solid ${C.bd}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted}}>{I.x}</button>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
-            {[[I.pin,'Location',item.loc],[I.clock,'Reported',item.time],[I.user,'By',item.rep],[I.zap,'Karma',`+${item.karma} pts`]].map(([icon,l,v])=>(
-              <div key={l} style={{padding:'11px 13px',borderRadius:9,background:C.sf,border:`1px solid ${C.bd}`}}>
-                <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:4,color:C.muted}}>{icon}<span style={{fontSize:10}}>{l}</span></div>
-                <span style={{fontSize:13,fontWeight:600,color:C.txt}}>{v}</span>
-              </div>
-            ))}
-          </div>
-          {item.desc&&(
-            <div style={{padding:'13px',borderRadius:9,background:C.sf,border:`1px solid ${C.bd}`,marginBottom:16}}>
-              <div style={{fontSize:10,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>Description</div>
-              <p style={{fontSize:13,color:C.sub,lineHeight:1.65}}>{item.desc}</p>
-            </div>
-          )}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <a href={wa} target="_blank" rel="noreferrer noopener" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'11px',borderRadius:9,background:'rgba(37,211,102,.1)',border:'1px solid rgba(37,211,102,.3)',fontSize:13,fontWeight:600,color:'#25D366',transition:'background .15s'}}
-              onMouseEnter={e=>e.currentTarget.style.background='rgba(37,211,102,.2)'}
-              onMouseLeave={e=>e.currentTarget.style.background='rgba(37,211,102,.1)'}>
-              {I.msg} WhatsApp
-            </a>
-            <button onClick={onClose} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'11px',borderRadius:9,background:'rgba(59,130,246,.1)',border:'1px solid rgba(59,130,246,.3)',fontSize:13,fontWeight:600,color:'#60A5FA',transition:'background .15s'}}
-              onMouseEnter={e=>e.currentTarget.style.background='rgba(59,130,246,.2)'}
-              onMouseLeave={e=>e.currentTarget.style.background='rgba(59,130,246,.1)'}>
-              {I.eye} Track
-            </button>
-          </div>
+  const wa=`https://wa.me/${ph}?text=${encodeURIComponent(`Hi! Saw your UniFind report for "${san(item.title)}" near ${san(item.loc)}. ${item.status==='lost'?'I think I found it!':'Is this yours?'}`)}`;
+  return <Modal onClose={onClose}><div style={{background:'#07091A',border:'1px solid rgba(99,102,241,.18)',borderRadius:16,overflow:'hidden',boxShadow:'0 40px 100px rgba(0,0,0,.85)'}}>
+    <div style={{height:2,background:`linear-gradient(90deg,${c},${c}70)`}}/>
+    <div style={{padding:22}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:18}}>
+        <div style={{display:'flex',alignItems:'center',gap:11}}>
+          <div style={{width:42,height:42,borderRadius:10,background:c+'14',border:`1px solid ${c}22`,display:'flex',alignItems:'center',justifyContent:'center',color:c}}>{Ico.pkg}</div>
+          <div><h2 style={{fontFamily:'Syne,sans-serif',fontSize:17,fontWeight:800,color:'#F0F4FF',letterSpacing:'-.03em'}}>{item.title}</h2>
+          <span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:99,background:c+'14',color:c,textTransform:'capitalize'}}>{item.status==='found'?'✅ Found':'🔴 Lost'} · {item.cat}</span></div>
         </div>
+        <button onClick={onClose} style={{width:28,height:28,borderRadius:7,background:'rgba(255,255,255,.04)',border:'1px solid rgba(99,102,241,.12)',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(180,190,240,.35)'}}>{Ico.x}</button>
       </div>
-    </Modal>
-  );
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:9,marginBottom:14}}>
+        {[[Ico.pin,'Location',item.loc],[Ico.clock,'Reported',item.time],[Ico.user,'By',item.rep],[Ico.zap,'Karma',`+${item.karma} pts`]].map(([icon,l,v])=>(
+          <div key={l} style={{padding:'10px 12px',borderRadius:8,background:'rgba(255,255,255,.032)',border:'1px solid rgba(99,102,241,.1)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:3,color:'rgba(180,190,240,.35)'}}>{icon}<span style={{fontSize:10}}>{l}</span></div>
+            <span style={{fontSize:12.5,fontWeight:600,color:'#F0F4FF'}}>{v}</span>
+          </div>
+        ))}
+      </div>
+      {item.desc&&<div style={{padding:'12px',borderRadius:8,background:'rgba(255,255,255,.032)',border:'1px solid rgba(99,102,241,.1)',marginBottom:14}}><div style={{fontSize:10,color:'rgba(180,190,240,.32)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>Description</div><p style={{fontSize:13,color:'rgba(200,210,255,.55)',lineHeight:1.65}}>{item.desc}</p></div>}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:9}}>
+        <a href={wa} target="_blank" rel="noreferrer noopener" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'10px',borderRadius:9,background:'rgba(37,211,102,.1)',border:'1px solid rgba(37,211,102,.3)',fontSize:13,fontWeight:600,color:'#25D366',transition:'background .15s'}}
+          onMouseEnter={e=>e.currentTarget.style.background='rgba(37,211,102,.2)'}
+          onMouseLeave={e=>e.currentTarget.style.background='rgba(37,211,102,.1)'}>{Ico.msg} WhatsApp</a>
+        <button onClick={onClose} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'10px',borderRadius:9,background:'rgba(99,102,241,.1)',border:'1px solid rgba(99,102,241,.3)',fontSize:13,fontWeight:600,color:'#818CF8',transition:'background .15s'}}
+          onMouseEnter={e=>e.currentTarget.style.background='rgba(99,102,241,.2)'}
+          onMouseLeave={e=>e.currentTarget.style.background='rgba(99,102,241,.1)'}>{Ico.eye} Track</button>
+      </div>
+    </div>
+  </div></Modal>;
 }
 
-// ══════════════════════════════════════════════════════
-//  REPORT MODAL — with input sanitization
-// ══════════════════════════════════════════════════════
 function ReportModal({initial,onClose,onSubmit}){
-  const [step,setStep]=React.useState(1);
-  const [drag,setDrag]=React.useState(false);
-  const [img,setImg]=React.useState(null);
-  const [formErr,setFormErr]=React.useState('');
-  const [form,setForm]=React.useState({type:initial?.type||'lost',title:'',cat:'Electronics',loc:'',desc:'',phone:''});
+  const[step,setStep]=React.useState(1);
+  const[drag,setDrag]=React.useState(false);
+  const[img,setImg]=React.useState(null);
+  const[fErr,setFErr]=React.useState('');
+  const[form,setForm]=React.useState({type:initial?.type||'lost',title:'',cat:'Electronics',loc:'',desc:'',phone:''});
   const upd=(k,v)=>setForm(f=>({...f,[k]:v}));
-  const fileUrl=f=>{if(f)setImg(URL.createObjectURL(f));};
-
-  const goNext=()=>{
-    setFormErr('');
-    if(step===1){
-      if(!form.title.trim()){setFormErr('Please enter the item name.');return;}
-      if(form.title.trim().length<2){setFormErr('Item name is too short.');return;}
-    }
-    if(step===2){
-      if(!form.loc){setFormErr('Please select a location.');return;}
-    }
-    if(step===3){
-      if(!form.phone.trim()){setFormErr('Please enter your WhatsApp number.');return;}
-      if(!validatePhone(form.phone)){setFormErr('Enter a valid phone number (e.g. +234 801 234 5678).');return;}
-      // Sanitize all fields before submit
-      onSubmit({
-        ...form,
-        title: cleanInput(form.title, 120),
-        desc:  cleanInput(form.desc, 500),
-        phone: form.phone.replace(/[^+\d\s\-()]/g,'').trim(),
-      });
-      return;
-    }
+  const furl=f=>{if(f)setImg(URL.createObjectURL(f));};
+  const go=()=>{
+    setFErr('');
+    if(step===1&&!form.title.trim()){setFErr('Enter the item name.');return;}
+    if(step===2&&!form.loc){setFErr('Select a location.');return;}
+    if(step===3){if(!form.phone.trim()){setFErr('Enter your WhatsApp number.');return;}if(!validPhone(form.phone)){setFErr('Enter a valid phone number.');return;}onSubmit({...form,title:clean(form.title,120),desc:clean(form.desc,500),phone:form.phone.replace(/[^+\d\s\-(]/g,'').trim()});return;}
     setStep(s=>s+1);
   };
-
-  return(
-    <Modal onClose={onClose}>
-      <div style={{background:'#09101f',border:`1px solid ${C.bd}`,borderRadius:16,overflow:'hidden',boxShadow:'0 40px 100px rgba(0,0,0,.75)'}}>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 22px',borderBottom:`1px solid ${C.bd}`}}>
-          <div>
-            <h2 style={{fontSize:15,fontWeight:700,color:C.txt}}>{form.type==='lost'?'Report Lost Item':'Report Found Item'}</h2>
-            <div style={{display:'flex',gap:5,marginTop:8,alignItems:'center'}}>
-              {[1,2,3].map(s=>(
-                <div key={s} style={{height:3,borderRadius:99,overflow:'hidden',width:s<=step?22:10,background:'rgba(255,255,255,.08)',transition:'width .2s'}}>
-                  <div style={{height:'100%',width:s<=step?'100%':'0%',background:s<step?C.green:s===step?C.blue:'transparent',transition:'width .3s'}}/>
-                </div>
-              ))}
-              <span style={{fontSize:11,color:C.muted,marginLeft:4}}>Step {step}/3</span>
-            </div>
-          </div>
-          <button onClick={onClose} style={{width:28,height:28,borderRadius:7,background:C.sf,border:`1px solid ${C.bd}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted}}>{I.x}</button>
-        </div>
-        <div style={{padding:'22px',minHeight:290}}>
-          {step===1&&(
-            <div style={{display:'flex',flexDirection:'column',gap:16}}>
-              <div style={{display:'flex',gap:10}}>
-                {['lost','found'].map(t=>{const c=t==='found'?C.green:C.red;return(
-                  <button key={t} onClick={()=>upd('type',t)} style={{flex:1,padding:'11px',borderRadius:9,background:form.type===t?c+'14':C.sf,border:`1px solid ${form.type===t?c+'45':C.bd}`,fontSize:13,fontWeight:600,color:form.type===t?C.txt:C.muted,textTransform:'capitalize',transition:'all .14s'}}>
-                    {t==='lost'?'🔴 ':'🟢 '}I {t} this
-                  </button>
-                );})}
-              </div>
-              <Field label="Item Name" placeholder="e.g. MacBook Pro, Student ID…" value={form.title} onChange={v=>upd('title',v)} icon={I.pkg} maxLength={120}/>
-              <div>
-                <label style={{display:'block',fontSize:12,fontWeight:500,color:C.muted,marginBottom:6}}>Category</label>
-                <select value={form.cat} onChange={e=>upd('cat',e.target.value)} style={{width:'100%',padding:'11px 14px',borderRadius:10,background:C.sf,border:`1px solid ${C.bd}`,fontSize:14,color:C.txt,outline:'none'}}>
-                  {CATS.filter(c=>c!=='All').map(c=><option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-            </div>
-          )}
-          {step===2&&(
-            <div style={{display:'flex',flexDirection:'column',gap:16}}>
-              <div>
-                <label style={{display:'block',fontSize:12,fontWeight:500,color:C.muted,marginBottom:6}}>Photo <span style={{color:'rgba(255,255,255,.2)'}}>(optional)</span></label>
-                <label onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)}
-                  onDrop={e=>{e.preventDefault();setDrag(false);fileUrl(e.dataTransfer.files[0]);}}
-                  style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:128,borderRadius:12,border:`2px dashed ${drag?C.blue:C.bd}`,background:drag?'rgba(59,130,246,.06)':C.sf,cursor:'pointer',position:'relative',overflow:'hidden',transition:'border-color .15s'}}>
-                  {img?(
-                    <><img src={img} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover'}} alt="preview"/>
-                      <button onClick={e=>{e.preventDefault();setImg(null);}} style={{position:'absolute',top:8,right:8,width:24,height:24,borderRadius:'50%',background:'rgba(0,0,0,.6)',border:'none',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}>{I.x}</button>
-                    </>
-                  ):(
-                    <><div style={{color:C.muted}}>{I.upload}</div>
-                      <span style={{fontSize:13,color:C.muted,marginTop:8}}>Drag & drop or <span style={{color:'#60A5FA'}}>browse</span></span>
-                    </>
-                  )}
-                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{display:'none'}} onChange={e=>{if(e.target.files[0])fileUrl(e.target.files[0]);}}/>
-                </label>
-              </div>
-              <div>
-                <label style={{display:'block',fontSize:12,fontWeight:500,color:C.muted,marginBottom:6}}>Location</label>
-                <select value={form.loc} onChange={e=>upd('loc',e.target.value)} style={{width:'100%',padding:'11px 14px',borderRadius:10,background:C.sf,border:`1px solid ${C.bd}`,fontSize:14,color:C.txt,outline:'none'}}>
-                  <option value="">Select campus location…</option>
-                  {LOCS.map(l=><option key={l} value={l}>{l}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{display:'block',fontSize:12,fontWeight:500,color:C.muted,marginBottom:6}}>Description</label>
-                <textarea value={form.desc} onChange={e=>upd('desc',e.target.value)} rows={3} placeholder="Color, brand, markings…" maxLength={500} style={{width:'100%',padding:'11px 14px',borderRadius:10,background:C.sf,border:`1px solid ${C.bd}`,fontSize:13,color:C.txt,resize:'none',outline:'none'}}/>
-              </div>
-            </div>
-          )}
-          {step===3&&(
-            <div style={{display:'flex',flexDirection:'column',gap:16}}>
-              <Field label="WhatsApp Number" placeholder="+234 801 234 5678" value={form.phone} onChange={v=>upd('phone',v)} icon={I.msg} maxLength={20}/>
-              <div style={{padding:'14px 16px',borderRadius:10,background:C.sf,border:`1px solid ${C.bd}`}}>
-                <div style={{fontSize:10,color:C.muted,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:12}}>Summary</div>
-                {[['Type',form.type],['Item',form.title||'—'],['Category',form.cat],['Location',form.loc||'—']].map(([k,v])=>(
-                  <div key={k} style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:13}}>
-                    <span style={{color:C.muted}}>{k}</span>
-                    <span style={{fontWeight:600,color:C.txt,textTransform:'capitalize'}}>{v}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 14px',borderRadius:10,background:'rgba(59,130,246,.07)',border:'1px solid rgba(59,130,246,.18)'}}>
-                <span style={{color:C.blue}}>{I.sparkle}</span>
-                <span style={{fontSize:12,color:'rgba(147,197,253,.8)'}}>Submitting earns <strong style={{color:'#93C5FD'}}>+{form.type==='found'?25:10} Karma Points</strong></span>
-              </div>
-            </div>
-          )}
-          {formErr&&(
-            <div style={{marginTop:12,padding:'9px 13px',borderRadius:8,background:'rgba(239,68,68,.09)',border:'1px solid rgba(239,68,68,.22)',display:'flex',alignItems:'center',gap:8}}>
-              <span style={{color:C.red,flexShrink:0}}>{I.alert}</span>
-              <span style={{fontSize:12,color:'#FCA5A5'}}>{formErr}</span>
-            </div>
-          )}
-        </div>
-        <div style={{display:'flex',gap:10,padding:'0 22px 22px'}}>
-          {step>1&&(
-            <button onClick={()=>{setStep(s=>s-1);setFormErr('');}} style={{padding:'10px 18px',borderRadius:9,background:C.sf,border:`1px solid ${C.bd}`,fontSize:13,fontWeight:500,color:C.muted}}
-              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.075)'}
-              onMouseLeave={e=>e.currentTarget.style.background=C.sf}>Back</button>
-          )}
-          <button className="btn-shimmer" onClick={goNext} style={{flex:1,padding:'10px',borderRadius:9,background:'linear-gradient(135deg,#1D4ED8,#4338CA)',border:'none',fontSize:13,fontWeight:600,color:'#fff',position:'relative',overflow:'hidden',transition:'transform .15s'}}
-            onMouseEnter={e=>e.currentTarget.style.transform='scale(1.015)'}
-            onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
-            <span style={{position:'relative',zIndex:1}}>{step===3?'Submit Report':'Continue →'}</span>
-          </button>
+  const c=form.type==='found'?'#34D399':'#FB7185';
+  return <Modal onClose={onClose}><div style={{background:'#07091A',border:'1px solid rgba(99,102,241,.18)',borderRadius:16,overflow:'hidden',boxShadow:'0 40px 100px rgba(0,0,0,.85)'}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid rgba(99,102,241,.1)'}}>
+      <div><h2 style={{fontFamily:'Syne,sans-serif',fontSize:14,fontWeight:700,color:'#F0F4FF'}}>{form.type==='lost'?'Report Lost Item':'Report Found Item'}</h2>
+        <div style={{display:'flex',gap:5,marginTop:7,alignItems:'center'}}>
+          {[1,2,3].map(s=><div key={s} style={{height:3,borderRadius:99,overflow:'hidden',width:s<=step?20:8,background:'rgba(255,255,255,.07)',transition:'width .2s'}}><div style={{height:'100%',width:s<=step?'100%':'0%',background:s<step?'#34D399':s===step?'#6366F1':'transparent',transition:'width .3s'}}/></div>)}
+          <span style={{fontSize:11,color:'rgba(180,190,240,.32)',marginLeft:3}}>Step {step}/3</span>
         </div>
       </div>
-    </Modal>
-  );
-}
-
-// ══════════════════════════════════════════════════════
-//  APP SHELL
-// ══════════════════════════════════════════════════════
-function AppShell({fbUser}){
-  const [section,setSection]=React.useState('dashboard');
-  const [items,setItems]=React.useState(SEED);
-  const [selItem,setSelItem]=React.useState(null);
-  const [showRep,setShowRep]=React.useState(null);
-  const [toast,setToast]=React.useState(null);
-  const [collapsed,setCollapsed]=React.useState(false);
-  const [sq,setSq]=React.useState('');
-  const [showN,setShowN]=React.useState(false);
-
-  const user={
-    name:fbUser.displayName||fbUser.email?.split('@')[0]||'User',
-    email:fbUser.email,photo:fbUser.photoURL,
-    karma:120,verified:!!fbUser.emailVerified||!!fbUser.displayName,returned:3,
-  };
-
-  const notifs=[
-    {id:1,text:'Your MacBook report got 5 views',time:'3m ago',u:true},
-    {id:2,text:'Amaka O. may have found your item',time:'1h ago',u:true},
-    {id:3,text:'+25 Karma awarded for your report',time:'3h ago',u:false},
-  ];
-
-  const addItem=form=>{
-    setItems(p=>[{
-      id:Date.now(),
-      title:form.title,cat:form.cat,status:form.type,
-      loc:form.loc,rep:user.name,time:'just now',desc:form.desc,
-      karma:form.type==='found'?25:10,
-      phone:form.phone||'2340000000000',
-      verified:user.verified,
-      mx:12+Math.random()*72,my:12+Math.random()*72,
-    },...p]);
-    setToast(form.type==='found'?'Found item reported · +25 Karma ✓':'Lost item reported ✓');
-    setShowRep(null);
-  };
-
-  const nav=[
-    {id:'dashboard',icon:I.home,label:'Dashboard'},
-    {id:'map',icon:I.map,label:'Live Map'},
-    {id:'items',icon:I.pkg,label:'Items'},
-    {id:'profile',icon:I.user,label:'Profile'},
-  ];
-  const SB=collapsed?60:228;
-
-  return(
-    <div style={{display:'flex',height:'100vh',background:C.bg,overflow:'hidden'}}>
-      {/* SIDEBAR */}
-      <div className="sidebar" style={{width:SB,minWidth:SB,flexShrink:0,height:'100vh',display:'flex',flexDirection:'column',borderRight:`1px solid ${C.bd}`,background:'rgba(3,5,8,.98)',position:'relative',zIndex:20,transition:'width .28s cubic-bezier(.22,1,.36,1)',overflow:'hidden'}}>
-        <div style={{display:'flex',alignItems:'center',gap:10,padding:'0 14px',height:60,borderBottom:`1px solid ${C.bd}`,flexShrink:0,overflow:'hidden'}}>
-          <div style={{width:28,height:28,borderRadius:7,background:'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'#fff',boxShadow:'0 0 14px rgba(37,99,235,.3)'}}>
-            {I.compass}
-          </div>
-          <span className="sb-logo-text" style={{fontSize:15,fontWeight:800,color:C.txt,letterSpacing:'-.045em',whiteSpace:'nowrap',opacity:collapsed?0:1,transition:'opacity .2s'}}>UniFind</span>
-        </div>
-        <nav style={{flex:1,padding:'10px 8px',display:'flex',flexDirection:'column',gap:2}}>
-          {nav.map(({id,icon,label})=>{
-            const active=section===id;
-            return(
-              <button key={id} onClick={()=>setSection(id)} className={`nav-btn${active?' nav-active':''}`} style={{width:'100%',display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:8,background:'transparent',border:'none',textAlign:'left',color:active?'#60A5FA':C.muted,overflow:'hidden'}}>
-                <span style={{flexShrink:0,display:'flex',opacity:active?1:.7}}>{icon}</span>
-                <span className="sb-label" style={{fontSize:13,fontWeight:active?600:400,color:active?C.txt:C.sub,whiteSpace:'nowrap',opacity:collapsed?0:1,transition:'opacity .2s'}}>{label}</span>
-              </button>
-            );
-          })}
-          <div style={{marginTop:8}}>
-            <button onClick={()=>setShowRep({type:'lost'})} style={{width:'100%',display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:8,background:'rgba(29,78,216,.12)',border:'1px solid rgba(59,130,246,.22)',overflow:'hidden',transition:'border-color .14s'}}
-              onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(59,130,246,.45)'}
-              onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(59,130,246,.22)'}>
-              <span style={{color:'#60A5FA',flexShrink:0,display:'flex'}}>{I.plus}</span>
-              <span className="sb-label" style={{fontSize:13,fontWeight:600,color:'#93C5FD',whiteSpace:'nowrap',opacity:collapsed?0:1,transition:'opacity .2s'}}>Report Item</span>
-            </button>
-          </div>
-        </nav>
-        <div style={{padding:'10px 8px',borderTop:`1px solid ${C.bd}`,flexShrink:0}}>
-          <div style={{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',borderRadius:8,background:C.sf,overflow:'hidden'}}>
-            <div style={{width:26,height:26,borderRadius:6,flexShrink:0,overflow:'hidden',background:user.photo?'none':'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'#fff'}}>
-              {user.photo?<img src={user.photo} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>:user.name[0].toUpperCase()}
-            </div>
-            <div className="sb-user-info" style={{flex:1,minWidth:0,display:'flex',alignItems:'center',justifyContent:'space-between',opacity:collapsed?0:1,transition:'opacity .2s'}}>
-              <div style={{minWidth:0}}>
-                <div style={{fontSize:12,fontWeight:600,color:C.txt,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.name}</div>
-                <div style={{fontSize:10,color:C.muted,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.email}</div>
-              </div>
-              <button onClick={()=>auth.signOut()} style={{background:'none',border:'none',color:C.muted,display:'flex',marginLeft:6,flexShrink:0,transition:'color .14s'}}
-                onMouseEnter={e=>e.currentTarget.style.color='#F87171'}
-                onMouseLeave={e=>e.currentTarget.style.color=C.muted}>
-                {I.logout}
-              </button>
-            </div>
-          </div>
-        </div>
-        <button onClick={()=>setCollapsed(s=>!s)} style={{position:'absolute',top:20,right:-13,width:26,height:26,borderRadius:'50%',background:'#0c1220',border:`1px solid ${C.bd}`,display:'flex',alignItems:'center',justifyContent:'center',zIndex:30,color:C.muted,transition:'transform .14s'}}
-          onMouseEnter={e=>e.currentTarget.style.transform='scale(1.14)'}
-          onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
-          <span style={{display:'block',transform:collapsed?'rotate(0)':'rotate(180deg)',transition:'transform .3s'}}>{I.chevron}</span>
-        </button>
-      </div>
-
-      {/* MAIN */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
-        <header style={{display:'flex',alignItems:'center',gap:12,padding:'0 24px',height:60,borderBottom:`1px solid ${C.bd}`,background:'rgba(3,5,8,.92)',backdropFilter:'blur(16px)',flexShrink:0,zIndex:10}}>
-          <div style={{flex:1,maxWidth:440}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,background:C.sf,border:`1px solid ${C.bd}`,borderRadius:8,padding:'6px 12px'}}>
-              <span style={{color:C.muted}}>{I.search}</span>
-              <input value={sq} onChange={e=>setSq(e.target.value)} placeholder="Search items, locations…" maxLength={100} style={{flex:1,fontSize:13,color:C.txt,outline:'none',background:'transparent'}}/>
-            </div>
-          </div>
-          <div style={{marginLeft:'auto',position:'relative'}}>
-            <button onClick={()=>setShowN(s=>!s)} style={{width:34,height:34,borderRadius:8,background:C.sf,border:`1px solid ${C.bd}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted,position:'relative'}}>
-              {I.bell}
-              {notifs.some(n=>n.u)&&<span style={{position:'absolute',top:5,right:5,width:7,height:7,borderRadius:'50%',background:C.blue,border:'1.5px solid #030508'}}/>}
-            </button>
-            {showN&&(
-              <>
-                <div onClick={()=>setShowN(false)} style={{position:'fixed',inset:0,zIndex:40}}/>
-                <div className="slide-up" style={{position:'absolute',top:42,right:0,width:276,background:'#0c1220',border:`1px solid ${C.bd}`,borderRadius:12,boxShadow:'0 20px 60px rgba(0,0,0,.6)',zIndex:50,overflow:'hidden'}}>
-                  <div style={{padding:'10px 16px',borderBottom:`1px solid ${C.bd}`}}>
-                    <span style={{fontSize:11,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:'.1em'}}>Notifications</span>
-                  </div>
-                  {notifs.map(n=>(
-                    <div key={n.id} style={{display:'flex',gap:10,padding:'11px 16px',borderBottom:'1px solid rgba(255,255,255,.04)'}}>
-                      <div style={{width:6,height:6,borderRadius:'50%',marginTop:5,flexShrink:0,background:n.u?C.blue:'transparent'}}/>
-                      <div>
-                        <div style={{fontSize:12,color:C.sub,lineHeight:1.5}}>{n.text}</div>
-                        <div style={{fontSize:11,color:C.muted,marginTop:2}}>{n.time}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </header>
-        <main style={{flex:1,overflow:'hidden'}}>
-          {section==='dashboard'&&<Dashboard user={user} items={items} setSection={setSection} setSelectedItem={setSelItem} setShowReport={setShowRep} sq={sq}/>}
-          {section==='map'&&<MapView items={items} setSelectedItem={setSelItem}/>}
-          {section==='items'&&<ItemsView items={items} setSelectedItem={setSelItem} sq={sq}/>}
-          {section==='profile'&&<ProfileView user={user}/>}
-        </main>
-      </div>
-
-      {selItem&&<ItemModal item={selItem} onClose={()=>setSelItem(null)}/>}
-      {showRep&&<ReportModal initial={showRep} onClose={()=>setShowRep(null)} onSubmit={addItem}/>}
-      {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+      <button onClick={onClose} style={{width:27,height:27,borderRadius:7,background:'rgba(255,255,255,.04)',border:'1px solid rgba(99,102,241,.12)',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(180,190,240,.35)'}}>{Ico.x}</button>
     </div>
-  );
+    <div style={{padding:'20px',minHeight:270}}>
+      {step===1&&<div style={{display:'flex',flexDirection:'column',gap:14}}>
+        <div style={{display:'flex',gap:9}}>{['lost','found'].map(t=>{const tc=t==='found'?'#34D399':'#FB7185';return <button key={t} onClick={()=>upd('type',t)} style={{flex:1,padding:'10px',borderRadius:9,background:form.type===t?tc+'14':'rgba(255,255,255,.032)',border:`1px solid ${form.type===t?tc+'45':'rgba(99,102,241,.1)'}`,fontSize:13,fontWeight:600,color:form.type===t?'#F0F4FF':'rgba(180,190,240,.45)',textTransform:'capitalize',transition:'all .14s'}}>{t==='lost'?'🔴 ':'🟢 '}I {t} this</button>;})}</div>
+        <div><label style={{display:'block',fontSize:11,fontWeight:700,color:'rgba(180,190,240,.35)',marginBottom:6,letterSpacing:'.07em',textTransform:'uppercase'}}>Item Name</label><div className="auth-field-wrap"><span style={{paddingLeft:13,color:'rgba(180,190,240,.32)',display:'flex',flexShrink:0}}>{Ico.pkg}</span><input placeholder="e.g. MacBook Pro, Student ID…" value={form.title} onChange={e=>upd('title',e.target.value)} maxLength={120} style={{flex:1,padding:'11px 13px',fontSize:14,color:'#F0F4FF',outline:'none',background:'transparent'}}/></div></div>
+        <div><label style={{display:'block',fontSize:11,fontWeight:700,color:'rgba(180,190,240,.35)',marginBottom:6,letterSpacing:'.07em',textTransform:'uppercase'}}>Category</label><select value={form.cat} onChange={e=>upd('cat',e.target.value)} style={{width:'100%',padding:'12px 14px',borderRadius:10,background:'rgba(255,255,255,.04)',border:'1px solid rgba(99,102,241,.14)',fontSize:14,color:'#F0F4FF',outline:'none'}}>{CATS.filter(x=>x!=='All').map(x=><option key={x} value={x}>{x}</option>)}</select></div>
+      </div>}
+      {step===2&&<div style={{display:'flex',flexDirection:'column',gap:14}}>
+        <div><label style={{display:'block',fontSize:11,fontWeight:700,color:'rgba(180,190,240,.35)',marginBottom:6,letterSpacing:'.07em',textTransform:'uppercase'}}>Photo (optional)</label>
+          <label onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);furl(e.dataTransfer.files[0])}} style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:100,borderRadius:10,border:`2px dashed ${drag?'#6366F1':'rgba(99,102,241,.2)'}`,background:drag?'rgba(99,102,241,.06)':'rgba(255,255,255,.03)',cursor:'pointer',position:'relative',overflow:'hidden',transition:'border-color .15s'}}>
+            {img?<><img src={img} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover'}} alt="preview"/><button onClick={e=>{e.preventDefault();setImg(null)}} style={{position:'absolute',top:7,right:7,width:22,height:22,borderRadius:'50%',background:'rgba(0,0,0,.65)',border:'none',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}>{Ico.x}</button></>:<><span style={{color:'rgba(180,190,240,.3)'}}>{Ico.upload}</span><span style={{fontSize:12,color:'rgba(180,190,240,.35)',marginTop:6}}>Drop image or <span style={{color:'#6366F1'}}>browse</span></span></>}
+            <input type="file" accept="image/jpeg,image/png,image/webp" style={{display:'none'}} onChange={e=>{if(e.target.files[0])furl(e.target.files[0])}}/>
+          </label>
+        </div>
+        <div><label style={{display:'block',fontSize:11,fontWeight:700,color:'rgba(180,190,240,.35)',marginBottom:6,letterSpacing:'.07em',textTransform:'uppercase'}}>Location</label><select value={form.loc} onChange={e=>upd('loc',e.target.value)} style={{width:'100%',padding:'12px 14px',borderRadius:10,background:'rgba(255,255,255,.04)',border:'1px solid rgba(99,102,241,.14)',fontSize:14,color:'#F0F4FF',outline:'none'}}><option value="">Select campus location…</option>{LOCS.map(l=><option key={l} value={l}>{l}</option>)}</select></div>
+        <div><label style={{display:'block',fontSize:11,fontWeight:700,color:'rgba(180,190,240,.35)',marginBottom:6,letterSpacing:'.07em',textTransform:'uppercase'}}>Description</label><textarea value={form.desc} onChange={e=>upd('desc',e.target.value)} rows={3} placeholder="Color, brand, markings…" maxLength={500} style={{width:'100%',padding:'11px 14px',borderRadius:10,background:'rgba(255,255,255,.04)',border:'1px solid rgba(99,102,241,.14)',fontSize:13,color:'#F0F4FF',resize:'none',outline:'none'}}/></div>
+      </div>}
+      {step===3&&<div style={{display:'flex',flexDirection:'column',gap:14}}>
+        <div><label style={{display:'block',fontSize:11,fontWeight:700,color:'rgba(180,190,240,.35)',marginBottom:6,letterSpacing:'.07em',textTransform:'uppercase'}}>WhatsApp Number</label><div className="auth-field-wrap"><span style={{paddingLeft:13,color:'rgba(180,190,240,.32)',display:'flex',flexShrink:0}}>{Ico.msg}</span><input placeholder="+234 801 234 5678" value={form.phone} onChange={e=>upd('phone',e.target.value)} maxLength={20} style={{flex:1,padding:'11px 13px',fontSize:14,color:'#F0F4FF',outline:'none',background:'transparent'}}/></div></div>
+        <div style={{padding:'13px 15px',borderRadius:10,background:'rgba(255,255,255,.032)',border:'1px solid rgba(99,102,241,.1)'}}>
+          <div style={{fontSize:10.5,color:'rgba(180,190,240,.32)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>Summary</div>
+          {[['Type',form.type],['Item',form.title||'—'],['Category',form.cat],['Location',form.loc||'—']].map(([k,v])=>(
+            <div key={k} style={{display:'flex',justifyContent:'space-between',marginBottom:7,fontSize:13}}><span style={{color:'rgba(180,190,240,.38)'}}>{k}</span><span style={{fontWeight:600,color:'#F0F4FF',textTransform:'capitalize'}}>{v}</span></div>
+          ))}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:9,padding:'10px 13px',borderRadius:10,background:'rgba(99,102,241,.07)',border:'1px solid rgba(99,102,241,.18)'}}><span style={{color:'#6366F1'}}>{Ico.sparkle}</span><span style={{fontSize:12,color:'rgba(167,139,250,.8)'}}>Submitting earns <strong style={{color:'#A78BFA'}}>+{form.type==='found'?25:10} Karma Points</strong></span></div>
+      </div>}
+      {fErr&&<div style={{marginTop:11,padding:'9px 12px',borderRadius:8,background:'rgba(251,113,133,.09)',border:'1px solid rgba(251,113,133,.22)',display:'flex',alignItems:'center',gap:7}}><span style={{color:'#FB7185',flexShrink:0}}>{Ico.alert}</span><span style={{fontSize:12,color:'#FDA4B2'}}>{fErr}</span></div>}
+    </div>
+    <div style={{display:'flex',gap:9,padding:'0 20px 20px'}}>
+      {step>1&&<button onClick={()=>{setStep(s=>s-1);setFErr('');}} style={{padding:'10px 16px',borderRadius:9,background:'rgba(255,255,255,.04)',border:'1px solid rgba(99,102,241,.12)',fontSize:13,fontWeight:500,color:'rgba(180,190,240,.5)',transition:'background .14s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.08)'} onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.04)'}>Back</button>}
+      <button onClick={go} style={{flex:1,padding:'10px',borderRadius:9,background:'linear-gradient(135deg,#4338CA,#6366F1)',border:'none',fontSize:13,fontWeight:700,color:'#fff',transition:'transform .15s',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.transform='scale(1.014)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>{step===3?'Submit Report':'Continue →'}</button>
+    </div>
+  </div></Modal>;
 }
 
-// ══════════════════════════════════════════════════════
-//  ROOT
-// ══════════════════════════════════════════════════════
-function Root(){
-  const [fbUser,setFbUser]=React.useState(undefined);
+function Dashboard({user,items,setSection,setSel,setRep,sq}){
+  const lost=items.filter(i=>i.status==='lost').length,found=items.filter(i=>i.status==='found').length;
+  const h=new Date().getHours(),g=h<12?'morning':h<17?'afternoon':'evening';
+  const stats=[{l:'Lost',v:lost,c:'#FB7185',bg:'rgba(251,113,133,.07)',bd:'rgba(251,113,133,.16)'},{l:'Found',v:found,c:'#34D399',bg:'rgba(52,211,153,.07)',bd:'rgba(52,211,153,.16)'},{l:'Recovered',v:47,c:'#6366F1',bg:'rgba(99,102,241,.07)',bd:'rgba(99,102,241,.16)'},{l:'Karma',v:user.karma,c:'#FBBF24',bg:'rgba(251,191,36,.07)',bd:'rgba(251,191,36,.16)'}];
+  const fil=items.filter(i=>!sq||i.title.toLowerCase().includes(sq.toLowerCase())||i.loc.toLowerCase().includes(sq.toLowerCase()));
+  return <div style={{height:'100%',overflowY:'auto',padding:'24px 20px 48px'}}>
+    <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:22,flexWrap:'wrap',gap:12}}>
+      <div><div style={{fontSize:10.5,color:'rgba(180,190,240,.32)',fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:3}}>Dashboard</div><h1 style={{fontFamily:'Syne,sans-serif',fontSize:'clamp(18px,3vw,22px)',fontWeight:800,color:'#F0F4FF',letterSpacing:'-.04em'}}>Good {g}, {user.name.split(' ')[0]}</h1></div>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{[{l:'Report Lost',t:'lost',c:'#FB7185'},{l:'Report Found',t:'found',c:'#34D399'}].map(a=><button key={a.t} onClick={()=>setRep({type:a.t})} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,background:a.c+'14',border:`1px solid ${a.c}28`,fontSize:13,fontWeight:500,color:'rgba(200,210,255,.6)',transition:'all .15s'}} onMouseEnter={e=>{e.currentTarget.style.background=a.c+'25';e.currentTarget.style.borderColor=a.c+'55'}} onMouseLeave={e=>{e.currentTarget.style.background=a.c+'14';e.currentTarget.style.borderColor=a.c+'28'}}><span style={{color:a.c}}>{Ico.plus}</span>{a.l}</button>)}</div>
+    </div>
+    <div className="dash-stats" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:22}}>
+      {stats.map(s=><div key={s.l} className="card-hover" style={{borderRadius:12,padding:'16px',background:s.bg,border:`1px solid ${s.bd}`}}>
+        <div style={{fontFamily:'Syne,sans-serif',fontSize:'clamp(22px,3vw,28px)',fontWeight:800,color:s.c,letterSpacing:'-.04em',lineHeight:1}}>{s.v}</div>
+        <div style={{fontSize:11,color:'rgba(180,190,240,.38)',marginTop:4}}>{s.l}</div>
+      </div>)}
+    </div>
+    <div className="dash-main" style={{display:'grid',gridTemplateColumns:'1fr 272px',gap:18}}>
+      <div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+          <span style={{fontSize:14,fontWeight:600,color:'#F0F4FF'}}>Recent Activity</span>
+          <button onClick={()=>setSection('items')} style={{display:'flex',alignItems:'center',gap:4,background:'none',border:'none',color:'#6366F1',fontWeight:500,fontSize:12}}>View all {Ico.arrow}</button>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>{fil.slice(0,7).map(item=><ItemRow key={item.id} item={item} onClick={()=>setSel(item)}/>)}</div>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(99,102,241,.1)',height:165}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',borderBottom:'1px solid rgba(99,102,241,.1)'}}>
+            <span style={{fontSize:10.5,fontWeight:600,color:'rgba(180,190,240,.32)',textTransform:'uppercase',letterSpacing:'.08em'}}>Live Map</span>
+            <button onClick={()=>setSection('map')} style={{fontSize:11,color:'#6366F1',background:'none',border:'none'}}>Expand →</button>
+          </div>
+          <div onClick={()=>setSection('map')} style={{height:'calc(100% - 34px)',background:'linear-gradient(135deg,#040614,#060918)',cursor:'pointer',position:'relative',overflow:'hidden'}}>
+            <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(99,102,241,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.04) 1px,transparent 1px)',backgroundSize:'18px 18px'}}/>
+            {items.map(it=>{const cc=it.status==='found'?'#34D399':'#6366F1';return <div key={it.id} style={{position:'absolute',left:`${it.mx}%`,top:`${it.my}%`,width:7,height:7,borderRadius:'50%',background:cc,boxShadow:`0 0 6px ${cc}`,transform:'translate(-50%,-50%)'}}/>;  })}
+          </div>
+        </div>
+        <div style={{borderRadius:12,padding:'14px',background:'rgba(251,191,36,.07)',border:'1px solid rgba(251,191,36,.16)'}}>
+          <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:10}}>
+            <div style={{width:28,height:28,borderRadius:7,background:'rgba(251,191,36,.18)',display:'flex',alignItems:'center',justifyContent:'center',color:'#FBBF24'}}>{Ico.zap}</div>
+            <div><div style={{fontSize:10,color:'rgba(180,190,240,.32)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.08em'}}>Karma</div><div style={{fontFamily:'Syne,sans-serif',fontSize:20,fontWeight:800,color:'#F0F4FF',letterSpacing:'-.04em'}}>{user.karma}</div></div>
+            <div style={{marginLeft:'auto',padding:'3px 10px',borderRadius:99,background:'rgba(251,191,36,.2)',fontSize:11,fontWeight:600,color:'#FBBF24'}}>Gold</div>
+          </div>
+          <div style={{height:4,borderRadius:99,background:'rgba(255,255,255,.07)'}}><div style={{height:'100%',borderRadius:99,background:'linear-gradient(90deg,#FBBF24,#FDE68A)',width:`${(user.karma/150)*100}%`,transition:'width 1.2s ease'}}/></div>
+          <div style={{fontSize:11,color:'rgba(180,190,240,.32)',marginTop:7}}>{150-user.karma} pts to Platinum</div>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
 
+function MapView({items,setSel}){
+  const[filter,setFilter]=React.useState('all');
+  const[hov,setHov]=React.useState(null);
+  const fil=items.filter(i=>filter==='all'||i.status===filter);
+  return <div style={{height:'100%',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+    <div style={{padding:'9px 14px',background:'rgba(99,102,241,.07)',borderBottom:'1px solid rgba(99,102,241,.12)',display:'flex',alignItems:'center',gap:7,flexShrink:0}}>
+      <span style={{color:'#6366F1',display:'flex'}}>{Ico.map}</span>
+      <span style={{fontSize:12,color:'rgba(167,139,250,.7)'}}><strong style={{color:'#6366F1'}}>Live campus map:</strong> Add a Google Maps API key to enable real geolocation pins.</span>
+    </div>
+    <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+      <div style={{flex:1,position:'relative',overflow:'hidden',background:'linear-gradient(145deg,#040614,#060918)'}}>
+        <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(99,102,241,.032) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.032) 1px,transparent 1px)',backgroundSize:'56px 56px'}}/>
+        <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',opacity:.22}}><line x1="0" y1="37%" x2="100%" y2="37%" stroke="rgba(99,102,241,.22)" strokeWidth="10"/><line x1="0" y1="63%" x2="100%" y2="63%" stroke="rgba(99,102,241,.16)" strokeWidth="7"/><line x1="27%" y1="0" x2="27%" y2="100%" stroke="rgba(99,102,241,.18)" strokeWidth="8"/><line x1="63%" y1="0" x2="63%" y2="100%" stroke="rgba(99,102,241,.22)" strokeWidth="10"/></svg>
+        {fil.map(item=>{const c=item.status==='found'?'#34D399':'#6366F1';const isH=hov===item.id;return <div key={item.id} style={{position:'absolute',left:`${item.mx}%`,top:`${item.my}%`}}><div style={{position:'absolute',width:28,height:28,borderRadius:'50%',border:`1px solid ${c}50`,left:'50%',top:'50%',animation:'ping 2.2s ease-out infinite'}}/><button onMouseEnter={()=>setHov(item.id)} onMouseLeave={()=>setHov(null)} onClick={()=>setSel(item)} style={{position:'absolute',left:'50%',top:'50%',transform:`translate(-50%,-50%) scale(${isH?1.22:1})`,width:30,height:30,borderRadius:8,background:c+'18',border:`1.5px solid ${c}`,display:'flex',alignItems:'center',justifyContent:'center',color:c,boxShadow:`0 0 ${isH?24:10}px ${c}60`,transition:'all .2s'}}>{Ico.pin}</button>{isH&&<div style={{position:'absolute',bottom:'calc(100% + 8px)',left:'50%',transform:'translateX(-50%)',whiteSpace:'nowrap',zIndex:10,padding:'6px 12px',borderRadius:8,background:'rgba(4,6,20,.96)',border:`1px solid ${c}45`,boxShadow:'0 8px 24px rgba(0,0,0,.5)',fontSize:12,fontWeight:600,color:'#F0F4FF'}}>{item.title} <span style={{opacity:.42}}>· {item.status}</span></div>}</div>;})}
+        <div style={{position:'absolute',top:12,left:12,display:'flex',alignItems:'center',gap:8,padding:'7px 14px',borderRadius:9,background:'rgba(4,6,15,.88)',border:'1px solid rgba(99,102,241,.14)',backdropFilter:'blur(12px)'}}><div style={{width:6,height:6,borderRadius:'50%',background:'#34D399',animation:'ping 2s ease-out infinite'}}/><span style={{fontSize:12,fontWeight:500,color:'rgba(200,210,255,.5)'}}>Simulated · {fil.length} pins</span></div>
+        <div style={{position:'absolute',bottom:16,left:'50%',transform:'translateX(-50%)',display:'flex',gap:8}}>{[{id:'all',l:'All',n:items.length},{id:'lost',l:'Lost',n:items.filter(i=>i.status==='lost').length,c:'#FB7185'},{id:'found',l:'Found',n:items.filter(i=>i.status==='found').length,c:'#34D399'}].map(f=><button key={f.id} onClick={()=>setFilter(f.id)} style={{padding:'6px 14px',borderRadius:8,border:`1px solid ${filter===f.id?(f.c||'#6366F1')+'55':'rgba(99,102,241,.12)'}`,background:filter===f.id?'rgba(4,6,20,.94)':'rgba(4,6,15,.72)',backdropFilter:'blur(12px)',fontSize:12,fontWeight:600,color:filter===f.id?'#F0F4FF':'rgba(180,190,240,.38)',display:'flex',alignItems:'center',gap:5,transition:'all .15s'}}>{f.l} <span style={{color:f.c||'#6366F1',opacity:.7}}>{f.n}</span></button>)}</div>
+      </div>
+      <div style={{width:196,flexShrink:0,borderLeft:'1px solid rgba(99,102,241,.1)',background:'rgba(3,5,15,.98)',overflowY:'auto'}}>
+        <div style={{padding:'8px 12px',borderBottom:'1px solid rgba(99,102,241,.1)'}}><span style={{fontSize:10.5,fontWeight:600,color:'rgba(180,190,240,.32)',textTransform:'uppercase',letterSpacing:'.08em'}}>Items</span></div>
+        <div style={{padding:6,display:'flex',flexDirection:'column',gap:4}}>{items.map(item=>{const c=item.status==='found'?'#34D399':'#FB7185';return <button key={item.id} onClick={()=>setSel(item)} style={{width:'100%',textAlign:'left',padding:'9px 10px',borderRadius:7,background:'rgba(255,255,255,.032)',border:'1px solid rgba(99,102,241,.08)',transition:'background .14s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(99,102,241,.08)'} onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.032)'}><div style={{display:'flex',alignItems:'center',gap:5,marginBottom:2}}><div style={{width:5,height:5,borderRadius:'50%',background:c,flexShrink:0}}/><span style={{fontSize:11.5,fontWeight:600,color:'#F0F4FF',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.title}</span></div><div style={{fontSize:10,color:'rgba(180,190,240,.35)',paddingLeft:10}}>{item.loc}</div></button>;})}</div>
+      </div>
+    </div>
+  </div>;
+}
+
+function ItemsView({items,setSel,sq}){
+  const[filter,setFilter]=React.useState('all');
+  const[cat,setCat]=React.useState('All');
+  const[view,setView]=React.useState('list');
+  const fil=items.filter(i=>(filter==='all'||i.status===filter)&&(cat==='All'||i.cat===cat)&&(!sq||i.title.toLowerCase().includes(sq.toLowerCase())||i.loc.toLowerCase().includes(sq.toLowerCase())));
+  return <div style={{height:'100%',overflowY:'auto',padding:'20px 20px 48px'}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18,flexWrap:'wrap',gap:12}}>
+      <div><h1 style={{fontFamily:'Syne,sans-serif',fontSize:18,fontWeight:800,color:'#F0F4FF',letterSpacing:'-.04em'}}>All Items</h1><p style={{fontSize:12,color:'rgba(180,190,240,.32)',marginTop:1}}>{fil.length} of {items.length}</p></div>
+      <div style={{display:'flex',borderRadius:8,overflow:'hidden',border:'1px solid rgba(99,102,241,.12)'}}>{[{id:'list',icon:Ico.list},{id:'grid',icon:Ico.grid}].map(v=><button key={v.id} onClick={()=>setView(v.id)} style={{padding:'7px 10px',background:view===v.id?'rgba(99,102,241,.14)':'rgba(255,255,255,.032)',border:'none',display:'flex',alignItems:'center',color:view===v.id?'#6366F1':'rgba(180,190,240,.32)',transition:'background .14s'}}>{v.icon}</button>)}</div>
+    </div>
+    <div style={{display:'flex',flexWrap:'wrap',gap:7,marginBottom:18}}>
+      {['all','lost','found'].map(f=>{const c=f==='found'?'#34D399':f==='lost'?'#FB7185':'#6366F1';return <button key={f} onClick={()=>setFilter(f)} style={{padding:'5px 13px',borderRadius:7,background:filter===f?c+'14':'rgba(255,255,255,.032)',border:`1px solid ${filter===f?c+'40':'rgba(99,102,241,.1)'}`,fontSize:12,fontWeight:500,color:filter===f?'#F0F4FF':'rgba(180,190,240,.45)',textTransform:'capitalize',transition:'all .14s'}}>{f==='all'?'All Items':f}</button>;})}
+      <div style={{width:1,background:'rgba(99,102,241,.1)',margin:'0 3px'}}/>
+      {CATS.map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:'5px 11px',borderRadius:7,background:cat===c?'rgba(99,102,241,.15)':'rgba(255,255,255,.032)',border:`1px solid ${cat===c?'rgba(99,102,241,.4)':'rgba(99,102,241,.1)'}`,fontSize:12,fontWeight:500,color:cat===c?'#A78BFA':'rgba(180,190,240,.45)',whiteSpace:'nowrap',transition:'all .14s'}}>{c}</button>)}
+    </div>
+    {view==='list'?<div style={{display:'flex',flexDirection:'column',gap:6}}>{fil.map(item=><ItemRow key={item.id} item={item} onClick={()=>setSel(item)}/>)}</div>
+    :<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(190px,1fr))',gap:11}}>{fil.map(item=>{const c=item.status==='found'?'#34D399':'#FB7185';return <button key={item.id} className="card-hover" onClick={()=>setSel(item)} style={{borderRadius:12,padding:'16px',textAlign:'left',background:'rgba(255,255,255,.032)',border:`1px solid rgba(99,102,241,.1)`,transition:'all .18s'}} onMouseEnter={e=>{e.currentTarget.style.borderColor=c+'35';e.currentTarget.style.transform='translateY(-2px)'}} onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,.1)';e.currentTarget.style.transform='translateY(0)'}}><div style={{width:34,height:34,borderRadius:8,background:c+'14',border:`1px solid ${c}22`,display:'flex',alignItems:'center',justifyContent:'center',color:c,marginBottom:12}}>{Ico.pkg}</div><div style={{fontSize:13,fontWeight:700,color:'#F0F4FF',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.title}</div><div style={{fontSize:11,color:'rgba(180,190,240,.35)',marginBottom:10,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.loc}</div><div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}><span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:99,background:c+'14',color:c,textTransform:'capitalize'}}>{item.status}</span><span style={{fontSize:11,color:'rgba(180,190,240,.32)'}}>{item.time}</span></div></button>;})}
+    </div>}
+    {fil.length===0&&<div style={{textAlign:'center',paddingTop:80}}><div style={{fontSize:40,marginBottom:12}}>📦</div><p style={{fontSize:13,color:'rgba(180,190,240,.32)'}}>No items match</p></div>}
+  </div>;
+}
+
+function ProfileView({user}){
+  return <div style={{height:'100%',overflowY:'auto',padding:'20px 20px 48px'}}><div style={{maxWidth:640}}>
+    <div style={{borderRadius:14,padding:'22px',background:'rgba(255,255,255,.032)',border:'1px solid rgba(99,102,241,.12)',marginBottom:14,position:'relative',overflow:'hidden'}}>
+      <div style={{position:'absolute',top:0,right:0,width:200,height:200,borderRadius:'50%',background:'radial-gradient(circle,rgba(99,102,241,.09),transparent)',pointerEvents:'none',transform:'translate(30%,-30%)'}}/>
+      <div style={{display:'flex',alignItems:'center',gap:16,position:'relative',zIndex:1,flexWrap:'wrap'}}>
+        <div style={{width:50,height:50,borderRadius:13,overflow:'hidden',background:user.photo?'none':'linear-gradient(135deg,#4338CA,#818CF8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:800,color:'#fff',flexShrink:0}}>
+          {user.photo?<img src={user.photo} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>:user.name[0].toUpperCase()}
+        </div>
+        <div style={{flex:1,minWidth:0}}><h2 style={{fontFamily:'Syne,sans-serif',fontSize:18,fontWeight:800,color:'#F0F4FF',letterSpacing:'-.04em'}}>{user.name}</h2><p style={{fontSize:13,color:'rgba(180,190,240,.38)'}}>{user.email}</p></div>
+        <button onClick={()=>auth.signOut()} style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',borderRadius:8,background:'rgba(251,113,133,.09)',border:'1px solid rgba(251,113,133,.2)',fontSize:12,fontWeight:500,color:'#FB7185',transition:'background .15s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(251,113,133,.18)'} onMouseLeave={e=>e.currentTarget.style.background='rgba(251,113,133,.09)'}>{Ico.logout} Sign out</button>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:0,marginTop:18,paddingTop:18,borderTop:'1px solid rgba(99,102,241,.1)'}}>
+        {[['Reported',5],['Returned',user.returned],['Helped',12]].map(([l,v])=><div key={l} style={{textAlign:'center'}}><div style={{fontFamily:'Syne,sans-serif',fontSize:20,fontWeight:800,color:'#F0F4FF',letterSpacing:'-.04em'}}>{v}</div><div style={{fontSize:11,color:'rgba(180,190,240,.32)',marginTop:2}}>{l}</div></div>)}
+      </div>
+    </div>
+    <div style={{borderRadius:12,padding:'18px',background:'rgba(255,255,255,.032)',border:'1px solid rgba(99,102,241,.12)'}}>
+      <div style={{fontSize:10.5,fontWeight:700,color:'rgba(180,190,240,.32)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:14}}>Achievements</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(90px,1fr))',gap:10}}>
+        {[['🏆','First Return',true],['⭐','5 Found',true],['🛡️','Verified',user.verified],['🔥','10 Found',false],['💎','Diamond',false],['🌟','Hero',false]].map(([icon,l,e])=><div key={l} style={{padding:'14px 8px',borderRadius:10,textAlign:'center',background:e?'rgba(255,255,255,.05)':'rgba(255,255,255,.02)',border:`1px solid ${e?'rgba(255,255,255,.09)':'rgba(255,255,255,.04)'}`,opacity:e?1:.3}}><div style={{fontSize:22,marginBottom:5}}>{icon}</div><div style={{fontSize:10,color:'rgba(180,190,240,.35)'}}>{l}</div></div>)}
+      </div>
+    </div>
+  </div></div>;
+}
+
+function AppShell({fbUser}){
+  const[section,setSection]=React.useState('dashboard');
+  const[items,setItems]=React.useState(SEED);
+  const[sel,setSel]=React.useState(null);
+  const[rep,setRep]=React.useState(null);
+  const[toast,setToast]=React.useState(null);
+  const[col,setCol]=React.useState(false);
+  const[sq,setSq]=React.useState('');
+  const[showN,setShowN]=React.useState(false);
+  const user={name:fbUser.displayName||fbUser.email?.split('@')[0]||'User',email:fbUser.email,photo:fbUser.photoURL,karma:120,verified:!!fbUser.emailVerified||!!fbUser.displayName,returned:3};
+  const notifs=[{id:1,text:'Your MacBook report got 5 views',time:'3m ago',u:true},{id:2,text:'Amaka O. may have found your item',time:'1h ago',u:true},{id:3,text:'+25 Karma awarded',time:'3h ago',u:false}];
+  const addItem=form=>{setItems(p=>[{id:Date.now(),title:form.title,cat:form.cat,status:form.type,loc:form.loc,rep:user.name,time:'just now',desc:form.desc,karma:form.type==='found'?25:10,phone:form.phone||'2340000000000',verified:user.verified,mx:12+Math.random()*72,my:12+Math.random()*72},...p]);setToast(form.type==='found'?'Found item reported · +25 Karma ✓':'Lost item reported ✓');setRep(null);};
+  const nav=[{id:'dashboard',icon:Ico.home,label:'Dashboard'},{id:'map',icon:Ico.map,label:'Live Map'},{id:'items',icon:Ico.pkg,label:'Items'},{id:'profile',icon:Ico.user,label:'Profile'}];
+  const SB=col?56:216;
+  return <div style={{display:'flex',height:'100vh',background:'#04060F',overflow:'hidden'}}>
+    <div className="sidebar-dash" style={{width:SB,minWidth:SB,flexShrink:0,height:'100vh',display:'flex',flexDirection:'column',borderRight:'1px solid rgba(99,102,241,.1)',background:'rgba(3,5,14,.98)',position:'relative',zIndex:20,transition:'width .28s cubic-bezier(.22,1,.36,1)',overflow:'hidden'}}>
+      <div style={{display:'flex',alignItems:'center',gap:9,padding:'0 12px',height:56,borderBottom:'1px solid rgba(99,102,241,.1)',flexShrink:0}}>
+        <div style={{width:26,height:26,borderRadius:7,background:'linear-gradient(135deg,#4338CA,#818CF8)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'#fff',boxShadow:'0 0 14px rgba(99,102,241,.3)'}}>{Ico.logo}</div>
+        <span className="sb-name" style={{fontFamily:'Syne,sans-serif',fontSize:14,fontWeight:800,color:'#F0F4FF',letterSpacing:'-.04em',whiteSpace:'nowrap',opacity:col?0:1,transition:'opacity .2s'}}>UniFind</span>
+      </div>
+      <nav style={{flex:1,padding:'8px 7px',display:'flex',flexDirection:'column',gap:2}}>
+        {nav.map(({id,icon,label})=>{const active=section===id;return <button key={id} onClick={()=>setSection(id)} className={`nav-btn-dash${active?' nav-active-dash':''}`} style={{width:'100%',display:'flex',alignItems:'center',gap:9,padding:'9px 9px',borderRadius:7,background:'transparent',border:'none',textAlign:'left',color:active?'#818CF8':'rgba(180,190,240,.38)',overflow:'hidden'}}><span style={{flexShrink:0,display:'flex',opacity:active?1:.6}}>{icon}</span><span className="sb-label" style={{fontSize:13,fontWeight:active?600:400,color:active?'#F0F4FF':'rgba(200,210,255,.5)',whiteSpace:'nowrap',opacity:col?0:1,transition:'opacity .2s'}}>{label}</span></button>;})}
+        <div style={{marginTop:7}}><button onClick={()=>setRep({type:'lost'})} style={{width:'100%',display:'flex',alignItems:'center',gap:9,padding:'9px 9px',borderRadius:7,background:'rgba(99,102,241,.1)',border:'1px solid rgba(99,102,241,.2)',overflow:'hidden',transition:'border-color .14s'}} onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(99,102,241,.4)'} onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(99,102,241,.2)'}><span style={{color:'#818CF8',flexShrink:0,display:'flex'}}>{Ico.plus}</span><span className="sb-label" style={{fontSize:13,fontWeight:600,color:'rgba(167,139,250,.9)',whiteSpace:'nowrap',opacity:col?0:1,transition:'opacity .2s'}}>Report Item</span></button></div>
+      </nav>
+      <div style={{padding:'8px 7px',borderTop:'1px solid rgba(99,102,241,.1)',flexShrink:0}}><div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 9px',borderRadius:7,background:'rgba(255,255,255,.032)',overflow:'hidden'}}><div style={{width:24,height:24,borderRadius:6,flexShrink:0,overflow:'hidden',background:user.photo?'none':'linear-gradient(135deg,#4338CA,#818CF8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'#fff'}}>{user.photo?<img src={user.photo} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>:user.name[0].toUpperCase()}</div><div className="sb-email" style={{flex:1,minWidth:0,opacity:col?0:1,transition:'opacity .2s',display:'flex',alignItems:'center',justifyContent:'space-between'}}><div style={{minWidth:0}}><div style={{fontSize:11.5,fontWeight:600,color:'#F0F4FF',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.name}</div><div style={{fontSize:10,color:'rgba(180,190,240,.32)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.email}</div></div><button onClick={()=>auth.signOut()} style={{background:'none',border:'none',color:'rgba(180,190,240,.32)',display:'flex',marginLeft:5,flexShrink:0,transition:'color .14s'}} onMouseEnter={e=>e.currentTarget.style.color='#FB7185'} onMouseLeave={e=>e.currentTarget.style.color='rgba(180,190,240,.32)'}>{Ico.logout}</button></div></div></div>
+      <button onClick={()=>setCol(s=>!s)} style={{position:'absolute',top:16,right:-12,width:24,height:24,borderRadius:'50%',background:'#0a0d1e',border:'1px solid rgba(99,102,241,.14)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:30,color:'rgba(180,190,240,.32)'}}><span style={{display:'block',transform:col?'rotate(0)':'rotate(180deg)',transition:'transform .3s'}}>{Ico.chevR}</span></button>
+    </div>
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
+      <header style={{display:'flex',alignItems:'center',gap:10,padding:'0 20px',height:56,borderBottom:'1px solid rgba(99,102,241,.1)',background:'rgba(3,5,14,.92)',backdropFilter:'blur(16px)',flexShrink:0,zIndex:10}}>
+        <div style={{flex:1,maxWidth:360}}>
+          <div style={{display:'flex',alignItems:'center',gap:7,background:'rgba(255,255,255,.032)',border:'1px solid rgba(99,102,241,.1)',borderRadius:8,padding:'6px 11px'}}>
+            <span style={{color:'rgba(180,190,240,.32)'}}>{Ico.search}</span>
+            <input value={sq} onChange={e=>setSq(e.target.value)} placeholder="Search items…" maxLength={100} style={{flex:1,fontSize:13,color:'#F0F4FF',outline:'none',background:'transparent'}}/>
+          </div>
+        </div>
+        <div style={{marginLeft:'auto',position:'relative'}}>
+          <button onClick={()=>setShowN(s=>!s)} style={{width:32,height:32,borderRadius:8,background:'rgba(255,255,255,.032)',border:'1px solid rgba(99,102,241,.1)',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(180,190,240,.38)',position:'relative'}}>
+            {Ico.bell}{notifs.some(n=>n.u)&&<span style={{position:'absolute',top:5,right:5,width:6,height:6,borderRadius:'50%',background:'#6366F1',border:'1.5px solid #04060F'}}/>}
+          </button>
+          {showN&&<><div onClick={()=>setShowN(false)} style={{position:'fixed',inset:0,zIndex:40}}/><div style={{position:'absolute',top:40,right:0,width:256,background:'#09111f',border:'1px solid rgba(99,102,241,.14)',borderRadius:12,boxShadow:'0 20px 60px rgba(0,0,0,.6)',zIndex:50,overflow:'hidden',animation:'slideUp .28s cubic-bezier(.22,1,.36,1)'}}><div style={{padding:'9px 14px',borderBottom:'1px solid rgba(99,102,241,.1)'}}><span style={{fontSize:10.5,fontWeight:700,color:'rgba(180,190,240,.32)',textTransform:'uppercase',letterSpacing:'.1em'}}>Notifications</span></div>{notifs.map(n=><div key={n.id} style={{display:'flex',gap:9,padding:'10px 14px',borderBottom:'1px solid rgba(255,255,255,.03)'}}><div style={{width:5,height:5,borderRadius:'50%',marginTop:5,flexShrink:0,background:n.u?'#6366F1':'transparent'}}/><div><div style={{fontSize:12,color:'rgba(200,210,255,.5)',lineHeight:1.5}}>{n.text}</div><div style={{fontSize:10.5,color:'rgba(180,190,240,.28)',marginTop:2}}>{n.time}</div></div></div>)}</div></>}
+        </div>
+      </header>
+      <main style={{flex:1,overflow:'hidden'}}>
+        {section==='dashboard'&&<Dashboard user={user} items={items} setSection={setSection} setSel={setSel} setRep={setRep} sq={sq}/>}
+        {section==='map'&&<MapView items={items} setSel={setSel}/>}
+        {section==='items'&&<ItemsView items={items} setSel={setSel} sq={sq}/>}
+        {section==='profile'&&<ProfileView user={user}/>}
+      </main>
+    </div>
+    {sel&&<ItemModal item={sel} onClose={()=>setSel(null)}/>}
+    {rep&&<ReportModal initial={rep} onClose={()=>setRep(null)} onSubmit={addItem}/>}
+    {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+  </div>;
+}
+
+/* ══════════════════════════════════════════════════════
+   ROOT
+══════════════════════════════════════════════════════ */
+function Root(){
+  const[fbUser,setFbUser]=React.useState(undefined);
   React.useEffect(()=>{
-    // Handle redirect result (for popup-blocked fallback)
     auth.getRedirectResult().catch(()=>{});
-    const unsub=auth.onAuthStateChanged(u=>setFbUser(u??null));
-    return()=>unsub();
+    const u=auth.onAuthStateChanged(u=>setFbUser(u??null));
+    return()=>u();
   },[]);
 
-  if(fbUser===undefined) return(
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg}}>
-      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:16}}>
-        <div style={{width:38,height:38,borderRadius:10,background:'linear-gradient(135deg,#1D4ED8,#4338CA)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',boxShadow:'0 0 28px rgba(37,99,235,.4)'}}>{I.compass}</div>
-        <div className="spin-el" style={{width:18,height:18,borderRadius:'50%',border:'2px solid rgba(255,255,255,.14)',borderTopColor:C.blue}}/>
-      </div>
-    </div>
-  );
+  // Dot canvas (subtle background effect)
+  React.useEffect(()=>{
+    if(fbUser) return; // only on landing
+    const cv=document.getElementById('dot-canvas');
+    if(!cv) return;
+    const ctx=cv.getContext('2d');
+    let W,H,dots=[],raf;
+    const resize=()=>{W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;};
+    resize();
+    const N=Math.min(Math.floor((W*H)/14000),180);
+    for(let i=0;i<N;i++)dots.push({x:Math.random()*W,y:Math.random()*H,r:.6+Math.random()*.9,o:Math.random()*.5+.1,s:Math.random()*.18+.04,t:Math.random()*Math.PI*2});
+    const draw=()=>{
+      ctx.clearRect(0,0,W,H);
+      dots.forEach(d=>{
+        d.t+=d.s*.016;
+        d.o=(.15+Math.sin(d.t)*.12);
+        ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);
+        ctx.fillStyle=`rgba(130,140,210,${d.o})`;ctx.fill();
+      });
+      raf=requestAnimationFrame(draw);
+    };
+    draw();
+    window.addEventListener('resize',resize);
+    return()=>{cancelAnimationFrame(raf);window.removeEventListener('resize',resize);};
+  },[fbUser]);
 
-  return fbUser?<AppShell fbUser={fbUser}/>:<AuthPage/>;
+  if(fbUser===undefined) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#04060F'}}><div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:16}}><div style={{width:38,height:38,borderRadius:10,background:'linear-gradient(135deg,#4338CA,#818CF8)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',boxShadow:'0 0 28px rgba(99,102,241,.4)'}}>{Ico.logo}</div><div className="spin-el" style={{width:17,height:17,borderRadius:'50%',border:'2px solid rgba(255,255,255,.1)',borderTopColor:'#6366F1'}}/></div></div>;
+
+  return fbUser?<AppShell fbUser={fbUser}/>:<Landing/>;
 }
 
-const root=ReactDOM.createRoot(document.getElementById('root'));
-root.render(<Root/>);
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
 </script>
 </body>
 </html>
