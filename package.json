@@ -1,0 +1,19 @@
+{
+  "name": "unifind",
+  "version": "1.0.0",
+  "description": "Campus Lost & Found - UniFind",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "lost-and-found",
+    "campus",
+    "unifind"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {},
+  "dependencies": {}
+}
